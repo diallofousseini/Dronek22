@@ -45,3 +45,23 @@ Stage Summary:
 - Full preference management panel added with toggle switches
 - Bilingual support (FR/EN) for all cookie consent text
 - Build passes: ✓ Compiled successfully
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix footer logo, hero slogan animation, chatbot API fallback, newsletter API + footer integration
+
+Work Log:
+- Read worklog.md, Footer.tsx, HomePage.tsx, chatbot/route.ts
+- TASK 1: Replaced Next.js `<Image>` with regular `<img>` tag in Footer.tsx logo (lines 53-61), made logo responsive (h-16 mobile, h-20 desktop), enlarged text to lg:text-2xl, removed unused `import Image from 'next/image'`
+- TASK 2: Added `heroSloganIndex` state, `heroSlogans` array (6 FR/6 EN phrases), and 4-second interval useEffect to HomePage.tsx. Replaced static h1 title with AnimatePresence animated rotating slogan with smooth up/down transitions, kept gold subtitle "& de l'Agriculture par Drone" as static text below
+- TASK 3: Rewrote `/api/chatbot/route.ts` with `sdkAvailable` flag, graceful SDK init failure handling, and comprehensive `generateFallbackResponse()` function covering 10 keyword categories (greetings, services, drone, forestry, agroforestry, agriculture, contact, training, partnerships, about) with bilingual intelligent responses
+- TASK 4: Created `/api/newsletter/route.ts` with email validation, language support, and simulated subscription. Updated Footer.tsx newsletter section with `handleNewsletterSubscribe` async handler, loading spinner, error display, bilingual success state with checkmark icon, and proper disabled states
+- Build check: `npx next build` compiled successfully with zero errors
+
+Stage Summary:
+- Footer logo uses native `<img>` for Netlify compatibility with responsive sizing
+- Hero section main title now rotates through 6 bilingual slogans every 4 seconds with AnimatePresence transitions
+- Chatbot gracefully falls back to keyword-based intelligent responses when SDK is unavailable (Netlify deployment)
+- Newsletter subscription wired to API with loading states, error handling, and bilingual feedback
+- Build passes: ✓ Compiled successfully (6/6 routes: /, /_not-found, /api, /api/chatbot, /api/newsletter)

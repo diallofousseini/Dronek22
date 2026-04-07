@@ -162,6 +162,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const [heroIndex, setHeroIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [rotatingIndex, setRotatingIndex] = useState(0);
+  const [heroSloganIndex, setHeroSloganIndex] = useState(0);
 
   // Posts state for dynamic feed
   const [posts, setPosts] = useState([
@@ -264,6 +265,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     ? ['Foresterie Durable', 'Cartographie par Drone', 'Agroforesterie', 'Agriculture Innovante', 'Inventaire Forestier', 'SIG & Télédétection']
     : ['Sustainable Forestry', 'Drone Mapping', 'Agroforestry', 'Innovative Agriculture', 'Forest Inventory', 'GIS & Remote Sensing'];
 
+  const heroSlogans = lang === 'fr'
+    ? ['Gestion Durable des Forêts', 'Cartographie par Drone', 'Agroforesterie Innovante', 'Agriculture Durable', 'Inventaire Forestier', 'Technologies pour la Nature']
+    : ['Sustainable Forest Management', 'Drone Mapping', 'Innovative Agroforestry', 'Sustainable Agriculture', 'Forest Inventory', 'Technology for Nature'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroSloganIndex((prev) => (prev + 1) % heroSlogans.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [heroSlogans.length]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setRotatingIndex((prev) => (prev + 1) % rotatingPhrases.length);
@@ -361,15 +373,28 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               {lang === 'fr' ? 'LA GÉOMATIQUE ET L\'INNOVATION' : 'GEOMATICS AND INNOVATION'}
             </motion.p>
 
-            {/* Title — Main + Sub in Playfair Display ALL CAPS */}
+            {/* Title — Animated rotating slogan */}
             <motion.h1
               variants={fadeInUp}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase text-white leading-[1.1] max-w-5xl mx-auto"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase text-white leading-[1.1] max-w-5xl mx-auto min-h-[2.5em] sm:min-h-[2.2em] flex flex-col items-center justify-center"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              Gestion Durable des Forêts
-              <br />
-              <span className="text-dronek-gold">&amp; de l&apos;Agriculture par Drone</span>
+              <div className="h-[1.2em] flex items-center justify-center overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={heroSloganIndex}
+                    initial={{ y: 40, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1, transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } }}
+                    exit={{ y: -40, opacity: 0, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] } }}
+                    className="block text-center"
+                  >
+                    {heroSlogans[heroSloganIndex]}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+              <span className="text-dronek-gold text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
+                {lang === 'fr' ? "& de l'Agriculture par Drone" : '& Agriculture by Drone'}
+              </span>
             </motion.h1>
 
             {/* Rotating Text Effect */}

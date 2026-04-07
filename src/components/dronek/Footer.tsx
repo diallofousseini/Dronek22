@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { MapPin, Phone, Mail, Facebook, Linkedin, Twitter, Instagram, ArrowUp, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +11,11 @@ interface FooterProps {
 }
 
 export default function Footer({ onNavigate }: FooterProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [footerEmail, setFooterEmail] = useState('');
   const [footerSubscribed, setFooterSubscribed] = useState(false);
+  const [footerLoading, setFooterLoading] = useState(false);
+  const [footerError, setFooterError] = useState('');
 
   const handleNav = (page: 'home' | 'services-forestry' | 'services-drone' | 'services-agroforestry' | 'services-agriculture' | 'projects' | 'blog' | 'training' | 'team' | 'production' | 'contact') => {
     onNavigate(page);
@@ -23,6 +24,30 @@ export default function Footer({ onNavigate }: FooterProps) {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNewsletterSubscribe = async () => {
+    if (!footerEmail.trim()) return;
+    setFooterLoading(true);
+    setFooterError('');
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: footerEmail, language: lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFooterSubscribed(true);
+        setFooterEmail('');
+      } else {
+        setFooterError(data.message);
+      }
+    } catch {
+      setFooterError(lang === 'fr' ? 'Erreur réseau. Veuillez réessayer.' : 'Network error. Please try again.');
+    } finally {
+      setFooterLoading(false);
+    }
   };
 
   const quickLinks = [
@@ -51,15 +76,13 @@ export default function Footer({ onNavigate }: FooterProps) {
           {/* Column 1: Company info + Newsletter */}
           <div className="space-y-6 lg:col-span-1">
             <div className="flex items-center gap-3">
-              <Image
+              <img
                 src="/images/dronek-nav-icon.png"
                 alt="DRONEK"
-                width={80}
-                height={80}
-                className="h-20 w-auto brightness-0 invert"
+                className="h-16 lg:h-20 w-auto brightness-0 invert"
               />
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>DRONEK</span>
+                <span className="text-xl lg:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>DRONEK</span>
                 <span className="text-xs font-medium text-dronek-green tracking-widest uppercase">SARL</span>
               </div>
             </div>
@@ -154,26 +177,42 @@ export default function Footer({ onNavigate }: FooterProps) {
                 Newsletter
               </h4>
               {footerSubscribed ? (
-                <p className="text-dronek-green text-sm">✓ Merci !</p>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-dronek-green flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <p className="text-dronek-green text-sm">{lang === 'fr' ? 'Merci pour votre inscription !' : 'Thank you for subscribing!'}</p>
+                </div>
               ) : (
-                <div className="flex gap-2">
-                  <Input
-                    type="email"
-                    value={footerEmail}
-                    onChange={(e) => setFooterEmail(e.target.value)}
-                    placeholder="email@example.com"
-                    className="flex-1 bg-white/5 border-white/10 text-white text-sm rounded-lg placeholder:text-gray-500 focus:border-dronek-green"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && footerEmail) { setFooterSubscribed(true); setFooterEmail(''); }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => { if (footerEmail) { setFooterSubscribed(true); setFooterEmail(''); } }}
-                    className="bg-dronek-green hover:bg-dronek-dark text-white rounded-lg shrink-0"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </Button>
+                <div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      value={footerEmail}
+                      onChange={(e) => setFooterEmail(e.target.value)}
+                      placeholder="email@example.com"
+                      className="flex-1 bg-white/5 border-white/10 text-white text-sm rounded-lg placeholder:text-gray-500 focus:border-dronek-green"
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter' && footerEmail) { await handleNewsletterSubscribe(); }
+                      }}
+                      disabled={footerLoading}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleNewsletterSubscribe}
+                      disabled={footerLoading || !footerEmail}
+                      className="bg-dronek-green hover:bg-dronek-dark text-white rounded-lg shrink-0 disabled:opacity-50"
+                    >
+                      {footerLoading ? (
+                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                  {footerError && <p className="text-red-400 text-xs mt-1.5">{footerError}</p>}
                 </div>
               )}
             </div>
