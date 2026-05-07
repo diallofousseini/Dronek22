@@ -1,337 +1,340 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Clock, Send, Facebook, Linkedin, Twitter, Instagram, Calendar, ArrowRight, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Mail, MapPin, Phone, MessageSquare, ArrowRight } from 'lucide-react';
+import AnimatedSection from './AnimatedSection';
 import { useLanguage } from './LanguageProvider';
+import Values from './Values';
+import type { PageView } from './Navbar';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, limit, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import LocationMap from './LocationMap';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const stagger = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
-const timeSlots = [
-  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-  '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-  '15:00', '15:30', '16:00', '16:30',
-];
-
-const contactCards = [
-  { icon: MapPin, label: 'Adresse', key: 'address' as const },
-  { icon: Phone, label: 'Téléphone', key: 'phone' as const },
-  { icon: Mail, label: 'Email', key: 'email' as const },
-  { icon: Clock, label: 'Horaires', key: 'schedule' as const },
-];
-
-export default function ContactPage() {
+export default function ContactPage({ onNavigate }: { onNavigate: (page: PageView) => void }) {
+  const { lang } = useLanguage();
   const { t } = useLanguage();
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', subject: '', message: '',
+    prenom: '',
+    nom: '',
+    email: '',
+    telephone: '',
+    objet: '',
+    message: ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [dynamicInfo, setDynamicInfo] = useState<any>(null);
 
-  const handleFormChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  useEffect(() => {
+    if (!db) return;
+    // We look for a document in 'contacts' that has the category 'Configuration' 
+    // or we can just take the most recent one with type 'contact'
+    const q = query(collection(db, 'contacts'), where('category', '==', 'Configuration'), limit(1));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        setDynamicInfo(snapshot.docs[0].data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.prenom.trim()) newErrors.prenom = lang === 'fr' ? "Ce champ est requis" : "This field is required";
+    if (!formData.nom.trim()) newErrors.nom = lang === 'fr' ? "Ce champ est requis" : "This field is required";
+    if (!formData.email.trim()) {
+      newErrors.email = lang === 'fr' ? "Ce champ est requis" : "This field is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = lang === 'fr' ? "Format d'email invalide" : "Invalid email format";
+    }
+    if (!formData.objet.trim()) newErrors.objet = lang === 'fr' ? "L'objet est requis" : "Subject is required";
+    if (!formData.message.trim()) newErrors.message = lang === 'fr' ? "Ce champ est requis" : "This field is required";
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      setSent(true);
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-      setTimeout(() => setSent(false), 5000);
-    }, 1500);
+    if (validate()) {
+      setIsSubmitting(true);
+      try {
+        if (db) {
+          await addDoc(collection(db, 'contacts'), {
+            ...formData,
+            title: `Message de ${formData.prenom} ${formData.nom}`,
+            category: 'Message Direct',
+            status: 'Nouveau',
+            createdAt: serverTimestamp()
+          });
+        }
+        setIsSuccess(true);
+        setFormData({ prenom: '', nom: '', email: '', telephone: '', objet: '', message: '' });
+        setTimeout(() => setIsSuccess(false), 5000);
+      } catch (error) {
+        console.error("Error sending message:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (errors[e.target.name]) {
+      setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+    }
   };
 
   return (
-    <div>
-      {/* Hero Banner */}
-      <section className="relative h-80 sm:h-96 lg:h-[28rem] flex items-end overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-dronek-dark via-dronek-green to-dronek-dark" />
-        <div className="absolute inset-0 pattern-dots-light opacity-15" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16">
-          <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/90 text-sm font-medium mb-4">
-              <MessageCircle className="w-4 h-4" />
-              <span>DRONEK</span>
-            </motion.div>
-            <motion.h1 variants={fadeInUp} className="text-3xl lg:text-5xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
-              {t.contact.title}
-            </motion.h1>
-            <motion.p variants={fadeInUp} className="text-white/80 text-lg max-w-2xl">
-              {t.contact.subtitle}
-            </motion.p>
+    <div className="bg-white min-h-screen">
+      {/* 🚀 BANNER HERO — Centered Dronek Style */}
+      <AnimatedSection className="relative h-auto min-h-[160px] lg:min-h-[180px] flex items-start overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] lg:rounded-tl-[8rem] lg:rounded-br-[8rem] mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl bg-[#1a4a2e]">
+        {/* Background Accents */}
+        <div className="absolute inset-0 bg-gradient-to-br from-dronek-dark via-[#0a2118] to-dronek-green/20 opacity-90" />
+        <div className="absolute inset-0 pattern-dots-light opacity-10" />
+        
+        {/* Custom Background Image on the Right */}
+        <img 
+          src="/images/dronek_image3-removebg-preview.png" 
+          alt="" 
+          className="absolute right-0 bottom-0 translate-x-1/4 translate-y-1/4 w-[400px] lg:w-[600px] h-auto opacity-20 pointer-events-none"
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 pt-12 lg:pt-14 pb-8 flex justify-center items-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <h1 className="text-4xl lg:text-6xl font-montserrat-extrabold text-white uppercase tracking-[0.2em] leading-tight">
+              {"Parlons-en".split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
+                  className="inline-block"
+                >
+                  {char === ' ' ? '\u00A0' : char}
+                </motion.span>
+              ))}
+            </h1>
+            <div className="w-16 h-1 bg-white mx-auto mt-4 rounded-full opacity-80" />
           </motion.div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      {/* Contact Info + Form */}
-      <section className="section-padding bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            {/* Left: Contact Info */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="space-y-6">
-              {/* Contact cards */}
-              {contactCards.map((card, idx) => {
-                const Icon = card.icon;
-                return (
-                  <motion.div key={idx} variants={fadeInUp}>
-                    <div className="p-5 rounded-2xl border border-gray-100 hover:border-dronek-green/20 hover:shadow-md transition-all duration-300">
-                      <div className="flex items-start gap-4">
-                        <div className="w-11 h-11 rounded-xl bg-dronek-green/10 flex items-center justify-center shrink-0">
-                          <Icon className="w-5 h-5 text-dronek-green" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-dronek-text text-sm mb-1">{card.label}</h3>
-                          <p className="text-dronek-medium text-sm">{t.contact[card.key]}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+      {/* Main Content */}
+      <section className="py-16 lg:py-24 relative bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            
+            {/* Left Column - Info */}
+            <motion.div 
+              initial="hidden" 
+              whileInView="visible" 
+              viewport={{ once: true }} 
+              variants={stagger}
+              className="space-y-8 lg:pr-8"
+            >
+              <div>
+                <motion.p variants={fadeInUp} className="text-[#2d7a3a] font-medium text-sm mb-4">
+                </motion.p>
+                <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+                  <span className="text-[#1a4a2e]">{lang === 'fr' ? 'Contactez-nous' : 'Contact us'}</span><br />
+                  <span className="text-black font-normal">{lang === 'fr' ? 'aujourd\'hui' : 'today'}</span>
+                </motion.h2>
+                <motion.p variants={fadeInUp} className="text-gray-500 text-base sm:text-lg mt-6 leading-relaxed max-w-lg">
+                  {lang === 'fr' 
+                    ? 'Remplissez le formulaire suivant pour toute demande de soumission ou d\'information. Propulsons votre croissance opérationnelle grâce à la technologie aérienne par drones.'
+                    : 'Fill out the following form for any quote or information request. Let\'s boost your operational growth with drone aerial technology.'}
+                </motion.p>
+              </div>
 
-              {/* Social media */}
-              <motion.div variants={fadeInUp}>
-                <div className="p-5 rounded-2xl border border-gray-100">
-                  <h3 className="font-semibold text-dronek-text text-sm mb-4">Suivez-nous</h3>
-                  <div className="flex items-center gap-3">
-                    {[
-                      { icon: Facebook, color: 'hover:bg-blue-600' },
-                      { icon: Linkedin, color: 'hover:bg-blue-700' },
-                      { icon: Twitter, color: 'hover:bg-gray-800' },
-                      { icon: Instagram, color: 'hover:bg-pink-600' },
-                    ].map(({ icon: SocialIcon, color }, idx) => (
-                      <a key={idx} href="#" className={`w-10 h-10 rounded-xl bg-dronek-light flex items-center justify-center text-dronek-green ${color} hover:text-white transition-all duration-300`}>
-                        <SocialIcon className="w-4 h-4" />
-                      </a>
-                    ))}
+              <motion.div variants={stagger} className="space-y-6 pt-6">
+                <motion.div variants={fadeInUp} className="flex items-center gap-4">
+                  <Mail className="w-6 h-6 text-[#1a4a2e]" />
+                  <a 
+                    href={`mailto:${dynamicInfo?.email || t.contact.email}`}
+                    className="text-gray-600 font-medium text-lg hover:text-dronek-green transition-colors"
+                  >
+                    {dynamicInfo?.email || t.contact.email}
+                  </a>
+                </motion.div>
+                <motion.div variants={fadeInUp} className="flex items-center gap-4">
+                  <Phone className="w-6 h-6 text-[#1a4a2e]" />
+                  <div className="flex flex-col">
+                    {dynamicInfo?.phone ? (
+                      dynamicInfo.phone.split('\n').map((num: string, idx: number) => (
+                        <a key={idx} href={`tel:${num.replace(/\s+/g, '')}`} className="text-gray-600 font-medium text-lg hover:text-dronek-green transition-colors">
+                          {num}
+                        </a>
+                      ))
+                    ) : (
+                      <>
+                        <a href="tel:+2250707732264" className="text-gray-600 font-medium text-lg hover:text-dronek-green transition-colors">
+                          +225 07 07 73 22 64
+                        </a>
+                        <a href="tel:+2252721514149" className="text-gray-600 font-medium text-lg hover:text-dronek-green transition-colors">
+                          +225 27 21 51 41 49
+                        </a>
+                      </>
+                    )}
                   </div>
-                </div>
-              </motion.div>
-
-              {/* Map placeholder */}
-              <motion.div variants={fadeInUp}>
-                <div className="relative h-48 rounded-2xl overflow-hidden shadow-md bg-dronek-light/50 border border-gray-100">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <MapPin className="w-8 h-8 text-dronek-green mx-auto mb-2" />
-                      <p className="text-sm text-dronek-medium font-medium">Abidjan, Cocody</p>
-                      <p className="text-xs text-dronek-light-text">216 Logements</p>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 opacity-5">
-                    <svg width="100%" height="100%" className="text-dronek-green">
-                      <defs>
-                        <pattern id="contact-grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                        </pattern>
-                      </defs>
-                      <rect width="100%" height="100%" fill="url(#contact-grid)" />
-                    </svg>
-                  </div>
-                </div>
+                </motion.div>
+                <motion.div variants={fadeInUp} className="flex items-center gap-4">
+                  <MapPin className="w-6 h-6 text-[#1a4a2e] shrink-0" />
+                  <span className="text-gray-600 font-medium text-lg whitespace-pre-line">
+                    {dynamicInfo?.location || t.contact.address}
+                  </span>
+                </motion.div>
               </motion.div>
             </motion.div>
 
-            {/* Right: Contact Form */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="lg:col-span-2 space-y-8">
-              {/* Main contact form */}
-              <motion.div variants={fadeInUp}>
-                <Card className="border-0 shadow-lg bg-white rounded-2xl">
-                  <CardContent className="p-6 lg:p-8">
-                    <h2 className="text-xl font-bold text-dronek-text mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
-                      {t.contact.formTitle}
-                    </h2>
-                    {sent && (
-                      <div className="mb-6 p-4 rounded-xl bg-dronek-light text-dronek-green text-sm font-medium border border-dronek-green/20">
-                        ✓ {t.contact.success}
-                      </div>
+            {/* Right Column - Form */}
+            <motion.div 
+              initial="hidden" 
+              whileInView="visible" 
+              viewport={{ once: true }} 
+              variants={fadeInUp}
+              className="w-full"
+            >
+              <div className="bg-[#1a4a2e] rounded-[2.5rem] lg:rounded-[4rem] lg:rounded-tl-[8rem] lg:rounded-br-[8rem] p-8 sm:p-10 lg:p-14 shadow-2xl text-white relative overflow-hidden">
+                {/* Decorative background image */}
+                <img 
+                  src="/images/dronek_image3-removebg-preview.png" 
+                  alt="" 
+                  className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-64 lg:w-96 h-auto opacity-20 pointer-events-none select-none grayscale brightness-200"
+                />
+                
+                <h3 className="relative z-10 text-3xl font-bold mb-8">{t.contact.formTitle}</h3>
+                
+                <form onSubmit={handleSubmit} className="relative z-10 space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <input 
+                        type="text" 
+                        name="prenom"
+                        value={formData.prenom}
+                        onChange={handleChange}
+                        placeholder={t.contact.firstName + " *"} 
+                        className={`w-full bg-white text-gray-900 border-none rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-green-400 outline-none ${errors.prenom ? 'ring-2 ring-red-400' : ''}`}
+                      />
+                      {errors.prenom && <span className="text-red-300 text-xs block">{errors.prenom}</span>}
+                    </div>
+                    <div className="space-y-2">
+                      <input 
+                        type="text" 
+                        name="nom"
+                        value={formData.nom}
+                        onChange={handleChange}
+                        placeholder={t.contact.lastName + " *"} 
+                        className={`w-full bg-white text-gray-900 border-none rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-green-400 outline-none ${errors.nom ? 'ring-2 ring-red-400' : ''}`}
+                      />
+                      {errors.nom && <span className="text-red-300 text-xs block">{errors.nom}</span>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <input 
+                        type="email" 
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder={t.contact.emailField + " *"} 
+                        className={`w-full bg-white text-gray-900 border-none rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-green-400 outline-none ${errors.email ? 'ring-2 ring-red-400' : ''}`}
+                      />
+                      {errors.email && <span className="text-red-300 text-xs block">{errors.email}</span>}
+                    </div>
+                    <div className="space-y-2">
+                      <input 
+                        type="tel" 
+                        name="telephone"
+                        value={formData.telephone}
+                        onChange={handleChange}
+                        placeholder={t.contact.phoneField} 
+                        className="w-full bg-white text-gray-900 border-none rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-green-400 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <input 
+                      type="text" 
+                      name="objet"
+                      value={formData.objet}
+                      onChange={handleChange}
+                      placeholder={lang === 'fr' ? "Objet *" : "Subject *"} 
+                      className={`w-full bg-white text-gray-900 border-none rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-green-400 outline-none ${errors.objet ? 'ring-2 ring-red-400' : ''}`}
+                    />
+                    {errors.objet && <span className="text-red-300 text-xs block">{errors.objet}</span>}
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <textarea 
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      placeholder={t.contact.message + " *"} 
+                      rows={5}
+                      className={`w-full bg-white text-gray-900 border-none rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-green-400 outline-none resize-none ${errors.message ? 'ring-2 ring-red-400' : ''}`}
+                    />
+                    {errors.message && <span className="text-red-300 text-xs block">{errors.message}</span>}
+                  </div>
+
+                  {isSuccess && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-green-500/20 text-green-100 px-4 py-3 rounded-lg text-sm border border-green-500/30">
+                      {t.contact.success}
+                    </motion.div>
+                  )}
+
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full bg-[#2d7a3a] hover:bg-[#23602d] text-white font-semibold py-4 rounded-full transition-colors duration-300 flex items-center justify-center mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {t.contact.sending}
+                      </span>
+                    ) : (
+                      t.contact.send
                     )}
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name" className="text-sm font-medium text-dronek-text">{t.contact.name}</Label>
-                          <Input
-                            id="name"
-                            value={formData.name}
-                            onChange={(e) => handleFormChange('name', e.target.value)}
-                            required
-                            className="rounded-xl border-gray-200 focus:border-dronek-green"
-                            placeholder="Jean Dupont"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email" className="text-sm font-medium text-dronek-text">{t.contact.emailField}</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => handleFormChange('email', e.target.value)}
-                            required
-                            className="rounded-xl border-gray-200 focus:border-dronek-green"
-                            placeholder="jean@exemple.com"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="phone" className="text-sm font-medium text-dronek-text">{t.contact.phoneField}</Label>
-                          <Input
-                            id="phone"
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => handleFormChange('phone', e.target.value)}
-                            className="rounded-xl border-gray-200 focus:border-dronek-green"
-                            placeholder="+225 07 XX XX XX XX"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-dronek-text">{t.contact.subject}</Label>
-                          <Select value={formData.subject} onValueChange={(val) => handleFormChange('subject', val)} required>
-                            <SelectTrigger className="rounded-xl border-gray-200 focus:border-dronek-green">
-                              <SelectValue placeholder={t.contact.subjects.select} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="quote">{t.contact.subjects.quote}</SelectItem>
-                              <SelectItem value="info">{t.contact.subjects.info}</SelectItem>
-                              <SelectItem value="partnership">{t.contact.subjects.partnership}</SelectItem>
-                              <SelectItem value="training">{t.contact.subjects.training}</SelectItem>
-                              <SelectItem value="other">{t.contact.subjects.other}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="message" className="text-sm font-medium text-dronek-text">{t.contact.message}</Label>
-                        <Textarea
-                          id="message"
-                          value={formData.message}
-                          onChange={(e) => handleFormChange('message', e.target.value)}
-                          required
-                          rows={5}
-                          className="rounded-xl border-gray-200 focus:border-dronek-green resize-none"
-                          placeholder={t.contact.message}
-                        />
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={sending}
-                        className="w-full bg-gradient-to-r from-dronek-green to-dronek-dark hover:from-dronek-dark hover:to-dronek-green text-white rounded-full py-6 font-semibold shadow-lg shadow-dronek-green/15 transition-all duration-300"
-                      >
-                        {sending ? (
-                          <span className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            {t.contact.sending}
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <Send className="w-4 h-4" />
-                            {t.contact.send}
-                          </span>
-                        )}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Quote request */}
-              <motion.div variants={fadeInUp}>
-                <Card className="border border-dronek-green/10 bg-gradient-to-br from-dronek-light/50 to-white rounded-2xl">
-                  <CardContent className="p-6 lg:p-8">
-                    <h2 className="text-xl font-bold text-dronek-text mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                      {t.contact.quoteTitle}
-                    </h2>
-                    <p className="text-dronek-medium text-sm mb-6">{t.contact.quoteDesc}</p>
-                    <form onSubmit={(e) => { e.preventDefault(); alert('Merci pour votre demande de devis ! Nous vous répondrons sous 48h.'); }} className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">{t.contact.name}</Label>
-                          <Input required className="rounded-xl border-gray-200 focus:border-dronek-green" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">{t.contact.emailField}</Label>
-                          <Input type="email" required className="rounded-xl border-gray-200 focus:border-dronek-green" />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">{t.contact.message}</Label>
-                        <Textarea required rows={4} className="rounded-xl border-gray-200 focus:border-dronek-green resize-none" />
-                      </div>
-                      <Button
-                        type="submit"
-                        className="bg-gradient-to-r from-dronek-gold to-amber-500 hover:from-amber-500 hover:to-dronek-gold text-white rounded-full px-8 shadow-lg shadow-dronek-gold/15 transition-all duration-300 hover:scale-105"
-                      >
-                        {t.contact.quoteTitle}
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Appointment booking */}
-              <motion.div variants={fadeInUp}>
-                <Card className="border-0 shadow-lg bg-white rounded-2xl">
-                  <CardContent className="p-6 lg:p-8">
-                    <h2 className="text-xl font-bold text-dronek-text mb-2 flex items-center gap-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                      <Calendar className="w-5 h-5 text-dronek-green" />
-                      {t.contact.appointmentTitle}
-                    </h2>
-                    <p className="text-dronek-medium text-sm mb-6">{t.contact.appointmentDesc}</p>
-                    <form onSubmit={(e) => { e.preventDefault(); alert('Votre demande de rendez-vous a été enregistrée !'); }} className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">{t.contact.dateField}</Label>
-                          <Input type="date" required className="rounded-xl border-gray-200 focus:border-dronek-green" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">{t.contact.timeField}</Label>
-                          <Select required>
-                            <SelectTrigger className="rounded-xl border-gray-200 focus:border-dronek-green">
-                              <SelectValue placeholder={t.contact.timeField} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {timeSlots.map((slot) => (
-                                <SelectItem key={slot} value={slot}>{slot}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">{t.contact.description}</Label>
-                        <Textarea rows={3} className="rounded-xl border-gray-200 focus:border-dronek-green resize-none" placeholder={t.contact.description} />
-                      </div>
-                      <Button
-                        type="submit"
-                        className="bg-dronek-green hover:bg-dronek-dark text-white rounded-full px-8 shadow-md shadow-dronek-green/15 transition-all duration-300"
-                      >
-                        {t.contact.book}
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  </button>
+                </form>
+              </div>
             </motion.div>
           </div>
         </div>
       </section>
+
+      {/* Google Map Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="h-[500px] w-full">
+          <LocationMap />
+        </div>
+      </section>
+
     </div>
   );
 }

@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Règles de sécurité pour Firebase Cloud Storage
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // N'importe qui peut voir/télécharger les images et PDFs (public)
+    // Seul un utilisateur connecté (Admin) peut uploader ou supprimer des fichiers
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if true; // Temporairement pour le développement
+    }
+  }
+}

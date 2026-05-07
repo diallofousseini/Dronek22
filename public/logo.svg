@@ -1,29 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 30 30" style="enable-background:new 0 0 30 30;" xml:space="preserve">
-<defs>
-  <style type="text/css">
-    .st194{fill:#2D2D2D;stroke:#FFFFFF;stroke-width:0.6317;stroke-miterlimit:10;}
-    .st23{fill:#FFFFFF;}
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-label="DRONEK Foresterie Agriculture Technologie">
+  <defs>
+    <linearGradient id="logoGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#129a55" />
+      <stop offset="100%" stop-color="#17bb6d" />
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0b5f36" flood-opacity="0.18" />
+    </filter>
+    <style>
+      .wordmark { font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-style: italic; letter-spacing: -10px; }
+      .submark { font-family: Arial, Helvetica, sans-serif; font-weight: 700; letter-spacing: 0.5px; }
+    </style>
+  </defs>
 
-    .z-breathe {
-      animation: breathe 2.5s ease-in-out infinite;
-    }
+  <g transform="translate(450 188)" filter="url(#softShadow)">
+    <text x="-314" y="42" class="wordmark" font-size="154" fill="url(#logoGreen)">DRONEK</text>
 
-    @keyframes breathe {
-      0%, 100% { opacity: 0.7; }
-      50% { opacity: 1; }
-    }
-  </style>
-</defs>
+    <g transform="translate(-12,-86)">
+      <circle cx="0" cy="0" r="40" fill="none" stroke="url(#logoGreen)" stroke-width="12" />
+      <circle cx="0" cy="0" r="10" fill="url(#logoGreen)" />
 
-<g>
-  <path class="st194" d="M24.51,28.51H5.49c-2.21,0-4-1.79-4-4V5.49c0-2.21,1.79-4,4-4h19.03c2.21,0,4,1.79,4,4v19.03
-    C28.51,26.72,26.72,28.51,24.51,28.51z"/>
-  <g class="z-breathe">
-    <path class="st23" d="M15.47,7.1l-1.3,1.85c-0.2,0.29-0.54,0.47-0.9,0.47h-7.1V7.09C6.16,7.1,15.47,7.1,15.47,7.1z"/>
-    <polygon class="st23" points="24.3,7.1 13.14,22.91 5.7,22.91 16.86,7.1"/>
-    <path class="st23" d="M14.53,22.91l1.31-1.86c0.2-0.29,0.54-0.47,0.9-0.47h7.09v2.33H14.53z"/>
+      <path d="M -8 -26 C -34 -42, -48 -74, -36 -92 C -12 -88, 2 -60, -8 -26 Z" fill="url(#logoGreen)" />
+      <path d="M 8 -28 C 32 -50, 48 -82, 40 -102 C 14 -96, -2 -64, 8 -28 Z" fill="url(#logoGreen)" />
+      <path d="M -4 -22 C -6 -50, -22 -74, -42 -92" fill="none" stroke="#0f7f46" stroke-width="4" stroke-linecap="round" opacity="0.45" />
+      <path d="M 4 -22 C 8 -52, 24 -78, 42 -94" fill="none" stroke="#0f7f46" stroke-width="4" stroke-linecap="round" opacity="0.45" />
+    </g>
+
+    <text x="-288" y="104" class="submark" font-size="30" fill="#1b9b5b">Foresterie - Agriculture - Technologie</text>
   </g>
-</g>
 </svg>

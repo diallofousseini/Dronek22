@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="DRONEK Instagram mark">
+  <defs>
+    <style>
+      .g { fill: #169e58; }
+      .s { fill: #169e58; stroke: #169e58; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <path class="g" d="M112 62c-18 43-25 85-21 127 6 70 53 126 117 126 34 0 58-13 76-31-52-18-96-54-124-106-13-24-30-66-48-116z"/>
+  <path class="g" d="M392 104c-41-21-89-29-137-21-76 12-143 65-165 138-12 39-10 72 3 104 41-74 101-121 178-142 38-11 89-13 145-8 1-28-8-53-24-71z"/>
+  <path class="g" d="M438 176c-45-7-92-6-140 5-88 21-150 74-188 159-12 27-18 54-17 79 27 37 66 66 114 84 13 5 27 8 42 10 57 7 111-9 160-48 42-34 72-80 85-132 11-45 5-92-16-137-10-8-21-15-40-20z"/>
+
+  <circle class="g" cx="252" cy="302" r="53"/>
+
+  <path class="s" d="M130 146c36 73 80 123 132 150" stroke-width="7" fill="none"/>
+  <path class="s" d="M168 112c48 39 104 66 168 82" stroke-width="7" fill="none"/>
+  <path class="s" d="M390 196c36 57 47 113 34 170" stroke-width="5" fill="none" opacity="0.7"/>
+</svg>

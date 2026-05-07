@@ -1,15 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
+
+/* ITC Avant Garde - Bold (700) */
+@font-face {
+  font-family: 'ITC Avant Garde';
+  src:
+    local('ITC Avant Garde Bold'),
+    local('ITCAvantGardeStd-Bold'),
+    url('/Typographie/ITCAvantGardeStd-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ITC Avant Garde - Medium (500) */
+@font-face {
+  font-family: 'ITC Avant Garde';
+  src:
+    local('ITC Avant Garde Medium'),
+    local('ITCAvantGardeStd-Medium'),
+    url('/Typographie/ITCAvantGardeStd-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ITC Avant Garde - Book (400) */
+@font-face {
+  font-family: 'ITC Avant Garde';
+  src:
+    local('ITC Avant Garde Book'),
+    local('ITCAvantGardeStd-Bk'),
+    url('/Typographie/ITCAvantGardeStd-Bk.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ITC Avant Garde - Bold Oblique (700 Italic) */
+@font-face {
+  font-family: 'ITC Avant Garde';
+  src:
+    local('ITC Avant Garde Bold Oblique'),
+    local('ITCAvantGardeStd-BoldOblique'),
+    url('/Typographie/ITCAvantGardeStd-BoldOblique.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Inter', sans-serif;
-  --font-display: 'Playfair Display', serif;
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'ITC Avant Garde', sans-serif;
+  --font-display: 'ITC Avant Garde', sans-serif;
+  --font-mono: 'ITC Avant Garde', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -44,61 +93,210 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --color-dronek-green: #149655;
-  --color-dronek-dark: #0D6B3D;
-  --color-dronek-light: #E8F5E9;
-  --color-dronek-gold: #D4A853;
-  --color-dronek-text: #1A1A2E;
-  --color-dronek-medium: #4A5568;
-  --color-dronek-light-text: #718096;
+  --color-dronek-dark: #000000;
+  --color-dronek-light: #FFFFFF;
+  --color-dronek-gold: #149655;
+  --color-dronek-text: #000000;
+  --color-dronek-medium: #000000;
+  --color-dronek-light-text: #000000;
 }
 
 :root {
   --radius: 0.625rem;
   --background: #FFFFFF;
-  --foreground: #1A1A2E;
+  --foreground: #000000;
   --card: #FFFFFF;
-  --card-foreground: #1A1A2E;
+  --card-foreground: #000000;
   --popover: #FFFFFF;
-  --popover-foreground: #1A1A2E;
+  --popover-foreground: #000000;
   --primary: #149655;
   --primary-foreground: #FFFFFF;
-  --secondary: #E8F5E9;
-  --secondary-foreground: #0D6B3D;
-  --muted: #F8FAF5;
-  --muted-foreground: #718096;
-  --accent: #D4A853;
-  --accent-foreground: #1A1A2E;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #E2E8F0;
-  --input: #E2E8F0;
+  --secondary: #FFFFFF;
+  --secondary-foreground: #000000;
+  --muted: #FFFFFF;
+  --muted-foreground: #000000;
+  --accent: #149655;
+  --accent-foreground: #FFFFFF;
+  --destructive: #000000;
+  --border: #000000;
+  --input: #000000;
   --ring: #149655;
   --chart-1: #149655;
-  --chart-2: #0D6B3D;
-  --chart-3: #D4A853;
-  --chart-4: #E8F5E9;
-  --chart-5: #718096;
+  --chart-2: #000000;
+  --chart-3: #FFFFFF;
+  --chart-4: #149655;
+  --chart-5: #000000;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #1A1A2E;
+  --sidebar-foreground: #000000;
   --sidebar-primary: #149655;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #E8F5E9;
-  --sidebar-accent-foreground: #0D6B3D;
-  --sidebar-border: #E2E8F0;
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #000000;
   --sidebar-ring: #149655;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+    font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+    font-weight: 400;
   }
+
+  /* Titres & Accroches - ITC Avant Garde Bold */
+  h1,
+  h2,
+  h3,
+  .headline,
+  .accroche {
+    font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+    font-weight: 700 !important;
+    font-style: normal;
+  }
+
+  h1,
+  h2 {
+    letter-spacing: -0.02em;
+  }
+
+  /* Texte courant - ITC Avant Garde Medium (500) */
+  p,
+  a,
+  button,
+  li,
+  span,
+  label,
+  input,
+  textarea,
+  select,
+  figcaption {
+    font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+    font-weight: 500 !important;
+    font-style: normal;
+  }
+
+  /* Signatures & Mentions - ITC Avant Garde Book (400) */
+  small,
+  footer,
+  .footer-text,
+  .legal-text,
+  .signature-text {
+    font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+    font-weight: 400 !important;
+    font-style: normal;
+  }
+
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    @apply text-foreground;
+    position: relative;
+    background: #ffffff !important;
+    font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+    font-weight: 400;
   }
+
+  body > * {
+    background-color: transparent !important;
+  }
+}
+
+/* ============================
+   FONT VARIANTS - ITC AVANT GARDE
+   ============================ */
+
+/* Montserrat Extra Bold - Special case */
+.font-montserrat-extrabold {
+  font-family: var(--font-montserrat), sans-serif !important;
+  font-weight: 800 !important;
+}
+
+.font-poppins {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+/* Bold - Titres et accroches principales */
+.font-avant-bold,
+.font-bold {
+  font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+  font-weight: 700 !important;
+  font-style: normal;
+}
+
+/* Medium - Texte intermédiaire / courant */
+.font-avant-medium,
+.font-medium {
+  font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+  font-weight: 500 !important;
+  font-style: normal;
+}
+
+/* Book - Mentions / signatures */
+.font-avant-book,
+.font-normal {
+  font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+  font-weight: 400 !important;
+  font-style: normal;
+}
+
+/* Bold Oblique - Marketing et accroches spécifiques */
+.font-avant-bold-italic,
+.font-bold-italic,
+.slogan,
+.accroche-marketing {
+  font-family: 'ITC Avant Garde', Futura, sans-serif !important;
+  font-weight: 700 !important;
+  font-style: italic;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+body {
+}
+
+button {
+  transition: scale 0.3s ease;
+}
+
+button:hover {
+  scale: 1.05;
+}
+
+.apple-zoom-image {
+  transition: transform 0.3s ease;
+}
+
+.group:hover .apple-zoom-image,
+.group\/item:hover .apple-zoom-image {
+  transform: scale(1.05);
+}
+
+.logo img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-dronek-header {
+  height: 36px;
+}
+
+@media (min-width: 768px) {
+  .logo-dronek-header {
+    height: 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .logo-dronek-header {
+    height: 48px;
+  }
+}
+
+.logo-dronek-footer {
+  height: 40px;
 }
 
 /* ============================
@@ -127,31 +325,47 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Gradient text */
-.text-gradient {
-  background: linear-gradient(135deg, #0D6B3D, #149655);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.navbar-glass {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.text-gradient-gold {
-  background: linear-gradient(135deg, #D4A853, #F0C97A);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .navbar-glass {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}
+
+/* Brand utilities */
+.text-brand {
+  color: #149655;
+}
+
+.text-brand-inverse {
+  color: #FFFFFF;
+}
+
+.text-brand-dark {
+  color: #000000;
 }
 
 /* Section spacing */
 .section-padding {
-  padding-top: 6rem;
-  padding-bottom: 6rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 @media (min-width: 1024px) {
   .section-padding {
-    padding-top: 8rem;
-    padding-bottom: 8rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
   }
 }
 
@@ -176,35 +390,21 @@ html {
 
 /* Background patterns */
 .pattern-dots {
-  background-image: radial-gradient(circle, rgba(20, 150, 85, 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(20, 150, 85, 0.12) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 .pattern-dots-light {
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 /* ============================
    HERO OVERLAY - Multi-stop
    ============================ */
-.hero-overlay {
-  background: linear-gradient(
-    180deg,
-    rgba(13, 107, 61, 0.75) 0%,
-    rgba(20, 150, 85, 0.5) 30%,
-    rgba(0, 0, 0, 0.4) 60%,
-    rgba(0, 0, 0, 0.65) 100%
-  );
-}
-
+.hero-overlay,
 .hero-overlay-left {
-  background: linear-gradient(
-    90deg,
-    rgba(13, 107, 61, 0.9) 0%,
-    rgba(13, 107, 61, 0.6) 40%,
-    rgba(0, 0, 0, 0.3) 100%
-  );
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* ============================
@@ -218,12 +418,6 @@ html {
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
-}
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 @keyframes fade-in-up {
@@ -250,11 +444,6 @@ html {
   animation: shimmer 3s linear infinite;
 }
 
-.animate-gradient-shift {
-  background-size: 200% 200%;
-  animation: gradient-shift 4s ease infinite;
-}
-
 .animate-ken-burns {
   animation: ken-burns 20s ease-in-out infinite alternate;
 }
@@ -271,22 +460,22 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F8FAF5;
+  background: #FFFFFF;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #149655, #0D6B3D);
+  background: #149655;
   border-radius: 100px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #0D6B3D, #08522E);
+  background: #000000;
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #149655 #F8FAF5;
+  scrollbar-color: #149655 #FFFFFF;
 }
 
 /* ============================
@@ -324,9 +513,18 @@ html {
    SECTION DIVIDER
    ============================ */
 .section-divider {
-  width: 60px;
+  width: 960px;
+  max-width: 90vw;
   height: 4px;
-  background: linear-gradient(90deg, #149655, #D4A853);
+  background: #149655;
+  border-radius: 100px;
+}
+
+.section-divider-wide {
+  width: 240px;
+  max-width: 90vw;
+  height: 4px;
+  background: #149655;
   border-radius: 100px;
 }
 
@@ -378,4 +576,167 @@ html {
 .nav-link:hover::after,
 .nav-link.active::after {
   width: 100%;
+}
+
+/* ============================
+   BRAND ENFORCEMENT
+   ============================ */
+.bg-gradient-to-r,
+.bg-gradient-to-l,
+.bg-gradient-to-t,
+.bg-gradient-to-b,
+.bg-gradient-to-br,
+.bg-gradient-to-bl,
+.bg-gradient-to-tr,
+.bg-gradient-to-tl {
+  background-image: none !important;
+}
+
+:where([class*="text-gray-"], [class*="text-slate-"], [class*="text-blue-"], [class*="text-red-"], [class*="text-amber-"], [class*="text-emerald-"], [class*="text-teal-"], [class*="text-orange-"], [class*="text-yellow-"], [class*="text-zinc-"]) {
+  color: #000000 !important;
+}
+
+:where([class*="bg-gray-"], [class*="bg-slate-"], [class*="bg-blue-"], [class*="bg-red-"], [class*="bg-amber-"], [class*="bg-emerald-"], [class*="bg-teal-"], [class*="bg-orange-"], [class*="bg-yellow-"], [class*="bg-zinc-"]) {
+  background-color: #FFFFFF !important;
+}
+
+:where([class*="border-gray-"], [class*="border-slate-"], [class*="border-blue-"], [class*="border-red-"], [class*="border-amber-"], [class*="border-emerald-"], [class*="border-teal-"], [class*="border-orange-"], [class*="border-yellow-"], [class*="border-zinc-"]) {
+  border-color: #000000 !important;
+}
+
+/* ============================
+   STACK CARD SCROLL EFFECT
+   ============================ */
+.stack-card {
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: white;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              filter 0.4s ease,
+              box-shadow 0.4s ease;
+  will-change: transform;
+}
+
+.stack-card:hover {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================
+   PREMIUM WHITE HALO EFFECT
+   ============================ */
+.image-halo-white {
+  position: relative;
+  overflow: hidden;
+}
+
+.image-halo-white::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Soft white fade at the bottom as requested */
+  background: linear-gradient(to bottom, transparent 50%, #FFFFFF 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Alternative mask-based feather for better integration on some browsers */
+@supports (mask-image: paint(feather)) {
+  .image-halo-white {
+    mask-image: radial-gradient(circle, black 60%, transparent 100%);
+  }
+}
+.activity-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: white;
+}
+.activity-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+.activity-card-image {
+  position: relative;
+  overflow: hidden;
+  height: 280px;
+}
+.activity-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.activity-card:hover .activity-card-image img {
+  transform: scale(1.05);
+}
+.activity-card-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  background: rgba(0,0,0,0.3);
+  transition: opacity 0.3s ease;
+}
+.activity-card:hover .activity-card-actions {
+  opacity: 1;
+}
+.action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+  color: #149655;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.action-btn:hover {
+  transform: scale(1.1);
+}
+.activity-card-content {
+  padding: 1.25rem;
+  background: white;
+}
+.activity-card-title {
+  color: #149655; /* Vert Dronek */
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+.activity-card-description {
+  color: #444;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.activities-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+@media (max-width: 768px) {
+  .activities-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Hides scrollbars but keeps functionality */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

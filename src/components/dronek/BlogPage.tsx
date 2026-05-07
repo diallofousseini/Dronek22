@@ -1,303 +1,288 @@
-'use client';
-
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Calendar, Tag, BookOpen, Search } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, X, ImageIcon, Newspaper, Share2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from './LanguageProvider';
+import Partners from './Partners';
 import type { PageView } from './Navbar';
+import { collection, getDocs, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface BlogPageProps {
   onNavigate: (page: PageView) => void;
 }
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } },
-};
-
-const stagger = {
-  visible: { transition: { staggerChildren: 0.1 } },
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } },
-};
-
-const gradients = [
-  'from-dronek-green to-emerald-600',
-  'from-dronek-dark to-dronek-green',
-  'from-dronek-gold to-amber-600',
-  'from-emerald-700 to-teal-600',
-  'from-green-700 to-dronek-dark',
-];
-
 export default function BlogPage({ onNavigate }: BlogPageProps) {
   const { t, lang } = useLanguage();
-  const [selectedArticle, setSelectedArticle] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
+  const [dynamicNews, setDynamicNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleNav = (page: PageView) => {
-    onNavigate(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const categories = [...new Set(t.blog.articles.map((a) => a.category))];
-  const allTags = [...new Set(t.blog.articles.flatMap((a) => a.tags))];
-
-  const featuredArticle = t.blog.articles[0];
-  const otherArticles = t.blog.articles.slice(1);
-
-  // Article Detail View
-  if (selectedArticle !== null) {
-    const article = t.blog.articles[selectedArticle];
-    return (
-      <div>
-        <section className="relative h-64 sm:h-72 lg:h-80 flex items-center overflow-hidden">
-          <div className={`absolute inset-0 bg-gradient-to-br ${gradients[selectedArticle % gradients.length]}`} />
-          <div className="absolute inset-0 pattern-dots-light opacity-20" />
-          <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
-            <Badge className="bg-white/15 text-white backdrop-blur-md border-white/20 mb-4">{article.category}</Badge>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
-              {article.title}
-            </h1>
-            <div className="flex items-center justify-center gap-4 text-white/70 text-sm">
-              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{article.date}</span>
-              <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{article.tags[0]}</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="section-padding bg-white">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <Button variant="ghost" onClick={() => { setSelectedArticle(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mb-8 text-dronek-green hover:text-dronek-dark">
-              ← {lang === 'fr' ? 'Retour aux articles' : 'Back to articles'}
-            </Button>
-            <article className="space-y-8">
-              <p className="text-dronek-medium leading-relaxed text-lg font-light">{article.excerpt}</p>
-              <Separator />
-              <p className="text-dronek-text leading-relaxed text-base">{article.content}</p>
-              <Separator />
-              <div className="flex flex-wrap gap-2">
-                {article.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-dronek-green border-dronek-green/30 hover:bg-dronek-light cursor-pointer transition-colors">
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-            </article>
-          </div>
-        </section>
-      </div>
+  React.useEffect(() => {
+    if (!db) return;
+    
+    setLoading(true);
+    const q = query(
+      collection(db, 'news'), 
+      where('status', 'in', ['Publié', 'Published']),
+      orderBy('createdAt', 'desc')
     );
-  }
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetched = snapshot.docs.map(doc => ({
+        id: doc.id,
+        title: doc.data().title,
+        desc: doc.data().content || doc.data().desc,
+        image: doc.data().image || '/images/hero-main.jpg'
+      }));
+      setDynamicNews(fetched);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error listening to news:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
+  const allNews = [...dynamicNews, ...t.blog.newsGrid];
+  const selectedNews = selectedNewsId ? allNews.find((n: any, i: number) => (n.id || String(i)) === selectedNewsId) : null;
 
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative h-80 sm:h-96 lg:h-[28rem] flex items-end overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-dronek-dark via-dronek-green to-dronek-dark" />
-        <div className="absolute inset-0 pattern-dots-light opacity-15" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16">
-          <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/90 text-sm font-medium mb-4">
-              <BookOpen className="w-4 h-4" />
-              <span>DRONEK Blog</span>
-            </motion.div>
-            <motion.h1 variants={fadeInUp} className="text-3xl lg:text-5xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
-              {t.blog.title}
-            </motion.h1>
-            <motion.p variants={fadeInUp} className="text-white/80 text-lg max-w-2xl">{t.blog.subtitle}</motion.p>
+    <div className="min-h-screen bg-white">
+      {/* Hero Banner */}
+      <section className="relative h-48 lg:h-56 flex items-end overflow-hidden rounded-[2rem] mx-4 sm:mx-6 lg:mx-8 mt-12 lg:mt-14">
+        <div className="absolute inset-0">
+          <Image src="/images/hero-forest.jpg" alt="Actualités" fill className="object-cover" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/65 via-dronek-green/35 to-black/75" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 w-full">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-medium mb-2">
+              <Newspaper className="w-4 h-4" />
+              <span>{lang === 'fr' ? 'Actualités & Médias' : 'News & Media'}</span>
+            </div>
+            <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 leading-tight uppercase">
+              {(lang === 'fr' ? 'Nos dernières nouvelles' : 'Our Latest News').split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.1, delay: i * 0.03 }}
+                  className="inline-block"
+                >
+                  {char === ' ' ? '\u00A0' : char}
+                </motion.span>
+              ))}
+            </h1>
+            <p className="text-white/90 text-sm lg:text-base max-w-2xl">
+              {lang === 'fr' 
+                ? 'Suivez les dernières avancées de DRONEK dans la technologie agricole et la gestion forestière durable.'
+                : 'Follow DRONEK\'s latest advances in agricultural technology and sustainable forest management.'}
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Blog Content */}
-      <section className="section-padding bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Articles */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Featured article */}
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={scaleIn}
-              >
-                <div
-                  className="group cursor-pointer rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-1 border border-gray-100"
-                  onClick={() => { setSelectedArticle(0); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                >
-                  <div className="relative h-72 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${gradients[0]}`} />
-                    <div className="absolute inset-0 pattern-dots-light opacity-10" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <BookOpen className="w-20 h-20 text-white/15" />
-                    </div>
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-white/15 text-white backdrop-blur-md border-white/20">{featuredArticle.category}</Badge>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
-                      <div className="flex items-center gap-2 text-white/70 text-xs mb-2">
-                        <Calendar className="w-3 h-3" />
-                        {featuredArticle.date}
-                      </div>
-                      <h2 className="text-xl lg:text-2xl font-bold text-white mb-2 group-hover:text-dronek-gold transition-colors" style={{ fontFamily: "'Playfair Display', serif" }}>
-                        {featuredArticle.title}
-                      </h2>
-                      <p className="text-white/70 text-sm line-clamp-2">{featuredArticle.excerpt}</p>
-                    </div>
-                  </div>
+      {/* Grid Layout - Updated as requested */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          className="activities-grid"
+        >
+          {allNews.map((item: any, idx: number) => (
+            <motion.div
+              key={item.id || idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: (idx % 2) * 0.1 }}
+              className="activity-card"
+              onClick={() => setSelectedNewsId(item.id || String(idx))}
+            >
+              <div className="activity-card-image">
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-cover"
+                />
+                <div className="activity-card-actions">
+                  <button 
+                    className="action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (navigator.share) {
+                        navigator.share({
+                          title: item.title,
+                          text: item.desc,
+                          url: window.location.href
+                        });
+                      } else {
+                        navigator.clipboard.writeText(window.location.href);
+                        alert('Lien copié !');
+                      }
+                    }}
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                  </button>
+                  <button 
+                    className="action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Lien copié !');
+                    }}
+                  >
+                    <LinkIcon className="w-5 h-5" />
+                  </button>
                 </div>
-              </motion.div>
+              </div>
+              <div className="activity-card-content">
+                <h3 className="activity-card-title">
+                  {item.title}
+                </h3>
+                <p className="activity-card-description">
+                  {item.desc}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
 
-              {/* Other articles grid */}
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-50px' }}
-                variants={stagger}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-6"
-              >
-                {otherArticles.map((article, idx) => (
-                  <motion.div key={idx} variants={scaleIn}>
-                    <Card
-                      className="group cursor-pointer border-0 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden bg-white hover:-translate-y-1 h-full rounded-2xl"
-                      onClick={() => { setSelectedArticle(idx + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    >
-                      <div className={`relative h-40 bg-gradient-to-br ${gradients[(idx + 1) % gradients.length]} flex items-center justify-center overflow-hidden`}>
-                        <BookOpen className="w-12 h-12 text-white/20" />
-                        <div className="absolute top-4 left-4">
-                          <Badge className="bg-white/15 text-white text-xs backdrop-blur-md border-white/20">{article.category}</Badge>
-                        </div>
-                      </div>
-                      <CardContent className="p-5">
-                        <div className="flex items-center gap-2 text-xs text-dronek-light-text mb-3">
-                          <Calendar className="w-3 h-3" />
-                          {article.date}
-                        </div>
-                        <h3 className="text-base font-bold text-dronek-text mb-2 line-clamp-2 group-hover:text-dronek-green transition-colors">{article.title}</h3>
-                        <p className="text-dronek-medium text-sm leading-relaxed line-clamp-2 mb-4">{article.excerpt}</p>
-                        <span className="text-dronek-green font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                          {t.blog.readMore}
-                          <ArrowRight className="w-4 h-4" />
-                        </span>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
+      {/* Médiathèque Section - Moved and Reformatted */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-gray-50">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dronek-green/10 text-dronek-green text-[10px] font-bold uppercase tracking-widest mb-4">
+            <ImageIcon className="w-3 h-3" />
+            <span>Médiathèque</span>
+          </div>
+          <h2 className="text-3xl lg:text-4xl font-bold text-dronek-text">
+            {lang === 'fr' ? 'Notre Médiathèque' : 'Our Media Library'}
+          </h2>
+        </div>
+        
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:auto-rows-[240px]">
+          {/* Big Featured Image */}
+          <div className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/hero-forest.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
+          </div>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Search */}
-              <Card className="border-0 shadow-md bg-white rounded-2xl">
-                <CardContent className="p-5">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dronek-light-text" />
-                    <Input
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={lang === 'fr' ? 'Rechercher...' : 'Search...'}
-                      className="pl-9 rounded-xl border-gray-200 focus:border-dronek-green"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Small Block 1 */}
+          <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/project-training.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          </div>
 
-              {/* Categories */}
-              <Card className="border-0 shadow-md bg-white rounded-2xl">
-                <CardContent className="p-5">
-                  <h3 className="font-bold text-dronek-text mb-4 text-sm uppercase tracking-wider">{t.blog.categories}</h3>
-                  <div className="space-y-2">
-                    {categories.map((cat) => (
-                      <div key={cat} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0 cursor-pointer group">
-                        <span className="text-sm text-dronek-medium group-hover:text-dronek-green transition-colors">{cat}</span>
-                        <Badge variant="secondary" className="text-xs bg-dronek-light text-dronek-green rounded-full">{t.blog.articles.filter((a) => a.category === cat).length}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Small Block 2 */}
+          <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/hero-agriculture.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          </div>
 
-              {/* Tags */}
-              <Card className="border-0 shadow-md bg-white rounded-2xl">
-                <CardContent className="p-5">
-                  <h3 className="font-bold text-dronek-text mb-4 text-sm uppercase tracking-wider">{t.blog.tags}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs text-dronek-green border-dronek-green/20 hover:bg-dronek-light cursor-pointer transition-colors rounded-full">
-                        #{tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Wide Block */}
+          <div className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/drone-work.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          </div>
 
-              {/* Recent Posts */}
-              <Card className="border-0 shadow-md bg-white rounded-2xl">
-                <CardContent className="p-5">
-                  <h3 className="font-bold text-dronek-text mb-4 text-sm uppercase tracking-wider">{t.blog.recentPosts}</h3>
-                  <div className="space-y-4">
-                    {t.blog.articles.slice(0, 3).map((article, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-3 cursor-pointer group"
-                        onClick={() => { setSelectedArticle(idx); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                      >
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradients[idx % gradients.length]} shrink-0 flex items-center justify-center overflow-hidden`}>
-                          <BookOpen className="w-5 h-5 text-white/50" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-dronek-text line-clamp-2 group-hover:text-dronek-green transition-colors">{article.title}</h4>
-                          <p className="text-xs text-dronek-light-text mt-1">{article.date}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Medium/Wide Block */}
+          <div className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/project-carbon.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          </div>
 
-              {/* Newsletter mini-form */}
-              <Card className="border-0 shadow-md bg-gradient-to-br from-dronek-green to-dronek-dark rounded-2xl overflow-hidden">
-                <CardContent className="p-5 text-white">
-                  <h3 className="font-bold mb-2">{lang === 'fr' ? 'Newsletter' : 'Newsletter'}</h3>
-                  <p className="text-white/70 text-sm mb-4">{lang === 'fr' ? 'Recevez nos derniers articles' : 'Receive our latest articles'}</p>
-                  {subscribed ? (
-                    <p className="text-dronek-gold text-sm font-medium">✓ {lang === 'fr' ? 'Merci pour votre inscription !' : 'Thank you for subscribing!'}</p>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Input
-                        type="email"
-                        value={newsletterEmail}
-                        onChange={(e) => setNewsletterEmail(e.target.value)}
-                        placeholder="email@example.com"
-                        className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl text-sm focus:border-white/40"
-                      />
-                      <Button
-                        onClick={() => { if (newsletterEmail) { setSubscribed(true); setNewsletterEmail(''); } }}
-                        size="sm"
-                        className="bg-white text-dronek-dark hover:bg-white/90 rounded-xl font-semibold shrink-0"
-                      >
-                        OK
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+          {/* Vertical/Large Block */}
+          <div className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/hero-tech.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          </div>
+
+          {/* Last small blocks to fill */}
+          <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/nursery.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          </div>
+          <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <Image src="/images/nursery-detail.jpg" alt="Media" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
           </div>
         </div>
       </section>
+
+      {/* Premium Popup for News */}
+      <AnimatePresence>
+        {selectedNews && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedNewsId(null)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-md"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.95 }}
+              className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
+            >
+              <button 
+                onClick={() => setSelectedNewsId(null)}
+                className="absolute top-4 right-4 z-50 md:hidden bg-white/80 backdrop-blur-md rounded-full p-2 shadow-lg"
+              >
+                <X className="w-6 h-6 text-dronek-text" />
+              </button>
+
+              <div className="md:w-1/2 relative h-64 md:h-auto bg-gray-100">
+                <Image src={selectedNews.image} alt={selectedNews.title} fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              </div>
+
+              <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-dronek-green uppercase tracking-[0.2em]">Actualité</span>
+                    {selectedNews.date && <span className="text-xs text-gray-400">| {selectedNews.date}</span>}
+                  </div>
+                  <button onClick={() => setSelectedNewsId(null)} className="hidden md:block hover:scale-110 transition-transform">
+                    <X className="w-6 h-6 text-gray-300 hover:text-dronek-text" />
+                  </button>
+                </div>
+                
+                <h2 className="text-2xl md:text-3xl font-black text-dronek-text uppercase mb-4 leading-tight">
+                  {selectedNews.title}
+                </h2>
+
+                <div className="space-y-6">
+                  <p className="text-gray-600 leading-relaxed text-sm md:text-base">
+                    {selectedNews.desc}
+                  </p>
+                  
+                  <div className="bg-gray-50 rounded-2xl p-6">
+                    <h4 className="text-xs font-bold text-dronek-text uppercase tracking-widest mb-3">En résumé</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {lang === 'fr' 
+                        ? 'DRONEK continue d\'innover pour offrir des solutions technologiques de pointe au service du développement durable en Afrique de l\'Ouest.'
+                        : 'DRONEK continues to innovate to offer cutting-edge technological solutions for sustainable development in West Africa.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-10">
+                  <Button 
+                    onClick={() => setSelectedNewsId(null)}
+                    className="w-full rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-6 h-auto shadow-lg shadow-dronek-green/20"
+                  >
+                    OK
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <Partners />
     </div>
   );
 }
+

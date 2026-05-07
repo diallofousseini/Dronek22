@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" role="img" aria-label="FAO">
+  <rect width="520" height="120" fill="#ffffff"/>
+  <circle cx="88" cy="60" r="45" fill="none" stroke="#4f8dd9" stroke-width="6"/>
+  <text x="88" y="73" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#4f8dd9">FAO</text>
+  <text x="305" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#4f8dd9">Food and Agriculture</text>
+  <text x="305" y="92" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#4f8dd9">Organization</text>
+</svg>

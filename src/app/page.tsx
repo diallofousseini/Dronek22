@@ -2,38 +2,56 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LanguageProvider } from '@/components/dronek/LanguageProvider';
-import Navbar, { type PageView } from '@/components/dronek/Navbar';
+import { ArrowUp } from 'lucide-react';
+import Header, { type PageView } from '@/components/dronek/Header';
 import Footer from '@/components/dronek/Footer';
 import HomePage from '@/components/dronek/HomePage';
-import ServicesPage from '@/components/dronek/ServicesPage';
 import ProjectsPage from '@/components/dronek/ProjectsPage';
-import BlogPage from '@/components/dronek/BlogPage';
-import FormationPage from '@/components/dronek/FormationPage';
+import ActualitePage from '@/components/dronek/ActualitePage';
 import TeamPage from '@/components/dronek/TeamPage';
 import ProductionSitesPage from '@/components/dronek/ProductionSitesPage';
 import ContactPage from '@/components/dronek/ContactPage';
 import CookieConsent from '@/components/dronek/CookieConsent';
-import ChatBot from '@/components/dronek/ChatBot';
+import ImpactPage from '@/components/dronek/ImpactPage';
+import AllServicesPage from '@/components/dronek/AllServicesPage';
+import WelcomePage from '@/components/dronek/WelcomePage';
 
 const pageTransition = {
-  initial: { opacity: 0, y: 20, scale: 0.98 },
+  initial: { opacity: 0 },
   animate: {
-    opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+    opacity: 1,
+    transition: { duration: 0.5 },
   },
   exit: {
-    opacity: 0, y: -10, scale: 0.99,
-    transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] },
+    opacity: 0,
+    transition: { duration: 0.25 },
   },
 };
 
-function AppContent() {
-  const [currentPage, setCurrentPage] = useState<PageView>('home');
+interface AppContentProps {
+  initialPage: PageView;
+}
+function AppContent({ initialPage }: AppContentProps) {
+  const [currentPage, setCurrentPage] = useState<PageView>(initialPage);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setCurrentPage(initialPage);
+  }, [initialPage]);
+
+  useEffect(() => {
+    // Persistence: load saved page on mount
+    const savedPage = localStorage.getItem('dronek_current_page');
+    if (savedPage) {
+      setCurrentPage(savedPage as PageView);
+    }
+  }, []);
 
   const handleNavigate = useCallback((page: PageView) => {
     if (page !== currentPage) {
+      // Save for persistence
+      localStorage.setItem('dronek_current_page', page);
+      
       setLoading(true);
       // Small delay for loading state
       setTimeout(() => {
@@ -45,23 +63,14 @@ function AppContent() {
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'home':
-        return <HomePage onNavigate={handleNavigate} />;
-      case 'services-forestry':
-        return <ServicesPage service="forestry" onNavigate={handleNavigate} />;
-      case 'services-drone':
-        return <ServicesPage service="drone" onNavigate={handleNavigate} />;
-      case 'services-agroforestry':
-        return <ServicesPage service="agroforestry" onNavigate={handleNavigate} />;
-      case 'services-agriculture':
-        return <ServicesPage service="agriculture" onNavigate={handleNavigate} />;
+      case 'services':
+        return <AllServicesPage onNavigate={handleNavigate} />;
       case 'projects':
         return <ProjectsPage onNavigate={handleNavigate} />;
       case 'blog':
-      case 'blog-article':
-        return <BlogPage onNavigate={handleNavigate} />;
-      case 'training':
-        return <FormationPage onNavigate={handleNavigate} />;
+        return <ActualitePage onNavigate={handleNavigate} />;
+      case 'blog-impact':
+        return <ImpactPage />;
       case 'team':
         return <TeamPage />;
       case 'production':
@@ -75,38 +84,100 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar currentPage={currentPage} onNavigate={handleNavigate} />
+      <Header currentPage={currentPage} onNavigate={handleNavigate} />
       <AnimatePresence mode="wait">
-        <motion.div
-          key={currentPage}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          variants={pageTransition}
-        >
-          {loading ? (
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-2 border-dronek-green/30 border-t-dronek-green rounded-full animate-spin" />
-                <span className="text-dronek-light-text text-sm">Chargement...</span>
-              </div>
+        {loading ? (
+          <div key="loader" className="flex items-center justify-center min-h-[60vh]">
+            <div className="flex flex-col items-center gap-3">
+              <span className="logo">
+                <img src="/Typographie/logoV.png" alt="Dronek - Foresterie Agriculture Technologie" className="logo-dronek logo-dronek-header" />
+              </span>
+              <div className="w-8 h-8 border-2 border-dronek-green/30 border-t-dronek-green rounded-full animate-spin" />
+              <span className="text-dronek-light-text text-sm">Chargement...</span>
             </div>
-          ) : (
-            <main>{renderPage()}</main>
-          )}
-        </motion.div>
+          </div>
+        ) : (
+          <main key={currentPage}>{renderPage()}</main>
+        )}
       </AnimatePresence>
       <Footer onNavigate={handleNavigate} />
+      <ScrollToTop />
       <CookieConsent />
-      <ChatBot />
     </div>
   );
 }
 
-export default function Page() {
+function ScrollToTop() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <AnimatePresence>
+      {isVisible && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.3 }}
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-[150] w-10 h-10 bg-dronek-green text-white rounded-[4px] flex items-center justify-center shadow-[0_-4px_12px_rgba(20,150,85,0.2),0_4px_12px_rgba(0,0,0,0.1)] hover:brightness-95 transition-all duration-300 active:scale-90"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </motion.button>
+      )}
+    </AnimatePresence>
   );
+}
+
+interface DronekAppProps {
+  initialPage?: PageView;
+}
+
+export function DronekApp({ initialPage = 'home' }: DronekAppProps) {
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
+    // Check if user already saw the welcome page in this session
+    const hasSeenWelcome = sessionStorage.getItem('dronek_welcome_seen');
+    if (hasSeenWelcome) {
+      setShowWelcome(false);
+    }
+  }, []);
+
+  const handleEnter = () => {
+    sessionStorage.setItem('dronek_welcome_seen', 'true');
+    setShowWelcome(false);
+  };
+
+  if (showWelcome) {
+    return <WelcomePage onEnter={handleEnter} />;
+  }
+
+  return (
+    <AppContent initialPage={initialPage} />
+  );
+}
+
+export default function Page() {
+  return <DronekApp initialPage="home" />;
 }

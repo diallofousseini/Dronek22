@@ -36,13 +36,14 @@ export default function CookieConsent() {
       const savedPrefs = localStorage.getItem('dronek-cookie-preferences');
       if (savedPrefs) {
         try {
-          setPreferences(JSON.parse(savedPrefs));
+          const parsed = JSON.parse(savedPrefs);
+          setPreferences(parsed);
         } catch {
           setPreferences(defaultPreferences);
         }
       }
     }
-  }, []);
+  }, [setPreferences]);
 
   const saveConsent = (status: ConsentStatus) => {
     localStorage.setItem('dronek-cookie-consent', status);
@@ -110,7 +111,7 @@ export default function CookieConsent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6"
         >
           {/* Backdrop */}
@@ -127,7 +128,7 @@ export default function CookieConsent() {
             initial={{ y: 60, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 60, opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: 0.5 }}
             className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl shadow-black/20 overflow-hidden"
           >
             {/* Close button */}
@@ -187,7 +188,7 @@ export default function CookieConsent() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
                   <div className="px-6 pb-4">

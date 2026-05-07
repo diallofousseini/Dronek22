@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Montserrat } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/lib/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import { LanguageProvider } from "@/components/dronek/LanguageProvider";
+import ScrollToTop from "@/components/dronek/ScrollToTop";
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['700', '800'],
+  variable: '--font-montserrat',
 });
 
 export const viewport: Viewport = {
@@ -28,7 +28,6 @@ export const metadata: Metadata = {
     "DRONEK",
     "drone",
     "foresterie",
-    "agriculture",
     "agroforesterie",
     "Côte d'Ivoire",
     "cartographie",
@@ -43,7 +42,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "DRONEK SARL" }],
   icons: {
-    icon: "/logo.png",
+    icon: "/images/dronek-nav-icon.png",
+    shortcut: "/images/dronek-nav-icon.png",
+    apple: "/images/dronek-nav-icon.png",
   },
   openGraph: {
     title: "DRONEK SARL — Technologies Innovantes pour un Avenir Durable",
@@ -62,11 +63,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
-      >
-        {children}
-        <Toaster />
+      <body className={`${montserrat.variable} antialiased bg-background text-foreground`}>
+        <AuthProvider>
+          <LanguageProvider>
+            {children}
+            <ScrollToTop />
+          </LanguageProvider>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

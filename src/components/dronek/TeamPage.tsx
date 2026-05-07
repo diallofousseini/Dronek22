@@ -1,55 +1,161 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { Linkedin, Mail, Quote, PenLine } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users, Linkedin, Mail, X, Quote, Facebook } from 'lucide-react';
+import AnimatedSection from './AnimatedSection';
 import { useLanguage } from './LanguageProvider';
+import { Button } from '@/components/ui/button';
+import { db } from '@/lib/firebase';
+import { collection, query, onSnapshot, orderBy, where } from 'firebase/firestore';
+import SuccessSection from './SuccessSection';
+import { ScrollTitle } from './ScrollTitle';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  bio?: string;
+  email?: string;
+  facebook?: string;
+  linkedin?: string;
+}
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const stagger = {
-  visible: { transition: { staggerChildren: 0.15 } },
+  visible: { transition: { staggerChildren: 0.12 } },
 };
 
 const scaleIn = {
   hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
 };
 
 export default function TeamPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const [dynamicMembers, setDynamicMembers] = useState<TeamMember[]>([]);
+
+  useEffect(() => {
+    if (!db) return;
+    const q = query(
+      collection(db, 'team'), 
+      where('status', 'in', ['Publié', 'Published']),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setDynamicMembers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember)));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const members = [...dynamicMembers, ...t.team.members];
 
   return (
-    <div>
-      {/* Hero Banner with team photo */}
-      <section className="relative h-80 sm:h-96 lg:h-[28rem] flex items-end overflow-hidden">
+    <div className="bg-white min-h-screen">
+      {/* 🚀 BANNER HERO — Standardized Dronek Style */}
+      <AnimatedSection className="relative h-auto min-h-[400px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
         <div className="absolute inset-0">
-          <Image src="/images/team-photo.jpg" alt="DRONEK Team" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-t from-dronek-dark/90 via-dronek-dark/50 to-dronek-dark/30" />
+          <Image 
+            src="/images/hero-tech.jpg" 
+            alt="Team" 
+            fill 
+            className="object-cover" 
+            priority 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-dronek-dark to-dronek-green opacity-85" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16">
-          <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.h1
-              variants={fadeInUp}
-              className="text-3xl lg:text-5xl font-bold text-white mb-3"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              {t.team.title}
-            </motion.h1>
-            <motion.p variants={fadeInUp} className="text-white/80 text-lg max-w-2xl">
-              {t.team.subtitle}
-            </motion.p>
+
+        <div className="relative z-10 max-w-7xl mx-auto w-full pl-0 pr-4 sm:pr-6 lg:pr-8 pt-48 lg:pt-64 pb-12">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
+            <motion.div initial="hidden" animate="visible" variants={stagger} className="flex-1 min-w-0">
+                <ScrollTitle as="h1" className="text-xl lg:text-3xl font-montserrat-extrabold text-white leading-[1.1] uppercase tracking-tight ml-[26px]">
+                  {t.team.heroTitle.split('').map((char: string, i: number) => (
+                    <motion.span
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.1, delay: i * 0.03 }}
+                      className="inline-block"
+                    >
+                      {char === ' ' ? '\u00A0' : char}
+                    </motion.span>
+                  ))}
+                </ScrollTitle>
+            </motion.div>
+
+            <div className="lg:max-w-md">
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="text-white/80 text-sm lg:text-base font-medium leading-relaxed"
+              >
+                {t.team.subtitle}
+              </motion.p>
+            </div>
+          </div>
+        </div>
+      </AnimatedSection>
+
+      {/* Founder Word */}
+      <section className="pt-12 lg:pt-16 pb-6 lg:pb-8 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial="hidden" 
+            whileInView="visible" 
+            viewport={{ once: true }} 
+            variants={stagger}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center"
+          >
+            <motion.div variants={fadeInUp} className="lg:col-span-4 relative">
+              <div className="aspect-[4/5] rounded-[3rem] rounded-tl-[8rem] overflow-hidden shadow-2xl relative z-10 bg-[#ac96af]">
+                <Image 
+                  src="/images/founder.jpg" 
+                  alt="Founder" 
+                  fill 
+                  className="object-cover object-top mix-blend-multiply opacity-90" 
+                />
+              </div>
+
+
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="lg:col-span-8 space-y-6">
+              <ScrollTitle className="inline-flex items-center gap-2 text-dronek-green font-bold tracking-widest uppercase text-xs">
+                <div className="h-px w-6 bg-dronek-green" />
+                {t.team.founderWord.title}
+              </ScrollTitle>
+              <h2 className="text-2xl lg:text-3xl font-bold text-dronek-text leading-tight italic">
+                {t.team.founderWord.quote}
+              </h2>
+              <div className="space-y-4 text-dronek-medium text-base leading-relaxed font-sans">
+                <p>{t.team.founderWord.desc1}</p>
+                <p>{t.team.founderWord.desc2}</p>
+                <div className="flex flex-col pt-2">
+                  <span className="text-xl font-bold text-dronek-text">{t.team.founderWord.name}</span>
+                  <span className="text-sm font-semibold">{t.team.founderWord.signature}</span>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Team Grid */}
-      <section className="section-padding bg-white">
+      {/* Members Grid */}
+      <section className="pt-6 lg:pt-8 pb-16 lg:pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-12">
+            <div className="max-w-2xl">
+            </div>
+          </div>
+
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -57,36 +163,53 @@ export default function TeamPage() {
             variants={stagger}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
           >
-            {t.team.members.map((member, idx) => (
-              <motion.div key={idx} variants={scaleIn}>
-                <div className="group rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-2 bg-white border border-gray-100 h-full">
-                  {/* Image with overlay */}
-                  <div className="relative h-72 overflow-hidden">
+            {members.map((member, idx) => (
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, y: 150 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 2.0, delay: idx * 0.4, ease: "easeOut" }}
+                className="h-full"
+              >
+                <div className="group flex flex-col items-center text-center p-4">
+                  {/* Circular Image with Hover Socials (No border) */}
+                  <div className="relative w-48 h-48 sm:w-60 sm:h-60 lg:w-64 lg:h-64 rounded-full overflow-hidden shadow-2xl mb-8 group-hover:shadow-dronek-green/20 transition-all duration-500">
                     <Image
-                      src={`/images/${member.image}`}
+                      src={member.image.startsWith('http') ? member.image : `/images/${member.image}`}
                       alt={member.name}
                       fill
-                      className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      className="object-cover object-top transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-all duration-500 group-hover:from-black/60" />
-                    {/* Name overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <h3 className="text-lg font-bold text-white">{member.name}</h3>
-                      <p className="text-dronek-gold text-sm font-medium">{member.role}</p>
-                    </div>
-                    {/* Social links on hover */}
-                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                      <a href="#" className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center hover:bg-dronek-green border border-white/20 transition-colors">
-                        <Linkedin className="w-4 h-4 text-white" />
-                      </a>
-                      <a href="#" className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center hover:bg-dronek-green border border-white/20 transition-colors">
-                        <Mail className="w-4 h-4 text-white" />
-                      </a>
+                    
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 px-4">
+                      {[
+                        { icon: Facebook, href: member.facebook },
+                        { icon: Linkedin, href: member.linkedin },
+                        { icon: Mail, href: member.email ? `mailto:${member.email}` : null }
+                      ].map((social, sIdx) => social.href ? (
+                        <a
+                          key={sIdx}
+                          href={social.href}
+                          target={social.icon === Mail ? "_self" : "_blank"}
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 sm:w-12 sm:h-12 bg-dronek-green rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-110 transition-transform duration-200"
+                        >
+                          <social.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </a>
+                      ) : null)}
                     </div>
                   </div>
-                  {/* Bio */}
-                  <div className="p-5">
-                    <p className="text-dronek-medium text-sm leading-relaxed">{member.bio}</p>
+
+                  {/* Name & Role — Matches image style */}
+                  <div className="space-y-4 max-w-xs">
+                    <h3 className="text-2xl lg:text-3xl font-black text-black leading-[1.1] uppercase tracking-tighter">
+                      {member.name}
+                    </h3>
+                    <p className="text-dronek-green font-semibold text-lg lg:text-xl leading-snug">
+                      {member.role}
+                    </p>
+                    {/* Bio removed to match image style, can be restored if needed */}
                   </div>
                 </div>
               </motion.div>
@@ -95,55 +218,6 @@ export default function TeamPage() {
         </div>
       </section>
 
-      {/* Founder's Word */}
-      <section className="section-padding bg-dronek-light relative overflow-hidden">
-        <div className="absolute inset-0 pattern-dots opacity-30" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-50px' }}
-            variants={stagger}
-            className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16"
-          >
-            {/* Founder Photo */}
-            <motion.div variants={fadeInUp} className="shrink-0">
-              <div className="relative w-72 h-72 lg:w-96 lg:h-96 rounded-3xl overflow-hidden shadow-2xl shadow-dronek-green/10">
-                <Image src="/images/founder.jpg" alt={t.team.members[0].name} fill className="object-cover object-top" />
-                {/* Decorative frame */}
-                <div className="absolute inset-3 rounded-2xl border-2 border-white/20 pointer-events-none" />
-              </div>
-              {/* Decorative element behind */}
-              <div className="absolute -z-10 w-full h-full rounded-3xl border-2 border-dronek-green/15 translate-x-4 translate-y-4" />
-            </motion.div>
-
-            {/* Quote content */}
-            <motion.div variants={fadeInUp} className="flex-1 space-y-6">
-              <div className="flex items-center gap-3 mb-2">
-                <Quote className="w-6 h-6 text-dronek-green/40" />
-                <h2
-                  className="text-2xl lg:text-3xl font-bold text-dronek-text"
-                  style={{ fontFamily: "'Playfair Display', serif" }}
-                >
-                  {t.team.founderWord.title}
-                </h2>
-              </div>
-
-              <blockquote className="text-dronek-medium text-lg leading-relaxed italic border-l-4 border-dronek-green pl-6 bg-white/50 rounded-r-2xl py-4 pr-4">
-                {t.team.founderWord.quote}
-              </blockquote>
-
-              <div className="flex items-center gap-3 pt-2">
-                <div className="h-px flex-1 bg-dronek-green/20" />
-                <div className="flex items-center gap-2 text-dronek-text">
-                  <PenLine className="w-4 h-4 text-dronek-green" />
-                  <span className="font-semibold">{t.team.founderWord.signature}</span>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
     </div>
   );
 }

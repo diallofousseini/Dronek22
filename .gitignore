@@ -49,6 +49,12 @@ dev.out.log
 test
 prompt
 
+# Local tools
+.vscode/
+build_output.txt
+prisma/db/
+.gemini/
+
 server.log
 # Skills directory
 /skills/
