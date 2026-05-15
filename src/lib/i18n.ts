@@ -6,12 +6,13 @@ export const translations = {
       home: "Accueil",
       services: "Services",
       projects: "Projets",
-      news: "Actualité",
-      blog: "ACTUALITÉS",
+      news: "Actualités",
+      blog: "Actualités",
       about: "À Propos",
       team: "Équipe",
       production: "Sites de Production",
       contact: "Contact",
+      admin: "Admin",
     },
     hero: {
       title: "Technologies Innovantes pour une Gestion Durable des Forêts et de l'Agriculture",
@@ -29,10 +30,10 @@ export const translations = {
       forestry: {
         name: "Foresterie",
         desc: "",
-        fullDesc: "En foresterie, Dronek relève le défi d'un monde en mutation. Grâce à notre équipe de techniciens, de pépiniéristes et d'un répertoire de prestataires de qualité dans le domaine rural.",
+        fullDesc: "En foresterie, Dronek relève le défi d'un monde en mutation. Grâce à notre équipe de techniciens, de pépiniéristes et d'un répertoire de prestataires de qualité dans le domaine rural, nous apportons des solutions durables.",
         items: [
           { title: "Formations aux métiers forestiers (pépiniéristes, sylviculteurs, aménagistes forestiers)", desc: "", image: "/images/hero-forest.jpg", pdfUrl: "/docs/formation_forestiere.pdf" },
-          { title: "Production de plantes maraîchers par la mise en place de pépinières", desc: "", image: "/images/project-forest.jpg", pdfUrl: "/docs/pepinieres_maraicheres.pdf" },
+          { title: "Production de plantes maraîchères par la mise en place de pépinières", desc: "", image: "/images/project-forest.jpg", pdfUrl: "/docs/pepinieres_maraicheres.pdf" },
           { title: "Inventaire forestier et faunique", desc: "", image: "/images/hero-tech.jpg", pdfUrl: "/docs/inventaire_faunique.pdf" },
           { title: "Suivi de reboisement", desc: "", image: "/images/drone-work.jpg", pdfUrl: "/docs/suivi_reboisement.pdf" },
         ],
@@ -90,7 +91,7 @@ export const translations = {
       learnMore: "En savoir plus",
       downloadSheet: "Fiches techniques (PDF)",
       requestQuote: "Contact",
-      consultationTitle: "Laissez nous un message",
+      consultationTitle: "Laissez-nous un message",
       consultationSubtitle: "Parlons de votre projet et de la manière dont nous pouvons vous accompagner.",
       placeholders: {
         nom: "Nom",
@@ -102,6 +103,10 @@ export const translations = {
       send: "Envoyer",
       success: "Votre demande a bien été envoyée.",
       error: "Échec de l'envoi. Veuillez réessayer.",
+      bannerDesc: {
+        title: "Des solutions technologiques innovantes pour optimiser les opérations agricoles",
+        content: "Nous utilisons la technologie dans la pratique de l'agroforesterie en ayant recours aux drones pour la collecte d'informations relatives à la mise en place de systèmes agroforestiers de pointe."
+      }
     },
     projects: {
       title: "Nos Projets Phares",
@@ -114,7 +119,7 @@ export const translations = {
       objectivesLabel: "Objectifs du projet",
       impactsLabel: "Résultats & Impacts",
       aboutTitle: "À propos",
-      aboutText: "DRONEK vous accompagne dans vos projets d'innovation technologique liés à l'agriculture. Notre technologie permet d'alléger considérablement le travail de terrain par l'élimination de l'échantillonnage et la prise de données manuelles qui peut représenter un travail de longue haleine.\n\nNous utilisons la technologie dans la pratique de l'agroforesterie en ayant recours aux drones pour la collecte d'informations relatives à la mise en place de systèmes agroforestiers de pointe.",
+      aboutText: "DRONEK vous accompagne dans vos projets d'innovation technologique liés à l'agriculture. Notre technologie permet d'alléger considérablement le travail de terrain par l'élimination de l'échantillonnage et la collecte de données manuelles qui peuvent représenter un travail de longue haleine.\n\nNous utilisons la technologie dans la pratique de l'agroforesterie en ayant recours aux drones pour la collecte d'informations relatives à la mise en place de systèmes agroforestiers de pointe.",
       close: "Fermer",
       all: "Tous",
       forestry: "Foresterie",
@@ -140,7 +145,7 @@ export const translations = {
         {
           title: "Formation des Coopératives de Cacao du Sud-Ouest",
           desc: "Programme de formation de 200 agriculteurs aux bonnes pratiques de culture du cacao durable et à l'agroforesterie.",
-          location: "Soubgré, San Pedro",
+          location: "Soubré, San Pedro",
           year: "2023",
           sector: "agriculture",
           image: "project-training.jpg",
@@ -283,7 +288,7 @@ export const translations = {
     },
     training: {
       title: "Notre Catalogue de Formations",
-      subtitle: "Developpez vos compétences avec nos programmes de formation spécialisés",
+      subtitle: "Développez vos compétences avec nos programmes de formation spécialisés",
       register: "S'inscrire",
       modules: [
         {
@@ -338,7 +343,7 @@ export const translations = {
           },
           {
             q: "Les formations se déroulent-elles sur site ou en ligne ?",
-            a: "Nos formations combinent sessions en présentiel sur nos sites de formation et modules en ligne pour la théorie. Travaux pratiques se déroulent exclusivement sur le terrain.",
+            a: "Nos formations combinent sessions en présentiel sur nos sites de formation et modules en ligne pour la théorie. Les travaux pratiques se déroulent exclusivement sur le terrain.",
           },
           {
             q: "Quel est le nombre maximum de participants par session ?",
@@ -362,28 +367,19 @@ export const translations = {
       },
       members: [
         {
+          name: "Diallo Fousseini",
+          role: "Dévéloppeur Fullsatck",
+          image: "team2.jpg",
+        },
+        {
           name: "Kouamé Aka",
           role: "Fondateur et Directeur Général",
-          bio: "Ingénieur Forestier diplômé de l'INP-HB avec plus de 10 ans d'expérience dans la gestion durable des ressources forestières. Fondateur de DRONEK en 2017.",
           image: "founder.jpg",
         },
         {
           name: "Adjoua Koné",
           role: "Responsable Agricole",
-          bio: "Spécialiste en agroéconomie avec une expertise approfondie en formation des coopératives et en bonnes pratiques agricoles. Diplômée de l'Université Félix Houphouët-Boigny.",
           image: "team1.jpg",
-        },
-        {
-          name: "Yao Touré",
-          role: "Chef de Mission Drone",
-          bio: "Expert en SIG et cartographie avec une maîtrise avancée des technologies de télédétection et de photogrammétrie. Certifié pilote de drone professionnel.",
-          image: "team2.jpg",
-        },
-        {
-          name: "Aminata Diallo",
-          role: "Consultante Environnement",
-          bio: "Spécialiste en développement durable et évaluation environnementale. Experte en projets REDD+ et mécanismes de développement propre.",
-          image: "team3.jpg",
         },
       ],
     },
@@ -395,7 +391,7 @@ export const translations = {
         {
           name: "Site de Bonoua",
           location: "Bonoua, Côte d'Ivoire",
-          desc: "Siège opérationnel coordonnant les missions de cartographie aérienne en secteurs agricole, agroforestier et forestier. Centre d'excellence pour la planification stratégique, le traitement des données et le contrôle qualité.",
+          desc: "Siège opérationnel coordonnant les missions de cartographie aérienne dans les secteurs agricole, agroforestier et forestier. Centre d'excellence pour la planification stratégique, le traitement des données et le contrôle qualité.",
           image: "/images/nursery.jpg",
           employees: "25+ Experts",
           services: ["Cartographie Aérienne", "Planification Stratégique", "Contrôle Qualité"]
@@ -407,6 +403,14 @@ export const translations = {
           image: "/images/project-forest.jpg",
           employees: "15+ Spécialistes",
           services: ["Analyse NDVI", "Levés Topographiques", "Modélisation 3D"]
+        },
+        {
+          name: "Site de San Pédro",
+          location: "San Pédro, Côte d'Ivoire",
+          desc: "Centre d'excellence littoral spécialisé dans la surveillance maritime, la cartographie des zones humides et la gestion durable des plantations de cacao. Un hub stratégique pour le développement agro-industriel du Sud-Ouest ivoirien.",
+          image: "/images/nursery.jpg",
+          employees: "12+ Spécialistes",
+          services: ["Surveillance Maritime", "Cartographie Humide", "Cultures Pérennes"]
         },
       ],
     },
@@ -448,10 +452,10 @@ export const translations = {
       heroSubtitle: "Contactez-nous pour toute question ou demande de renseignements.",
     },
     testimonials: {
-      title: "Ce que Disent Nos Clients",
+      title: "Ce que disent nos clients",
       items: [
         {
-          text: "DRONEK a réalisé pour notre cooperative une cartographie par drone exceptionnelle. La précision des données nous a permis d'optimiser notre plan de gestion forestière. Un partenaire fiable et professionnel.",
+          text: "DRONEK a réalisé pour notre coopérative une cartographie par drone exceptionnelle. La précision des données nous a permis d'optimiser notre plan de gestion forestière. Un partenaire fiable et professionnel.",
           name: "M. Koné Ibrahim",
           role: "Directeur, Coopérative Agricole de Daloa",
         },
@@ -479,6 +483,8 @@ export const translations = {
       followUs: "Suivez-nous",
       copyright: "Tous droits réservés © 2026 DRONEK",
       ticker: "Précision - Innovation - Sécurité - Efficacité - Précision - Innovation - Sécurité -",
+      email: "Email",
+      phone: "Téléphone",
     },
     cookie: {
       title: "Nous utilisons des cookies",
@@ -518,12 +524,15 @@ export const translations = {
         loading: "Chargement...",
       },
       tabs: {
+        all: "Tous",
         services: "Services",
         projects: "Projets",
         news: "Actualités",
         team: "Équipe",
         contacts: "Contacts",
         production_sites: "Sites de Production",
+        media: "Média",
+        mediatheque: "Médiathèque",
       },
       actions: {
         edit: "Modifier",
@@ -531,6 +540,50 @@ export const translations = {
         view: "Voir",
         confirmDelete: "Voulez-vous vraiment supprimer \"{title}\" ?",
         deleteError: "Erreur lors de la suppression.",
+      },
+      editor: {
+        back: "Retour",
+        save: "Enregistrer",
+        saving: "Sauvegarde...",
+        success: "Enregistré avec succès",
+        error: "Erreur lors de l'enregistrement",
+        requiredFields: "Champs obligatoires manquants",
+        spaces: {
+          projet: "Espace Projet",
+          actualite: "Espace Actualités",
+          membre: "Espace Membres",
+          contact: "Espace Contact",
+          service: "Espace Service",
+          production_site: "Espace Site",
+          media: "Espace Média",
+          mediatheque: "Espace Médiathèque",
+        },
+        fields: {
+          title: "Titre",
+          name: "Nom complet",
+          category: "Secteur",
+          description: "Description courte",
+          content: "Contenu / Description",
+          image: "Image principale",
+          location: "Localisation",
+          year: "Année",
+          role: "Poste / Responsabilité",
+          bio: "Biographie",
+          email: "E-mail",
+          phone: "Téléphone",
+          isFeatured: "Projet Phare",
+          isMainService: "Service Principal",
+          mainServiceHint: "Afficher sur la page d'accueil",
+          pdf: "Fiche technique (PDF)",
+          objectives: "Objectifs",
+          impacts: "Résultats & Impacts",
+          detailTitle: "Titre Détail",
+          detailShortDesc: "Description Gauche",
+          detailLongDesc: "Description Longue",
+          buttonText: "Texte du Bouton",
+          facebook: "Lien Facebook",
+          linkedin: "Lien LinkedIn",
+        }
       },
       login: {
         title: "Espace Administration",
@@ -552,11 +605,12 @@ export const translations = {
       services: "Services",
       projects: "Projects",
       news: "News",
-      blog: "ACTUALIT\u00c9S",
+      blog: "News",
       about: "About",
       team: "Team",
       production: "Production Sites",
       contact: "Contact",
+      admin: "Admin",
     },
     hero: {
       title: "Innovative Technologies for Sustainable Forest and Agriculture Management",
@@ -643,7 +697,7 @@ export const translations = {
         ],
         benefits: ["Sustainable yields", "Income diversification", "Soil preservation", "Favorable microclimate"],
       },
-      learnMore: "Download the file",
+      learnMore: "Learn more",
       downloadSheet: "Technical Sheets (PDF)",
       requestQuote: "Contact",
       consultationTitle: "Leave us a message",
@@ -657,7 +711,11 @@ export const translations = {
       sending: "Sending...",
       send: "Send",
       success: "Your request has been sent successfully.",
-      error: "Failed to send. Please try again.",
+      error: "Sending failed. Please try again.",
+      bannerDesc: {
+        title: "Innovative technological solutions to optimize agricultural operations",
+        content: "We use technology in the practice of agroforestry by using drones to collect information related to the implementation of state-of-the-art agroforestry systems."
+      }
     },
     projects: {
       title: "Our Flagship Projects",
@@ -910,28 +968,19 @@ export const translations = {
       },
       members: [
         {
+          name: "Diallo Fousseini",
+          role: "Fullstack Developer",
+          image: "team2.jpg",
+        },
+        {
           name: "Kouamé Aka",
-          role: "Founder AND CEO",
-          bio: "Forest Engineer graduated from INP-HB with over 10 years of experience in sustainable forest resource management. Founder of DRONEK in 2017.",
+          role: "Founder and CEO",
           image: "founder.jpg",
         },
         {
           name: "Adjoua Koné",
           role: "Agricultural Manager",
-          bio: "Agroeconomics specialist with deep expertise in cooperative training and best agricultural practices. Graduated from Université Félix Houphouët-Boigny.",
           image: "team1.jpg",
-        },
-        {
-          name: "Yao Touré",
-          role: "Drone Mission Chief",
-          bio: "GIS and mapping expert with advanced mastery of remote sensing and photogrammetry technologies. Certified professional drone pilot.",
-          image: "team2.jpg",
-        },
-        {
-          name: "Aminata Diallo",
-          role: "Environment Consultant",
-          bio: "Sustainable development and environmental assessment specialist. Expert in REDD+ projects and clean development mechanisms.",
-          image: "team3.jpg",
         },
       ],
     },
@@ -942,7 +991,7 @@ export const translations = {
       sites: [
         {
           name: "Bonoua Site",
-          location: "Bonoua, Ivory Coast",
+          location: "Bonoua, Côte d'Ivoire",
           desc: "Operational headquarters coordinating aerial mapping missions in agricultural, agroforestry and forestry sectors. A center of excellence for strategic planning, data processing and quality control.",
           image: "/images/nursery.jpg",
           employees: "25+ Experts",
@@ -950,11 +999,19 @@ export const translations = {
         },
         {
           name: "Yamoussoukro Site",
-          location: "Yamoussoukro, Ivory Coast",
+          location: "Yamoussoukro, Côte d'Ivoire",
           desc: "Advanced geospatial facility specialized in drone mapping, orthomosaic generation, vegetation analysis (NDVI), topographic surveys and 3D modeling for agricultural and industrial sectors.",
           image: "/images/project-forest.jpg",
           employees: "15+ Specialists",
           services: ["NDVI Analysis", "Topographic Surveys", "3D Modeling"]
+        },
+        {
+          name: "San Pedro Site",
+          location: "San Pedro, Côte d'Ivoire",
+          desc: "Coastal excellence center specialized in maritime surveillance, wetlands mapping, and sustainable cocoa plantation management. A strategic hub for agro-industrial development in Southwestern Côte d'Ivoire.",
+          image: "/images/nursery.jpg",
+          employees: "12+ Specialists",
+          services: ["Maritime Surveillance", "Wetlands Mapping", "Perennial Crops"]
         },
       ],
     },
@@ -1013,12 +1070,15 @@ export const translations = {
         loading: "Loading...",
       },
       tabs: {
+        all: "All",
         services: "Services",
         projects: "Projects",
         news: "News",
         team: "Team",
         contacts: "Contacts",
         production_sites: "Production Sites",
+        media: "Media",
+        mediatheque: "Gallery",
       },
       actions: {
         edit: "Edit",
@@ -1026,6 +1086,50 @@ export const translations = {
         view: "View",
         confirmDelete: "Are you sure you want to delete \"{title}\"?",
         deleteError: "Error during deletion.",
+      },
+      editor: {
+        back: "Back",
+        save: "Save",
+        saving: "Saving...",
+        success: "Saved successfully",
+        error: "Error while saving",
+        requiredFields: "Missing required fields",
+        spaces: {
+          projet: "Project Space",
+          actualite: "News Space",
+          membre: "Members Space",
+          contact: "Contact Space",
+          service: "Service Space",
+          production_site: "Site Space",
+          media: "Media Space",
+          mediatheque: "Gallery Space",
+        },
+        fields: {
+          title: "Title",
+          name: "Full Name",
+          category: "Sector",
+          description: "Short Description",
+          content: "Content / Description",
+          image: "Main Image",
+          location: "Location",
+          year: "Year",
+          role: "Position / Responsibility",
+          bio: "Biography",
+          email: "Email",
+          phone: "Phone",
+          isFeatured: "Featured Project",
+          isMainService: "Main Service",
+          mainServiceHint: "Display on home page",
+          pdf: "Technical Sheet (PDF)",
+          objectives: "Objectives",
+          impacts: "Results & Impacts",
+          detailTitle: "Detail Title",
+          detailShortDesc: "Left Description",
+          detailLongDesc: "Long Description",
+          buttonText: "Button Text",
+          facebook: "Facebook Link",
+          linkedin: "LinkedIn Link",
+        }
       },
       login: {
         title: "Administration Area",
@@ -1072,6 +1176,8 @@ export const translations = {
       followUs: "Follow Us",
       copyright: "All rights reserved © 2026 DRONEK",
       ticker: "Precision - Innovation - Security - Efficiency - Precision - Innovation - Security -",
+      email: "Email",
+      phone: "Phone",
     },
     cookie: {
       title: "We use cookies",

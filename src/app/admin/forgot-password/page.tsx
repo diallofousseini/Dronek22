@@ -5,8 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Mail, Shield, ArrowLeft, Loader2 } from 'lucide-react';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -20,26 +19,15 @@ export default function ForgotPassword() {
 
     const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'tall3333333333@gmail.com';
 
-    if (!auth) {
-      if (email === adminEmail) {
-        setLoading(true);
-        setTimeout(() => {
-          setSuccess(true);
-          setLoading(false);
-          setEmail('');
-        }, 1000);
-        return;
-      }
-      setError("Configuration Firebase manquante. Contactez l'administrateur système.");
-      return;
-    }
-
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/login`,
+      });
+      if (error) throw error;
       setSuccess(true);
       setEmail('');
     } catch (err: any) {

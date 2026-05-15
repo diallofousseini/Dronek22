@@ -252,6 +252,18 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 360px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 280px) {
+  html {
+    font-size: 12px;
+  }
+}
+
 body {
 }
 
@@ -615,6 +627,18 @@ button:hover {
               filter 0.4s ease,
               box-shadow 0.4s ease;
   will-change: transform;
+}
+
+.stack-card-dynamic {
+  top: calc(clamp(60px, 10vh, 100px) + (var(--index) * 30px));
+  margin-bottom: 40vh;
+}
+
+@media (max-width: 768px) {
+  .stack-card-dynamic {
+    top: calc(clamp(60px, 10vh, 80px) + (var(--index) * 15px));
+    margin-bottom: 25vh;
+  }
 }
 
 .stack-card:hover {

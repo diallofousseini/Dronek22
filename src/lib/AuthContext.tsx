@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
+import { supabase, ADMIN_EMAIL } from './supabase';
+import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -16,26 +16,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'tall3333333333@gmail.com';
-    
-    // Check for mock auth first
+    // 1. Check for mock auth first (as a fallback)
     if (typeof window !== 'undefined' && localStorage.getItem('dronek_mock_auth') === 'true') {
-      setUser({ email: adminEmail, uid: 'mock-admin' } as any);
+      setUser({ email: ADMIN_EMAIL, id: 'mock-admin' } as any);
       setLoading(false);
-      return;
     }
 
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    // 2. Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // Optionnel : restreindre l'accès à l'admin email
+        if (session.user.email === ADMIN_EMAIL) {
+          setUser(session.user);
+        } else {
+          // Log out if not admin? Depending on requirements. 
+          // For now, let's just set the user.
+          setUser(session.user);
+        }
+      }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // 3. Listen for changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setUser(session.user);
+      } else {
+        // If sign out event or no session, check mock auth
+        if (localStorage.getItem('dronek_mock_auth') === 'true') {
+          setUser({ email: ADMIN_EMAIL, id: 'mock-admin' } as any);
+        } else {
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (

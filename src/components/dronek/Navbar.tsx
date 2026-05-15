@@ -22,6 +22,7 @@ export type PageView =
 interface NavbarProps {
   currentPage: PageView;
   onNavigate: (page: PageView) => void;
+  triggerNewsMenu?: boolean;
 }
 
 const serviceIcons = {
@@ -38,7 +39,7 @@ const serviceImages: Record<string, string> = {
   agriculture: '/images/hero-agriculture.jpg',
 };
 
-export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
+export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: NavbarProps) {
   const { t, lang, setLang } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -47,6 +48,17 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
   const [blogOpen, setBlogOpen] = useState(false);
   const [mobileBlogOpen, setMobileBlogOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    if (triggerNewsMenu) {
+      if (window.innerWidth >= 1024) {
+        setBlogOpen(true);
+      } else {
+        setMobileOpen(true);
+        setMobileBlogOpen(true);
+      }
+    }
+  }, [triggerNewsMenu]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -153,13 +165,16 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-[1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center h-14 lg:h-16 gap-2 lg:gap-3">
             {/* Logo */}
-            <button onClick={() => handleNav('home')} className="flex items-center justify-start shrink-0 py-1 pr-2">
-              <span className="logo h-[36px] max-w-[320px] overflow-visible">
+            <button onClick={() => handleNav('home')} className="flex items-center justify-start shrink-0 py-1 pr-1 sm:pr-2">
+              <span className="logo h-[32px] sm:h-[36px] max-w-[200px] sm:max-w-[320px] overflow-visible">
                 <img 
                   src="/Typographie/logoV.png" 
                   alt="Dronek" 
                   className="h-full w-auto object-contain transition-transform duration-300" 
-                  style={{ transform: 'translateY(-0.15cm) scale(1.15)', transformOrigin: 'center' }}
+                  style={{ 
+                    transform: 'translateY(-0.15cm) scale(clamp(0.85, 1vw + 0.8, 1.15))', 
+                    transformOrigin: 'left center' 
+                  }}
                 />
               </span>
             </button>
@@ -169,7 +184,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
               <button
                 onClick={() => handleNav('home')}
                 className={cn(
-                  'nav-link relative flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold uppercase tracking-[0.08em] transition-all duration-300 hover:scale-105',
+                  'nav-link relative flex items-center gap-2 px-3.5 py-1.5 text-[13px] font-normal uppercase tracking-[0.08em] transition-all duration-300 hover:scale-105',
                   isActive('home') ? 'text-dronek-green' : 'text-dronek-dark hover:text-dronek-green',
                 )}
               >
@@ -182,7 +197,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
               <button
                 onClick={() => handleNav('services')}
                 className={cn(
-                  'nav-link relative px-3.5 py-1.5 text-sm font-semibold uppercase tracking-[0.08em] transition-all duration-300 flex items-center gap-2 hover:scale-105',
+                  'nav-link relative px-3.5 py-1.5 text-[13px] font-normal uppercase tracking-[0.08em] transition-all duration-300 flex items-center gap-2 hover:scale-105',
                   (currentPage === 'services') ? 'text-dronek-green' : 'text-dronek-dark hover:text-dronek-green',
                 )}
               >
@@ -196,7 +211,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
               <div className="relative group/blog" onMouseEnter={() => setBlogOpen(true)} onMouseLeave={() => setBlogOpen(false)}>
                 <button
                   className={cn(
-                    'nav-link relative px-3.5 py-1.5 text-sm font-semibold uppercase tracking-[0.08em] transition-all duration-300 flex items-center gap-2 hover:scale-105',
+                    'nav-link relative px-3.5 py-1.5 text-[13px] font-normal uppercase tracking-[0.08em] transition-all duration-300 flex items-center gap-2 hover:scale-105',
                     (currentPage === 'blog' || currentPage === 'blog-impact') ? 'text-dronek-green' : 'text-dronek-dark hover:text-dronek-green',
                   )}
                 >
@@ -223,7 +238,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
                             <Newspaper className="w-5 h-5 text-gray-400 group-hover/item:text-dronek-green transition-colors" />
                           </div>
                           <div>
-                            <h4 className="font-bold text-[13px] text-dronek-dark uppercase tracking-wider">Derniers postes</h4>
+                            <h4 className="font-bold text-[13px] text-dronek-dark uppercase tracking-wider">Derniers posts</h4>
                           </div>
                         </button>
                         <button onClick={() => handleNav('blog-impact')} className="group/item flex items-center gap-3 p-3 rounded-none hover:bg-gray-100 transition-all duration-200 text-left">
@@ -245,7 +260,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
                   key={link.page}
                   onClick={() => handleNav(link.page)}
                   className={cn(
-                    'nav-link relative flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold uppercase tracking-[0.08em] transition-all duration-300 hover:scale-105',
+                    'nav-link relative flex items-center gap-2 px-3.5 py-1.5 text-[13px] font-normal uppercase tracking-[0.08em] transition-all duration-300 hover:scale-105',
                     isActive(link.page) ? 'text-dronek-green' : 'text-dronek-dark hover:text-dronek-green',
                   )}
                 >
@@ -339,15 +354,31 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
                 
                 <AnimatePresence>
                   {mobileServicesOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pl-14 pr-4">
-                      <button onClick={() => handleNav('services')} className="w-full py-3 text-left text-base font-bold text-dronek-green border-b border-gray-100 mb-2">
-                        {lang === 'fr' ? 'Voir tous les services' : 'View all services'}
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pl-4 pr-4 space-y-1 pb-4">
+                      <button 
+                        onClick={() => handleNav('services')} 
+                        className="w-full flex items-center justify-between p-4 bg-dronek-green/5 text-dronek-green rounded-xl font-bold text-sm mb-3 border border-dronek-green/10"
+                      >
+                        {lang === 'fr' ? 'VOIR TOUS LES SERVICES' : 'VIEW ALL SERVICES'}
+                        <ArrowRight className="w-4 h-4" />
                       </button>
-                      {serviceLinks.map((link) => (
-                        <button key={link.key} onClick={() => handleNav('services', link.section)} className="w-full py-3 text-left text-base font-medium text-dronek-dark/70 hover:text-dronek-green transition-colors">
-                          {t.services[link.key].name}
-                        </button>
-                      ))}
+                      <div className="grid grid-cols-1 gap-2 pl-4 border-l-2 border-gray-100">
+                        {serviceLinks.map((link) => {
+                          const Icon = serviceIcons[link.key];
+                          return (
+                            <button 
+                              key={link.key} 
+                              onClick={() => handleNav('services', link.section)} 
+                              className="flex items-center gap-3 w-full py-3 text-left text-base font-medium text-dronek-dark/80 hover:text-dronek-green transition-colors"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              {t.services[link.key].name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -366,7 +397,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
                   {mobileBlogOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pl-14 pr-4">
                       <button onClick={() => handleNav('blog')} className="w-full py-3 text-left text-base font-medium text-dronek-dark/70 hover:text-dronek-green transition-colors">
-                        Derniers postes
+                        Derniers posts
                       </button>
                       <button onClick={() => handleNav('blog-impact')} className="w-full py-3 text-left text-base font-medium text-dronek-dark/70 hover:text-dronek-green transition-colors">
                         Notre médiathèque

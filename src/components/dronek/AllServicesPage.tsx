@@ -8,8 +8,7 @@ import { useLanguage } from './LanguageProvider';
 import AnimatedSection from './AnimatedSection';
 import Partners from './Partners';
 import type { PageView } from './Navbar';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -40,14 +39,14 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
     {
       id: 'forestry',
       title: t.services.forestry?.name || (lang === 'fr' ? 'Foresterie' : 'Forestry'),
-      description: lang === 'fr' ? 'Nous proposons de nombreux services dans l\'accompagnement des projets d\'agroforesterie, de reboisement et d\'aménagement des forêts.' : 'We offer numerous services in supporting agroforestry, reforestation, and forest management projects.',
+      description: '',
       image: '/images/hero-forest.jpg',
       pdfUrl: '/pdf/fiche-technique-forestry.pdf',
       items: t.services.forestry?.items || [
-        { title: "Formations aux métiers forestiers (pépiniéristes, sylviculteurs, aménagistes forestiers)" },
-        { title: "Production de plantes maraîchers par la mise en place de pépinières" },
-        { title: "Inventaire forestier et faunique" },
-        { title: "Suivi de reboisement" }
+        { title: "FORMATION. Formations aux métiers forestiers (pépiniéristes, sylviculteurs...)" },
+        { title: "PÉPINIÈRES. Production de plantes maraîchères et mise en place de pépinières" },
+        { title: "INVENTAIRE. Inventaire forestier et faunique précis" },
+        { title: "SUIVI. Suivi rigoureux de reboisement et aménagement" }
       ]
     },
     {
@@ -83,10 +82,10 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
       image: '/images/hero-agriculture.jpg',
       pdfUrl: '/pdf/fiche-technique-agriculture.pdf',
       items: t.services.agriculture?.items || [
-        { title: "Audit, renforcement des capacités et conseils en agroéconomie" },
-        { title: "Appui à la diversification des activités agricoles" },
-        { title: "Formation sur les techniques d'élevage" },
-        { title: "Formation des producteurs sur les bonnes pratiques agricoles (BPA)" }
+        { title: "CONSEIL. Audit, renforcement des capacités et conseils en agroéconomie" },
+        { title: "APPUI. Appui à la diversification des activités agricoles" },
+        { title: "ÉLEVAGE. Formation spécialisée sur les techniques d'élevage" },
+        { title: "PRATIQUES. Formation sur les bonnes pratiques agricoles (BPA)" }
       ]
     }
   ];
@@ -96,23 +95,51 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
   const [loading, setLoading] = React.useState(true);
 
   useEffect(() => {
-    if (!db) return;
-    
-    const q = query(
-      collection(db, 'services'), 
-      where('status', 'in', ['Publié', 'Published']),
-      orderBy('createdAt', 'desc')
-    );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedServices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const fetchServices = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .in('statut', ['publie', 'Publié', 'Published'])
+        .order('ordre', { ascending: true });
       
-      if (fetchedServices.length > 0) {
-        setServices(fetchedServices);
+      if (data) {
+        const mapped = data.map(s => {
+          let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
+          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+             imageUrl = '/images/hero-forest.jpg';
+          }
+          return {
+            ...s,
+            id: s.id,
+            title: s.titre || s.title || (lang === 'fr' ? 'Sans titre' : 'Untitled'),
+            description: s.description_courte || s.description || s.resume || '',
+            image: imageUrl,
+            pdfUrl: s.pdf_url || s.pdfUrl || '',
+            items: s.items || []
+          };
+        });
+        
+        // Merge: Dynamic ones first, then defaults (excluding duplicates by id)
+        const combined = [...mapped];
+        defaultServices.forEach(ds => {
+          if (!combined.some(c => c.id === ds.id)) {
+            combined.push(ds);
+          }
+        });
+        
+        setServices(combined);
       }
       setLoading(false);
-    });
-    return () => unsubscribe();
+    };
+
+    fetchServices();
+
+    const subscription = supabase.channel('all-services').on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, fetchServices).subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [lang, t]);
 
   const handleNav = (page: PageView) => {
@@ -191,11 +218,11 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 lg:pt-48 pb-4">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-44 lg:pt-60 pb-4">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
             <motion.div initial="hidden" animate="visible" className="flex-1 min-w-0">
                 <motion.h1 
-                  className="text-2xl lg:text-5xl font-montserrat-extrabold text-white leading-[1.1] uppercase tracking-tight"
+                  className="text-2xl lg:text-5xl font-bold text-white leading-[1.1] uppercase tracking-tight"
                 >
                   {t.nav.services.split('').map((char: string, i: number) => (
                     <motion.span
@@ -211,16 +238,21 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                 </motion.h1>
             </motion.div>
 
-            <div className="lg:max-w-md">
+            <div className="lg:max-w-2xl">
               <motion.p 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-white/80 text-sm lg:text-base font-medium leading-relaxed"
+                className="text-white/90 text-sm lg:text-base font-medium leading-relaxed"
               >
-                {lang === 'fr' 
-                  ? 'Découvrez l\'ensemble de nos solutions technologiques au service de la nature et de l\'agriculture.' 
-                  : 'Discover all our technological solutions serving nature and agriculture.'}
+                <strong className="text-white text-lg block mb-3 uppercase tracking-wider">
+                  {t.services.bannerDesc.title}
+                </strong>
+                {t.services.bannerDesc.content.split('\n\n').map((para: string, i: number) => (
+                  <span key={i} className="block mb-4">
+                    {para}
+                  </span>
+                ))}
               </motion.p>
             </div>
           </div>
@@ -236,11 +268,12 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
           transition={{ duration: 0.8 }}
           className="space-y-4"
         >
-          <h2 className="text-2xl lg:text-3xl font-montserrat-extrabold text-dronek-dark uppercase tracking-tight">
-            DRONEK propose plusieurs services
+          <h2 className="text-3xl lg:text-4xl font-black tracking-tight" style={{ WebkitTextStroke: '0.5px currentColor' }}>
+            <span className="text-black">Nous vous proposons plusieurs </span>
+            <span className="text-[#149655]">services</span>
           </h2>
           <div className="w-16 h-1 bg-dronek-green mx-auto mb-6" />
-          <p className="text-base lg:text-lg text-dronek-medium leading-relaxed font-medium">
+          <p className="text-base lg:text-xl text-[#71807e] leading-relaxed font-medium max-w-3xl mx-auto">
             Dronek se distingue par une solide expertise technique et une maîtrise des innovations technologiques, 
             lui permettant de fournir des services efficaces et performants dans les secteurs de la foresterie et de l'agriculture.
           </p>
@@ -276,26 +309,26 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                 <motion.div
                   key={service.id}
                   id={service.id}
-                  initial={{ clipPath: 'inset(100% 0 0 0)' }}
-                  whileInView={{ clipPath: 'inset(0% 0 0 0)' }}
-                  transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                  viewport={{ once: true, margin: "-50px" }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  viewport={{ once: true, margin: "0px" }}
                   style={{
                     position: 'sticky',
-                    top: `${100 + sIdx * 30}px`,
                     zIndex: 20 + sIdx,
-                    height: '70vh',
-                    marginBottom: sIdx === services.length - 1 ? '10vh' : '40vh',
+                    minHeight: '60vh',
+                    height: 'auto',
                     background: 'white',
                     borderRadius: '24px',
-                    overflow: 'hidden',
                     boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
+                    // @ts-ignore
+                    '--index': sIdx,
                   }}
-                  className={`stack-card stack-card-${sIdx} w-full group`}
+                  className={`stack-card stack-card-dynamic w-full group`}
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] h-full">
                     {/* Left side: Image */}
-                    <div className="relative h-64 md:h-full overflow-hidden cursor-pointer rounded-r-[2rem] z-10" onClick={() => setSelectedService(service)}>
+                    <div className="relative h-72 sm:h-80 lg:h-full overflow-hidden cursor-pointer rounded-t-[24px] lg:rounded-l-[24px] lg:rounded-tr-none z-10" onClick={() => setSelectedService(service)}>
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.6 }}
@@ -308,16 +341,16 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                           className="object-cover"
                           priority={sIdx === 0}
                         />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+                        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-300" />
                       </motion.div>
                     </div>
 
                     {/* Right side: Content */}
-                    <div className="p-8 lg:p-14 flex flex-col justify-center h-full relative overflow-hidden bg-white/90 backdrop-blur-sm z-0">
+                    <div className="p-8 lg:p-14 pb-12 lg:pb-16 flex flex-col justify-center h-full relative overflow-hidden bg-white/90 backdrop-blur-sm z-0">
                       <div className="relative z-10">
 
 
-                        <h2 className="text-4xl lg:text-5xl font-black text-black leading-[1.05] mb-6 uppercase tracking-tight">
+                        <h2 className="text-3xl lg:text-4xl font-normal text-[#149655]/80 leading-[1.05] mb-6 uppercase tracking-tight">
                           {service.title}
                         </h2>
 
@@ -399,7 +432,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                 </div>
 
                 <div className="relative z-10 w-full h-full flex flex-col items-center justify-center text-center">
-                   <h2 className="text-4xl lg:text-5xl font-black uppercase tracking-tighter leading-tight mb-4">
+                   <h2 className="text-3xl lg:text-4xl font-normal text-white/70 uppercase tracking-tighter leading-tight mb-4">
                       {selectedService.title}
                    </h2>
                 </div>

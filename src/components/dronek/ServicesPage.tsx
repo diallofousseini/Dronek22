@@ -4,8 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight, TreePine, Navigation, Sprout, Wheat, ShieldCheck } from 'lucide-react';
-import { collection, serverTimestamp, query, orderBy, addDoc, onSnapshot, doc, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from './LanguageProvider';
 import AnimatedSection from './AnimatedSection';
@@ -14,7 +13,7 @@ import SolutionsPerformantes from './SolutionsPerformantes';
 import { ScrollTitle } from './ScrollTitle';
 
 interface ServicesPageProps {
-  service: 'forestry' | 'drone' | 'agroforestry' | 'agriculture';
+  service: 'forestry' | 'drone' | 'agroforestry' | 'agriculture' | 'surveillance';
   onNavigate: (page: PageView) => void;
 }
 
@@ -52,37 +51,60 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
   useEffect(() => {
-    if (!db) return;
-    
-    setLoading(true);
-    // 1. Fetch Global Page Config (Banner)
-    const docRef = doc(db, 'service_configs', service);
-    const unsubscribeConfig = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setPageData(docSnap.data());
+    const fetchServices = async () => {
+      setLoading(true);
+      
+      // 1. Fetch Global Page Config (Banner) from a 'service_configs' table
+      const { data: configData } = await supabase
+        .from('service_configs')
+        .select('*')
+        .eq('id', service)
+        .single();
+      
+      if (configData) {
+        setPageData(configData);
       }
-    });
 
-    // 2. Fetch Individual Cards for this Service
-    const q = query(
-      collection(db, 'services'), 
-      where('status', 'in', ['Publié', 'Published']),
-      orderBy('createdAt', 'asc')
-    );
-    const unsubscribeCards = onSnapshot(q, (snapshot) => {
-      const cards = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter((c: any) => c.serviceType === service);
-      setDynamicCards(cards);
+      // 2. Fetch Individual Cards for this Service
+      const { data: cardsData } = await supabase
+        .from('services')
+        .select('*')
+        .in('statut', ['publie', 'Publié', 'Published'])
+        .eq('service_type', service) // adapted field name
+        .order('created_at', { ascending: true });
+      
+      if (cardsData) {
+        const mapped = cardsData.map(c => {
+          let imageUrl = c.image_url || c.image;
+          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+             imageUrl = null;
+          }
+          return {
+            ...c,
+            title: c.titre || c.title,
+            desc: c.description_courte || c.description,
+            image: imageUrl,
+            pdfUrl: c.pdf_url || c.pdfUrl,
+            // Support for both 'detail_short_desc' and 'detail_long_desc' columns
+            detailTitle: c.detail_title || c.detailTitle,
+            detailShortDesc: c.detail_short_desc || c.detailShortDesc,
+            detailLongDesc: c.detail_long_desc || c.detailLongDesc
+          };
+        });
+        setDynamicCards(mapped);
+      }
       setLoading(false);
-    }, (error) => {
-      console.error("Error fetching service cards:", error);
-      setLoading(false);
-    });
+    };
+
+    fetchServices();
+
+    // Subscriptions
+    const subConfig = supabase.channel(`config-${service}`).on('postgres_changes', { event: '*', schema: 'public', table: 'service_configs', filter: `id=eq.${service}` }, fetchServices).subscribe();
+    const subCards = supabase.channel(`cards-${service}`).on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, fetchServices).subscribe();
 
     return () => {
-      unsubscribeConfig();
-      unsubscribeCards();
+      subConfig.unsubscribe();
+      subCards.unsubscribe();
     };
   }, [service]);
 
@@ -270,7 +292,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
               <div className="absolute inset-0 bg-black/10" />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 lg:pt-48 pb-16">
+            <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-44 lg:pt-60 pb-16">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-12 lg:gap-24">
                 <div className="flex-1 min-w-0">
                     <ScrollTitle as="h1" className="text-3xl lg:text-5xl font-montserrat-extrabold text-white leading-[1.1] uppercase tracking-tighter">
@@ -317,26 +339,26 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
             {allServiceItems.map((item: any, idx: number) => (
               <motion.div 
                 key={idx} 
-                initial={{ clipPath: 'inset(100% 0 0 0)' }}
-                whileInView={{ clipPath: 'inset(0% 0 0 0)' }}
-                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                viewport={{ once: true, margin: "-50px" }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                viewport={{ once: true, margin: "0px" }}
                 style={{
                   position: 'sticky',
-                  top: '100px',
+                  top: '80px',
                   zIndex: 20 + idx,
-                  height: '80vh',
-                  marginBottom: idx === allServiceItems.length - 1 ? '10vh' : '40vh',
+                  minHeight: '60vh',
+                  height: 'auto',
+                  marginBottom: idx === allServiceItems.length - 1 ? '10vh' : '30vh',
                   background: 'white',
                   borderRadius: '24px',
-                  overflow: 'hidden',
                   boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
                 }}
                 className={`stack-card stack-card-${idx} w-full group`}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
                   {/* Left Column - Image */}
-                  <div className="relative h-64 lg:h-full overflow-hidden">
+                  <div className="relative h-72 sm:h-80 lg:h-full overflow-hidden rounded-t-[24px] lg:rounded-l-[24px] lg:rounded-tr-none">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.6 }}
@@ -346,7 +368,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                     </motion.div>
                   </div>
                   {/* Right Column - Text Content */}
-                  <div className="p-8 lg:p-16 flex flex-col justify-center bg-white">
+                  <div className="p-8 lg:p-16 pb-12 lg:pb-20 flex flex-col justify-center bg-white">
                     <ScrollTitle
                       as="h3"
                       className="font-montserrat-extrabold uppercase text-3xl md:text-4xl text-dronek-dark mb-6 leading-none"
@@ -365,8 +387,8 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                     </motion.p>
 
                     <motion.div 
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.6, duration: 0.6 }}
                       viewport={{ once: true }}
                       className="mt-12"
@@ -420,16 +442,16 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                 
                 <div className="absolute inset-0 p-8 lg:p-12 flex flex-col justify-end text-white">
                   <motion.h2 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                     className="text-3xl lg:text-5xl font-montserrat-extrabold uppercase leading-none mb-6"
                   >
                     {selectedItem.detailTitle || selectedItem.title}
                   </motion.h2>
                   <motion.p 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                     className="text-white/80 text-base lg:text-lg font-medium leading-relaxed italic"
                   >

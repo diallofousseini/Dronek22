@@ -4,13 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogOut, Plus, Search, Zap, Briefcase, FileText, Users, MessageSquare, Globe } from 'lucide-react';
-import { signOut } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { Edit2, Trash2, ExternalLink, Loader2 } from 'lucide-react';
-import { collection, query, orderBy, deleteDoc, doc, Timestamp, onSnapshot } from 'firebase/firestore';
+import { LogOut, Plus, Search, Zap, Briefcase, FileText, Users, MessageSquare, Globe, Loader2, Edit2, Trash2, ExternalLink, LayoutGrid, ChevronRight, Image as ImageIcon, AlertTriangle, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 
 import { useLanguage } from '@/components/dronek/LanguageProvider';
 
@@ -20,31 +17,114 @@ interface DashboardItem {
   category: string;
   status: string;
   date: string;
+  table: string;
+  url?: string;
 }
+
+const StatusToggle = ({ item, onToggle, lang }: { item: DashboardItem, onToggle: (item: DashboardItem) => void, lang: string }) => {
+  const isPublished = item.status === 'Publié' || item.status === 'Published' || item.status === 'publie';
+  const x = useMotionValue(isPublished ? 80 : 0);
+  const opacityDraft = useTransform(x, [0, 40], [1, 0]);
+  const opacityPublished = useTransform(x, [40, 80], [0, 1]);
+  const trackBg = useTransform(x, [0, 80], ['#f3f4f6', '#149655']);
+  const handleBg = useTransform(x, [0, 80], ['#ffffff', '#ffffff']);
+  const iconColor = useTransform(x, [0, 80], ['#9ca3af', '#149655']);
+
+  useEffect(() => {
+    x.set(isPublished ? 80 : 0);
+  }, [isPublished, x]);
+
+  const handleDragEnd = () => {
+    const currentX = x.get();
+    if (!isPublished && currentX > 40) {
+      onToggle(item);
+    } else if (isPublished && currentX < 40) {
+      onToggle(item);
+    } else {
+      x.set(isPublished ? 80 : 0);
+    }
+  };
+
+  return (
+    <div className="relative w-[130px] h-[36px] select-none">
+      <motion.div 
+        style={{ backgroundColor: trackBg }}
+        className="absolute inset-0 rounded-full border border-gray-100 shadow-inner overflow-hidden cursor-pointer"
+        onClick={() => onToggle(item)}
+      >
+        {/* Texts */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <motion.span 
+              style={{ opacity: opacityDraft }}
+              className="absolute text-[9px] font-black uppercase tracking-widest text-gray-400"
+            >
+              {lang === 'fr' ? 'Brouillon' : 'Draft'}
+            </motion.span>
+            <motion.span 
+              style={{ opacity: opacityPublished }}
+              className="absolute text-[9px] font-black uppercase tracking-widest text-white"
+            >
+              {lang === 'fr' ? 'Publié' : 'Published'}
+            </motion.span>
+          </div>
+        </div>
+
+        {/* Handle */}
+        <motion.div
+          drag="x"
+          dragConstraints={{ left: 0, right: 80 }}
+          dragElastic={0.1}
+          onDragEnd={handleDragEnd}
+          style={{ x, backgroundColor: handleBg }}
+          className="absolute left-1 top-1 w-7 h-7 rounded-full shadow-md flex items-center justify-center z-10 cursor-grab active:cursor-grabbing"
+        >
+          <motion.div 
+            style={{ color: iconColor }}
+            className={`transition-transform duration-300 ${isPublished ? 'rotate-180' : ''}`}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+};
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { t, lang } = useLanguage();
-  const [activeTab, setActiveTab] = useState('services');
+  const [activeTab, setActiveTab] = useState('all');
   const [items, setItems] = useState<DashboardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{id: string, title: string, table: string} | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Helper to format date based on language
   const formatDate = (date: any) => {
     if (!date) return '-';
-    const d = date instanceof Timestamp ? date.toDate() : new Date(date);
-    return d.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US');
+    // Utiliser directement new Date() car Supabase renvoie des chaînes ISO ou des dates valides
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '-';
+      return d.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US');
+    } catch (e) {
+      return '-';
+    }
   };
 
   const tabs = [
-    { id: 'all', label: lang === 'fr' ? 'Service' : 'Service', icon: Zap },
+    { id: 'all', label: t.admin.tabs.all, icon: Zap },
+    { id: 'services', label: t.admin.tabs.services, icon: Zap },
     { id: 'projets', label: t.admin.tabs.projects, icon: Briefcase },
     { id: 'actualites', label: t.admin.tabs.news, icon: FileText },
     { id: 'equipe', label: t.admin.tabs.team, icon: Users },
     { id: 'contacts', label: t.admin.tabs.contacts, icon: MessageSquare },
     { id: 'production_sites', label: t.admin.tabs.production_sites, icon: Globe },
+    { id: 'mediatheque', label: t.admin.tabs.mediatheque, icon: ImageIcon },
   ];
 
   useEffect(() => {
@@ -59,98 +139,123 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!db) return;
-    
     setLoading(true);
     
-    const collectionsToFetch = activeTab === 'all' 
-      ? ['projects', 'news', 'team', 'contacts', 'production_sites', 'services']
-      : [activeTab === 'projets' ? 'projects' : 
-         activeTab === 'actualites' ? 'news' : 
-         activeTab === 'equipe' ? 'team' : 
-         activeTab === 'contacts' ? 'contacts' : 
-         activeTab === 'production_sites' ? 'production_sites' : 'services'];
+    const tablesToFetch = activeTab === 'all' 
+      ? ['projets', 'actualites', 'equipe', 'contacts', 'production_sites', 'services']
+      : activeTab === 'mediatheque' ? ['contacts'] : [activeTab];
 
-    let allUnsubscribes: any[] = [];
-    let combinedItems: any[] = [];
+    const fetchData = async () => {
+      let combined: any[] = [];
+      for (const table of tablesToFetch) {
+        let query = supabase
+          .from(table)
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (table === 'contacts' && activeTab === 'mediatheque') {
+          query = query.eq('sujet', 'Mediatheque');
+        } else if (table === 'contacts' && activeTab === 'all') {
+          // In 'all', we show everything including Mediatheque config
+        } else if (table === 'contacts') {
+          // In 'contacts' tab, maybe we only want real contacts?
+          // Let's keep it consistent: if they click contacts, show all contacts including config
+        }
 
-    const fetchCollection = (name: string) => {
-      const q = query(collection(db, name), orderBy('createdAt', 'desc'));
-      return onSnapshot(q, (snapshot) => {
-        const colItems = snapshot.docs.map(doc => ({
-          id: doc.id,
-          title: doc.data().title || doc.data().name || (lang === 'fr' ? 'Sans titre' : 'Untitled'),
-          category: doc.data().category || doc.data().type || doc.data().badge || name,
-          status: doc.data().status || (lang === 'fr' ? 'Publié' : 'Published'),
-          date: formatDate(doc.data().createdAt),
-          collection: name,
-          rawDate: doc.data().createdAt?.toDate?.() || new Date()
-        }));
-
-        // Replace items from this collection in combinedItems
-        combinedItems = [
-          ...combinedItems.filter(item => item.collection !== name),
-          ...colItems
-        ].sort((a, b) => b.rawDate - a.rawDate);
-
-        setItems(combinedItems);
-        setLoading(false);
-      }, (error) => {
-        console.error(`Error listening to ${name}:`, error);
-      });
+        const { data } = await query;
+        
+        if (data) {
+          combined = [...combined, ...data.map(item => ({
+            ...item,
+            id: item.id,
+            title: item.prenom || item.nom ? `${item.prenom || ''} ${item.nom || ''}`.trim() : (item.sujet || item.titre || item.name || item.title || (lang === 'fr' ? 'Sans titre' : 'Untitled')),
+            category: item.sujet === 'Mediatheque' ? 'Média' : (item.categorie || item.category || table),
+            status: item.statut || item.status || (lang === 'fr' ? 'Publié' : 'Published'),
+            date: formatDate(item.created_at),
+            table: table,
+            url: item.url || item.image_url || item.photo_url || item.image || item.photo,
+            rawDate: new Date(item.created_at)
+          }))];
+        }
+      }
+      setItems(combined.sort((a, b) => b.rawDate - a.rawDate));
+      setLoading(false);
     };
 
-    allUnsubscribes = collectionsToFetch.map(name => fetchCollection(name));
+    fetchData();
 
-    return () => allUnsubscribes.forEach(unsub => unsub());
+    // Subscriptions
+    const channels = tablesToFetch.map(table => 
+      supabase.channel(`${table}-list-${activeTab}`).on('postgres_changes', { event: '*', schema: 'public', table }, fetchData).subscribe()
+    );
+
+    return () => {
+      channels.forEach(c => c.unsubscribe());
+    };
   }, [activeTab, lang]);
 
   const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('dronek_mock_auth');
-    if (auth) {
-      await signOut(auth);
-    }
     window.location.href = '/admin/login';
   };
 
-  const handleDelete = async (id: string, title: string, collectionName: string) => {
-    if (!db) return;
-    if (confirm(t.admin.actions.confirmDelete.replace('{title}', title))) {
-      try {
-        await deleteDoc(doc(db, collectionName, id));
-      } catch (error) {
-        console.error("Error deleting item:", error);
-        alert(t.admin.actions.deleteError);
-      }
+  const handleDelete = (id: string, title: string, tableName: string) => {
+    setItemToDelete({ id, title, table: tableName });
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.from(itemToDelete.table).delete().eq('id', itemToDelete.id);
+      if (error) throw error;
+      // Optimistic update
+      setItems(prev => prev.filter(item => item.id !== itemToDelete.id));
+      setShowDeleteModal(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      alert(lang === 'fr' ? "Erreur lors de la suppression" : "Error during deletion");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleToggleStatus = async (item: any) => {
-    if (!db) return;
-    const newStatus = item.status === 'Publié' || item.status === 'Published' 
-      ? (lang === 'fr' ? 'Brouillon' : 'Draft')
-      : (lang === 'fr' ? 'Publié' : 'Published');
+    const isPublished = item.status === 'Publié' || item.status === 'Published' || item.status === 'publie';
+    const newStatus = isPublished ? 'brouillon' : 'publie';
     
+    // Optimistic update
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i));
+
     try {
-      const { updateDoc } = await import('firebase/firestore');
-      await updateDoc(doc(db, item.collection, item.id), {
-        status: newStatus
-      });
+      const { error } = await supabase
+        .from(item.table)
+        .update({ statut: newStatus })
+        .eq('id', item.id);
+      if (error) {
+        // Rollback on error
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: item.status } : i));
+        throw error;
+      }
     } catch (error) {
       console.error("Error updating status:", error);
     }
   };
 
-  const handleEdit = (id: string, collectionName: string) => {
+  const handleEdit = (id: string, tableName: string) => {
+    const item = items.find(i => i.id === id);
     const typeMap: any = {
-      'projects': 'projet',
-      'news': 'actualite',
-      'team': 'membre',
-      'contacts': 'contact',
+      'equipe': 'membre',
+      'contacts': item?.sujet === 'Mediatheque' ? 'mediatheque' : 'contact',
       'production_sites': 'production_site',
-      'services': 'service'
+      'services': 'service',
+      'projets': 'projet',
+      'actualites': 'actualite'
     };
-    const type = typeMap[collectionName] || 'service';
+    const type = typeMap[tableName] || 'service';
     router.push(`/admin/services/new?type=${type}&id=${id}`);
   };
 
@@ -203,20 +308,37 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link 
-              href={`/admin/services/new?type=${activeTab === 'projets' ? 'projet' : activeTab === 'actualites' ? 'actualite' : activeTab === 'equipe' ? 'membre' : activeTab === 'contacts' ? 'contact' : activeTab === 'production_sites' ? 'production_site' : 'service'}`}
-              className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
-            >
-              <Plus className="w-5 h-5 stroke-[3px]" />
-              {t.admin.add} {
-                activeTab === 'all' ? (lang === 'fr' ? 'Service' : 'Service') : 
-                activeTab === 'projets' ? t.admin.tabs.projects.slice(0, -1) : 
-                activeTab === 'actualites' ? t.admin.tabs.news.slice(0, -1) : 
-                activeTab === 'equipe' ? t.admin.tabs.team : 
-                activeTab === 'production_sites' ? (lang === 'fr' ? 'Site' : 'Site') :
-                t.admin.tabs.contacts.slice(0, -1) && activeTab === 'contacts' ? t.admin.tabs.contacts.slice(0, -1) : (lang === 'fr' ? 'Service' : 'Service')
-              }
-            </Link>
+            {activeTab === 'mediatheque' ? (
+              <Link 
+                href="/admin/services/new?type=mediatheque"
+                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
+              >
+                <ImageIcon className="w-5 h-5" />
+                {lang === 'fr' ? 'Ajouter Média' : 'Add Media'}
+              </Link>
+            ) : (
+              <Link 
+                href={`/admin/services/new?type=${
+                  activeTab === 'projets' ? 'projet' : 
+                  activeTab === 'actualites' ? 'actualite' : 
+                  activeTab === 'equipe' ? 'membre' : 
+                  activeTab === 'contacts' ? 'contact' : 
+                  activeTab === 'production_sites' ? 'production_site' : 'service'
+                }`}
+                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
+              >
+                <Plus className="w-5 h-5 stroke-[3px]" />
+                {t.admin.add} {
+                  activeTab === 'all' ? (lang === 'fr' ? 'Service' : 'Service') : 
+                  activeTab === 'projets' ? t.admin.tabs.projects.slice(0, -1) : 
+                  activeTab === 'actualites' ? t.admin.tabs.news.slice(0, -1) : 
+                  activeTab === 'equipe' ? t.admin.tabs.team : 
+                  activeTab === 'production_sites' ? (lang === 'fr' ? 'Site' : 'Site') :
+                  activeTab === 'services' ? (lang === 'fr' ? 'Service' : 'Service') :
+                  t.admin.tabs.contacts.slice(0, -1)
+                }
+              </Link>
+            )}
 
             <button 
               onClick={handleLogout}
@@ -266,7 +388,8 @@ export default function AdminDashboard() {
               <input
                 type="text"
                 placeholder={t.admin.searchPlaceholder.replace('{tab}', 
-                  activeTab === 'all' ? (lang === 'fr' ? 'Service' : 'Service') : 
+                  activeTab === 'all' ? (lang === 'fr' ? 'Élément' : 'Item') : 
+                  activeTab === 'services' ? (lang === 'fr' ? 'Service' : 'Service') :
                   activeTab === 'projets' ? t.admin.tabs.projects : 
                   activeTab === 'actualites' ? t.admin.tabs.news : 
                   activeTab === 'equipe' ? t.admin.tabs.team : 
@@ -284,7 +407,7 @@ export default function AdminDashboard() {
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">{t.admin.table.item}</th>
                   <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">{t.admin.table.category}</th>
-                  <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">{t.admin.table.status}</th>
+                  <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider text-center">{t.admin.table.status}</th>
                   <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">{t.admin.table.date}</th>
                   <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider text-right">{t.admin.table.actions}</th>
                 </tr>
@@ -303,29 +426,26 @@ export default function AdminDashboard() {
                   items.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-6">
-                        <span className="font-bold text-gray-900 group-hover:text-[#149655] transition-colors text-lg uppercase tracking-tight">{item.title}</span>
+                        <div className="flex items-center gap-4">
+                          {item.url && item.url !== "" && (
+                            <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100">
+                              <img src={item.url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <span className="font-bold text-gray-900 group-hover:text-[#149655] transition-colors text-lg uppercase tracking-tight">{item.title}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-6 text-sm text-gray-600 font-medium uppercase">{item.category}</td>
                       <td className="px-6 py-6">
-                        <button 
-                          onClick={() => handleToggleStatus(item)}
-                          className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all active:scale-95",
-                            (item.status === 'Publié' || item.status === 'Published') 
-                              ? "bg-green-50 text-green-700 border border-green-100" 
-                              : "bg-amber-50 text-amber-700 border border-amber-100"
-                          )}
-                        >
-                           <div className={cn("w-2 h-2 rounded-full", (item.status === 'Publié' || item.status === 'Published') ? "bg-green-500" : "bg-amber-400")} />
-                           <span className="text-[10px] font-black uppercase tracking-widest">{item.status}</span>
-                         </button>
+                        <div className="flex justify-center">
+                          <StatusToggle item={item} onToggle={handleToggleStatus} lang={lang} />
+                        </div>
                       </td>
                       <td className="px-6 py-6 text-sm text-gray-500 font-normal">{item.date}</td>
                       <td className="px-6 py-6 text-right">
-                        <div className="flex items-center justify-end gap-3">
-                          <button onClick={() => handleEdit(item.id, item.collection)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#149655] hover:bg-[#149655]/10 rounded-xl transition-all" title={t.admin.actions.edit}><Edit2 className="w-5 h-5" /></button>
-                          <button onClick={() => handleDelete(item.id, item.title, item.collection)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title={t.admin.actions.delete}><Trash2 className="w-5 h-5" /></button>
-                          <button className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title={t.admin.actions.view}><ExternalLink className="w-5 h-5" /></button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleEdit(item.id, item.table)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#149655] hover:bg-[#149655]/10 rounded-xl transition-all" title={t.admin.actions.edit}><Edit2 className="w-5 h-5" /></button>
+                          <button onClick={() => handleDelete(item.id, item.title, item.table)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title={t.admin.actions.delete}><Trash2 className="w-5 h-5" /></button>
                         </div>
                       </td>
                     </tr>
@@ -342,6 +462,82 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Premium Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute inset-0 bg-[#0b261a]/60 backdrop-blur-md"
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 40 }}
+              className="bg-white rounded-[2.5rem] p-10 lg:p-12 max-w-md w-full shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] border border-white/20 relative overflow-hidden z-10"
+            >
+              {/* Header Accent */}
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-dronek-green/60 via-dronek-green to-dronek-dark" />
+              
+              <button 
+                onClick={() => setShowDeleteModal(false)}
+                className="absolute top-6 right-6 p-2.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all active:scale-90"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="relative w-24 h-24 mx-auto mb-10">
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+                  className="absolute inset-0 bg-[#149655]/10 rounded-[2.5rem] rotate-12" 
+                />
+                <div className="absolute inset-0 bg-[#149655]/5 rounded-[2.5rem] -rotate-6 animate-pulse" />
+                <div className="relative h-full flex items-center justify-center">
+                  <AlertTriangle className="w-12 h-12 text-[#149655]" />
+                </div>
+              </div>
+
+              <h3 className="text-3xl font-black text-gray-900 text-center mb-4 uppercase tracking-tighter italic">
+                {lang === 'fr' ? 'Attention !' : 'Warning !'}
+              </h3>
+              
+              <p className="text-gray-500 text-center mb-10 font-medium leading-relaxed text-lg px-2">
+                {lang === 'fr' 
+                  ? <>Êtes-vous sûr de vouloir supprimer <span className="text-gray-900 font-bold italic">"{itemToDelete?.title}"</span> ? Cette action est définitive.</> 
+                  : <>Are you sure you want to delete <span className="text-gray-900 font-bold italic">"{itemToDelete?.title}"</span>? This action is permanent.</>}
+              </p>
+
+              <div className="grid grid-cols-2 gap-5">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="py-5 px-6 rounded-2xl bg-gray-50 text-gray-600 font-bold uppercase tracking-widest text-xs hover:bg-gray-100 transition-all active:scale-95 border border-gray-200"
+                >
+                  {lang === 'fr' ? 'Annuler' : 'Cancel'}
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="py-5 px-6 rounded-2xl bg-[#149655] text-white font-bold uppercase tracking-widest text-xs hover:bg-[#0b3b24] transition-all active:scale-95 shadow-xl shadow-[#149655]/20 flex items-center justify-center gap-3"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  {lang === 'fr' ? 'Supprimer' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

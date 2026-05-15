@@ -5,12 +5,14 @@ import { Facebook, Instagram, Linkedin, MapPin, Mail, Phone } from 'lucide-react
 import { useLanguage } from './LanguageProvider';
 
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 interface FooterProps {
   onNavigate: (page: 'home' | 'services' | 'projects' | 'blog' | 'team' | 'production' | 'contact' | 'admin') => void;
+  onOpenNewsMenu?: () => void;
 }
 
-export default function Footer({ onNavigate }: FooterProps) {
+export default function Footer({ onNavigate, onOpenNewsMenu }: FooterProps) {
   const { t, lang } = useLanguage();
 
   const handleNav = (page: 'home' | 'services' | 'projects' | 'blog' | 'team' | 'production' | 'contact' | 'admin') => {
@@ -18,15 +20,45 @@ export default function Footer({ onNavigate }: FooterProps) {
       window.location.href = '/admin/login';
       return;
     }
+    
+    if (page === 'blog' && onOpenNewsMenu) {
+      onOpenNewsMenu();
+      return;
+    }
+
     onNavigate(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const [dynamicInfo, setDynamicInfo] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchContactInfo = async () => {
+      const { data } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('sujet', 'Configuration')
+        .single();
+      
+      if (data) {
+        setDynamicInfo(data);
+      }
+    };
+
+    fetchContactInfo();
+
+    const sub = supabase.channel('footer-contact').on('postgres_changes', { event: '*', schema: 'public', table: 'contacts', filter: 'sujet=eq.Configuration' }, fetchContactInfo).subscribe();
+
+    return () => {
+      sub.unsubscribe();
+    };
+  }, []);
   const quickLinks = [
     { label: t.nav.services, page: 'services' as const },
     { label: t.nav.projects, page: 'projects' as const },
     { label: t.nav.blog, page: 'blog' as const },
     { label: t.nav.production, page: 'production' as const },
-    { label: 'Admin', page: 'admin' as const },
+    { label: t.nav.admin || 'Admin', page: 'admin' as const },
   ];
 
   const socialLinks = [
@@ -92,9 +124,9 @@ export default function Footer({ onNavigate }: FooterProps) {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="space-y-6"
+              className="space-y-4"
             >
-              <img src="/Typographie/logoV.png" alt="DRONEK" className="h-[72px] w-auto origin-left" />
+              <img src="/images/AAAAAA-removebg-preview.png" alt="DRONEK" className="h-[72px] w-auto origin-left" />
               <p className="text-white text-sm leading-relaxed font-sans">
                 {t.footer.desc}
               </p>
@@ -119,7 +151,7 @@ export default function Footer({ onNavigate }: FooterProps) {
                   <li key={link.page}>
                     <button
                       onClick={() => handleNav(link.page)}
-                      className="text-white hover:text-white/80 transition-colors duration-300 text-sm font-sans"
+                      className="text-white hover:text-white/80 transition-colors duration-300 text-sm font-normal"
                     >
                       {link.label}
                     </button>
@@ -143,28 +175,38 @@ export default function Footer({ onNavigate }: FooterProps) {
                 <div className="flex gap-3 items-start">
                   <MapPin className="w-5 h-5 text-white shrink-0 mt-0.5" />
                   <p className="leading-relaxed">
-                    Cocody, en face de l&apos;entrée principale de l&apos;Hôtel Palm Club, Abidjan, Côte d&apos;Ivoire
+                    {dynamicInfo?.message || "Cocody, en face de l'entrée principale de l'Hôtel Palm Club, Abidjan, Côte d'Ivoire"}
                   </p>
                 </div>
                 <div className="flex gap-3 items-center">
                   <Mail className="w-5 h-5 text-white shrink-0" />
                   <div className="flex flex-col">
-                    <span className="font-semibold text-white">Email</span>
-                    <a href="mailto:info@dronek.net" className="text-white hover:text-white/80 transition-colors">
-                      info@dronek.net
+                    <span className="font-semibold text-white">{t.footer.email || 'Email'}</span>
+                    <a href={`mailto:${dynamicInfo?.email || 'info@dronek.net'}`} className="text-white hover:text-white/80 transition-colors">
+                      {dynamicInfo?.email || 'info@dronek.net'}
                     </a>
                   </div>
                 </div>
                 <div className="flex gap-3 items-start">
                   <Phone className="w-5 h-5 text-white shrink-0 mt-0.5" />
                   <div className="flex flex-col">
-                    <span className="font-semibold text-white">{lang === 'fr' ? 'Téléphone' : 'Phone'}</span>
-                    <a href="tel:+22507077322" className="text-white font-semibold hover:text-white/80 transition-colors">
-                      +225 07 07 73 22 64
-                    </a>
-                    <a href="tel:+225272151" className="text-white font-semibold hover:text-white/80 transition-colors">
-                      +225 27 21 51 41 49
-                    </a>
+                    <span className="font-semibold text-white">{t.footer.phone || (lang === 'fr' ? 'Téléphone' : 'Phone')}</span>
+                    {dynamicInfo?.telephone ? (
+                      dynamicInfo.telephone.split('\n').map((num: string, idx: number) => (
+                        <a key={idx} href={`tel:${num.replace(/\s+/g, '')}`} className="text-white font-semibold hover:text-white/80 transition-colors">
+                          {num}
+                        </a>
+                      ))
+                    ) : (
+                      <>
+                        <a href="tel:+22507077322" className="text-white font-semibold hover:text-white/80 transition-colors">
+                          +225 07 07 73 22 64
+                        </a>
+                        <a href="tel:+225272151" className="text-white font-semibold hover:text-white/80 transition-colors">
+                          +225 27 21 51 41 49
+                        </a>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

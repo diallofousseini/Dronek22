@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { MapPin, Layers } from 'lucide-react';
 import { useLanguage } from './LanguageProvider';
+import { supabase } from '@/lib/supabase';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -32,8 +33,49 @@ type ProductionCard = {
 
 export default function ProductionSitesView() {
   const { lang } = useLanguage();
+  const [dynamicCards, setDynamicCards] = React.useState<ProductionCard[]>([]);
 
-  const cards: ProductionCard[] = [
+  React.useEffect(() => {
+    const fetchSites = async () => {
+      const { data } = await supabase
+        .from('production_sites')
+        .select('*')
+        .in('statut', ['publie', 'Publié', 'Published', 'actif'])
+        .order('created_at', { ascending: true });
+      
+      if (data && data.length > 0) {
+        const dynamic = data.map(site => {
+          let imageUrl = site.image_url || site.image || '/images/hero-forest.jpg';
+          return {
+            badge: lang === 'fr' ? 'Site Opérationnel' : 'Operational Site',
+            title: site.nom || site.name || 'Site',
+            location: site.localisation || site.location || '',
+            desc: site.description || site.desc || site.description_courte || site.content || (lang === 'fr' ? 'Installation spécialisée.' : 'Specialized facility.'),
+            employees: site.employees || (lang === 'fr' ? 'Équipe Dronek' : 'Dronek Team'),
+            services: site.services ? site.services.split(',').map((s: string) => s.trim()) : [],
+            image: imageUrl,
+            stats: [
+              { label: 'CAPACITÉ', value: site.capacite || site.capacity || 'N/A', progress: 85, icon: Layers, color: 'bg-[#114f2e]' },
+              { label: 'SUPERFICIE', value: site.surface || 'N/A', progress: 100, icon: MapPin, color: 'bg-[#114f2e]' }
+            ]
+          };
+        });
+
+        // Deduplicate
+        const staticNames = new Set(defaultCards.map(c => c.title.toLowerCase().trim()));
+        const filteredDynamic = dynamic.filter(card => !staticNames.has(card.title.toLowerCase().trim()));
+
+        setDynamicCards(filteredDynamic);
+      }
+    };
+
+    fetchSites();
+
+    const sub = supabase.channel('sites-all').on('postgres_changes', { event: '*', schema: 'public', table: 'production_sites' }, fetchSites).subscribe();
+    return () => { sub.unsubscribe(); };
+  }, [lang]);
+
+  const defaultCards: ProductionCard[] = [
     {
       badge: lang === 'fr' ? 'Centre Opérationnel' : 'Operational Center',
       title: lang === 'fr' ? 'Site de Bonoua' : 'Bonoua Site',
@@ -90,15 +132,27 @@ export default function ProductionSitesView() {
     },
   ];
 
+  const cards = dynamicCards.length > 0 ? [...defaultCards, ...dynamicCards] : defaultCards;
+
   return (
     <div className="bg-white">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14 space-y-10 lg:space-y-16">
         {cards.map((card, index) => {
-          const image = (
-            <div className="rounded-[1.25rem] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
-              <Image src={card.image} alt={card.title} width={1200} height={760} className="w-full h-full object-cover" />
-            </div>
-          );
+            const image = (
+              <div className="rounded-[1.25rem] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.12)] aspect-[1200/760] relative">
+                <img 
+                  src={card.image} 
+                  alt={card.title} 
+                  className="absolute inset-0 w-full h-full object-cover" 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== '/images/hero-forest.jpg') {
+                      target.src = '/images/hero-forest.jpg';
+                    }
+                  }}
+                />
+              </div>
+            );
 
           const text = (
             <div className="max-w-xl">

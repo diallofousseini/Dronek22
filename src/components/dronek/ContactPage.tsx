@@ -8,8 +8,7 @@ import AnimatedSection from './AnimatedSection';
 import { useLanguage } from './LanguageProvider';
 import Values from './Values';
 import type { PageView } from './Navbar';
-import { collection, addDoc, serverTimestamp, query, where, onSnapshot, limit, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import LocationMap from './LocationMap';
 
 const fadeInUp = {
@@ -38,16 +37,25 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
   const [dynamicInfo, setDynamicInfo] = useState<any>(null);
 
   useEffect(() => {
-    if (!db) return;
-    // We look for a document in 'contacts' that has the category 'Configuration' 
-    // or we can just take the most recent one with type 'contact'
-    const q = query(collection(db, 'contacts'), where('category', '==', 'Configuration'), limit(1));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        setDynamicInfo(snapshot.docs[0].data());
+    const fetchContactInfo = async () => {
+      const { data } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('sujet', 'Configuration')
+        .single();
+      
+      if (data) {
+        setDynamicInfo(data);
       }
-    });
-    return () => unsubscribe();
+    };
+
+    fetchContactInfo();
+
+    const sub = supabase.channel('contact-config').on('postgres_changes', { event: '*', schema: 'public', table: 'contacts', filter: 'sujet=eq.Configuration' }, fetchContactInfo).subscribe();
+
+    return () => {
+      sub.unsubscribe();
+    };
   }, []);
 
   const validate = () => {
@@ -71,15 +79,21 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
     if (validate()) {
       setIsSubmitting(true);
       try {
-        if (db) {
-          await addDoc(collection(db, 'contacts'), {
-            ...formData,
-            title: `Message de ${formData.prenom} ${formData.nom}`,
-            category: 'Message Direct',
-            status: 'Nouveau',
-            createdAt: serverTimestamp()
-          });
-        }
+        const { error } = await supabase
+          .from('contacts')
+          .insert([
+            {
+              prenom: formData.prenom,
+              nom: formData.nom,
+              email: formData.email,
+              telephone: formData.telephone,
+              sujet: formData.objet,
+              message: formData.message,
+              statut: 'non_traite',
+              created_at: new Date().toISOString()
+            }
+          ]);
+        if (error) throw error;
         setIsSuccess(true);
         setFormData({ prenom: '', nom: '', email: '', telephone: '', objet: '', message: '' });
         setTimeout(() => setIsSuccess(false), 5000);
@@ -179,8 +193,8 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
                 <motion.div variants={fadeInUp} className="flex items-center gap-4">
                   <Phone className="w-6 h-6 text-[#1a4a2e]" />
                   <div className="flex flex-col">
-                    {dynamicInfo?.phone ? (
-                      dynamicInfo.phone.split('\n').map((num: string, idx: number) => (
+                    {dynamicInfo?.telephone ? (
+                      dynamicInfo.telephone.split('\n').map((num: string, idx: number) => (
                         <a key={idx} href={`tel:${num.replace(/\s+/g, '')}`} className="text-gray-600 font-medium text-lg hover:text-dronek-green transition-colors">
                           {num}
                         </a>
@@ -198,10 +212,15 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
                   </div>
                 </motion.div>
                 <motion.div variants={fadeInUp} className="flex items-center gap-4">
-                  <MapPin className="w-6 h-6 text-[#1a4a2e] shrink-0" />
-                  <span className="text-gray-600 font-medium text-lg whitespace-pre-line">
-                    {dynamicInfo?.location || t.contact.address}
-                  </span>
+                  <MapPin className="w-6 h-6 text-[#1a4a2e]" />
+                  <div className="flex flex-col">
+                    <span className="text-gray-400 text-sm uppercase tracking-widest font-bold mb-1">
+                      {lang === 'fr' ? 'Adresse' : 'Address'}
+                    </span>
+                    <p className="text-gray-600 font-medium text-lg">
+                      {dynamicInfo?.message || t.contact.address}
+                    </p>
+                  </div>
                 </motion.div>
               </motion.div>
             </motion.div>

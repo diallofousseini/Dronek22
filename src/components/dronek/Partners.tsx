@@ -46,26 +46,25 @@ export default function Partners() {
             </motion.div>
 
             <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-montserrat-extrabold tracking-tight text-dronek-text uppercase text-center">
-                {(lang === 'fr' ? 'Ils nous font confiance' : 'They trust us').split('').map((char, i) => (
-                  <motion.span
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
-                    className="inline-block"
-                  >
-                    {char === ' ' ? '\u00A0' : char}
-                  </motion.span>
-                ))}
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-center">
+                {lang === 'fr' ? (
+                  <>
+                    <span className="text-black">Ils nous font </span>
+                    <span className="text-[#149655]">confiance</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-black">They trust </span>
+                    <span className="text-[#149655]">us</span>
+                  </>
+                )}
               </h2>
               <motion.div 
                 initial={{ width: 0 }}
                 whileInView={{ width: "5rem" }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: 0.5 }}
-                className="h-1.5 bg-dronek-green rounded-full mt-6 mx-auto" 
+                className="h-1.5 bg-black rounded-full mt-6 mx-auto" 
               />
             </div>
           </div>

@@ -7,32 +7,32 @@ export type Partner = {
 export const partners: Partner[] = [
   {
     name: 'Le Conseil du Cafe-Cacao',
-    image: '/images/partners/conseil-cafe-cacao.svg',
+    image: '/images/partners/conseil-cafe-cacao.png',
     href: '#',
   },
   {
     name: 'Rainforest Alliance',
-    image: '/images/partners/rainforest-alliance.svg',
+    image: '/images/partners/rainforest-alliance.png',
     href: '#',
   },
   {
     name: 'Cargill',
-    image: '/images/partners/cargill.svg',
+    image: '/images/partners/cargill.png',
     href: '#',
   },
   {
     name: 'COP15 Abidjan 2022',
-    image: '/images/partners/cop15-abidjan.svg',
+    image: '/images/partners/cop15-abidjan.png',
     href: '#',
   },
   {
     name: 'Eaux et Forets CI',
-    image: '/images/partners/eaux-et-forets.svg',
+    image: '/images/partners/eaux-et-forets.png',
     href: '#',
   },
   {
     name: 'FAO',
-    image: '/images/partners/fao.svg',
+    image: '/images/partners/fao.png',
     href: '#',
   },
 ];

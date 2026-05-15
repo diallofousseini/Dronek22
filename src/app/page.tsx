@@ -34,17 +34,14 @@ interface AppContentProps {
 function AppContent({ initialPage }: AppContentProps) {
   const [currentPage, setCurrentPage] = useState<PageView>(initialPage);
   const [loading, setLoading] = useState(false);
+  const [triggerNewsMenu, setTriggerNewsMenu] = useState(false);
 
   useEffect(() => {
     setCurrentPage(initialPage);
   }, [initialPage]);
 
   useEffect(() => {
-    // Persistence: load saved page on mount
-    const savedPage = localStorage.getItem('dronek_current_page');
-    if (savedPage) {
-      setCurrentPage(savedPage as PageView);
-    }
+    // No persistence: always load initialPage (home) on refresh
   }, []);
 
   const handleNavigate = useCallback((page: PageView) => {
@@ -60,6 +57,16 @@ function AppContent({ initialPage }: AppContentProps) {
       }, 150);
     }
   }, [currentPage]);
+
+  const handleOpenNewsMenu = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Small delay to allow scroll to start before triggering menu
+    setTimeout(() => {
+      setTriggerNewsMenu(true);
+      // Reset trigger after a short delay so it can be triggered again
+      setTimeout(() => setTriggerNewsMenu(false), 500);
+    }, 100);
+  }, []);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -84,7 +91,11 @@ function AppContent({ initialPage }: AppContentProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header currentPage={currentPage} onNavigate={handleNavigate} />
+      <Header 
+        currentPage={currentPage} 
+        onNavigate={handleNavigate} 
+        triggerNewsMenu={triggerNewsMenu}
+      />
       <AnimatePresence mode="wait">
         {loading ? (
           <div key="loader" className="flex items-center justify-center min-h-[60vh]">
@@ -100,7 +111,7 @@ function AppContent({ initialPage }: AppContentProps) {
           <main key={currentPage}>{renderPage()}</main>
         )}
       </AnimatePresence>
-      <Footer onNavigate={handleNavigate} />
+      <Footer onNavigate={handleNavigate} onOpenNewsMenu={handleOpenNewsMenu} />
       <ScrollToTop />
       <CookieConsent />
     </div>

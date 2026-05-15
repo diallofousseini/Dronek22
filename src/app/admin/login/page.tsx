@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, X } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 import { useLanguage } from '@/components/dronek/LanguageProvider';
@@ -39,21 +38,27 @@ export default function AdminLogin() {
       return;
     }
 
-    if (!auth) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("Login error:", error);
       setShowErrorModal(true);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/admin');
-    } catch (error: any) {
-      console.error("Login error:", error);
+    if (data.user?.email !== adminEmail) {
+      await supabase.auth.signOut();
       setShowErrorModal(true);
-    } finally {
       setLoading(false);
+      return;
     }
+
+    router.push('/admin');
+    setLoading(false);
   };
 
   return (

@@ -6,16 +6,14 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ArrowLeft, Save, Plus, Trash2, Upload, X, Loader2, 
-  Zap, Globe, Shield, FileText, Image as ImageIcon, Copy, CheckCircle2, MapPin
+  Zap, Globe, Shield, FileText, Image as ImageIcon, Copy, CheckCircle2, MapPin,
+  ChevronDown, LayoutGrid, Play
 } from 'lucide-react';
-import { db, storage } from '@/lib/firebase';
-import { 
-  doc, getDoc, setDoc, serverTimestamp, onSnapshot, collection 
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/components/dronek/LanguageProvider';
 
 // --- Types ---
 interface ServiceCard {
@@ -151,7 +149,7 @@ function HorizontalField({ label, value, onChange, placeholder, type = 'text', l
         {type === 'textarea' ? (
           <textarea 
             rows={5} 
-            value={value} 
+            value={value || ""} 
             onChange={(e) => onChange(e.target.value)} 
             placeholder={placeholder}
             className="w-full px-4 py-4 bg-[#f9fafb] border border-[#e5e7eb] rounded-xl focus:bg-white focus:border-[#149655] focus:ring-4 focus:ring-[#149655]/5 outline-none transition-all duration-200 text-[14px] font-medium text-[#111827] leading-relaxed placeholder:text-[#9ca3af]"
@@ -170,7 +168,7 @@ function HorizontalField({ label, value, onChange, placeholder, type = 'text', l
         ) : (
           <input 
             type="text" 
-            value={value} 
+            value={value || ""} 
             onChange={(e) => onChange(e.target.value)} 
             placeholder={placeholder}
             className="w-full h-[50px] px-4 bg-[#f9fafb] border border-[#e5e7eb] rounded-xl focus:bg-white focus:border-[#149655] focus:ring-4 focus:ring-[#149655]/5 outline-none transition-all duration-200 text-[14px] font-medium text-[#111827] placeholder:text-[#9ca3af]"
@@ -201,7 +199,7 @@ function VerticalField({ label, value, onChange, placeholder, type = 'text', lab
       ) : (
         <input 
           type="text" 
-          value={value} 
+          value={value || ""} 
           onChange={(e) => onChange(e.target.value)} 
           placeholder={placeholder}
           className="w-full h-[60px] px-6 bg-white border border-[#e5e7eb] rounded-2xl focus:border-[#149655] focus:ring-8 focus:ring-[#149655]/5 outline-none transition-all duration-300 text-[15px] font-semibold text-[#111] placeholder:text-[#9ca3af] shadow-sm"
@@ -211,33 +209,93 @@ function VerticalField({ label, value, onChange, placeholder, type = 'text', lab
   );
 }
 
+const sanitizeFileName = (name: string) => {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9.]/gi, '_')
+    .toLowerCase();
+};
+
 function SimpleUpload({ value, onChange, path }: { value: string, onChange: (v: string) => void, path: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [up, setUp] = useState(false);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
   
   const handle = async (e: any) => {
     const f = e.target.files?.[0];
-    if (!f || !storage) return;
+    if (!f) return;
+
+    // Check file size (Supabase limit)
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+    if (f.size > MAX_SIZE) {
+      alert("Le fichier est trop volumineux (max 50 Mo). Veuillez le compresser.");
+      return;
+    }
+    
+    const objectUrl = URL.createObjectURL(f);
+    setLocalPreview(objectUrl);
+    
     setUp(true);
     try {
-      const r = ref(storage, `${path}/${Date.now()}_${f.name}`);
-      const s = await uploadBytes(r, f);
-      const url = await getDownloadURL(s.ref);
-      onChange(url);
-    } catch {}
+      const fileName = `${Date.now()}_${sanitizeFileName(f.name)}`;
+      console.log("🚀 Tentative d'upload vers Supabase...");
+      console.log("📁 Chemin :", `${path}/${fileName}`);
+      
+      // Try 'IMAGES' bucket first (matching your screenshot)
+      let bucket = 'IMAGES';
+      console.log("🪣 Bucket cible :", bucket);
+
+      let { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(`${path}/${fileName}`, f, { cacheControl: '3600', upsert: true });
+
+      if (error) {
+        console.warn("⚠️ Échec sur bucket IMAGES, tentative sur DOCUMENTS...", error);
+        // Fallback to 'DOCUMENTS' bucket
+        bucket = 'DOCUMENTS';
+        const { data: fallbackData, error: fallbackError } = await supabase.storage
+          .from(bucket)
+          .upload(`${path}/${fileName}`, f, { cacheControl: '3600', upsert: true });
+        
+        if (fallbackError) {
+           console.error("❌ Échec critique sur les deux buckets :", fallbackError);
+           throw fallbackError;
+        }
+        data = fallbackData;
+      }
+
+      if (data) {
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+        console.log("✅ Upload réussi ! URL :", urlData.publicUrl);
+        onChange(urlData.publicUrl);
+      }
+    } catch (err: any) {
+      console.error("🔥 Erreur lors de l'upload :", err);
+      alert("Erreur lors de l'upload : " + (err.message || "Erreur inconnue"));
+    }
     setUp(false);
   };
 
   return (
     <div 
       onClick={() => fileRef.current?.click()} 
-      className="relative aspect-video bg-[#fafafa] border-2 border-dashed border-[#d1d5db] rounded-[16px] overflow-hidden flex flex-col items-center justify-center cursor-pointer group hover:bg-[#f3f4f6] hover:border-[#149655] transition-all duration-300"
+      className="relative min-h-[250px] w-full bg-[#fafafa] border-2 border-dashed border-[#d1d5db] rounded-[16px] overflow-hidden flex flex-col items-center justify-center cursor-pointer group hover:bg-[#f3f4f6] hover:border-[#149655] transition-all duration-300"
     >
        {up ? (
-         <Loader2 className="w-8 h-8 animate-spin text-[#149655]" />
-       ) : value ? (
+          <div className="relative w-full h-full min-h-[250px] flex flex-col items-center justify-center overflow-hidden">
+            {localPreview && <img src={localPreview} alt="Uploading preview" className="absolute inset-0 object-cover w-full h-full opacity-40 blur-[2px]" />}
+            <Loader2 className="w-10 h-10 animate-spin text-[#149655] relative z-10 drop-shadow-md" />
+            <span className="text-[#149655] font-bold text-xs mt-3 uppercase tracking-widest relative z-10 drop-shadow-md">Upload en cours...</span>
+          </div>
+       ) : localPreview || value ? (
          <>
-           <Image src={value} alt="img" fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+           <img 
+             src={localPreview || value} 
+             alt="Preview" 
+             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" 
+             onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }} 
+           />
            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white space-y-2">
               <ImageIcon className="w-6 h-6" />
               <span className="text-[11px] font-bold uppercase tracking-widest">Modifier l&apos;image</span>
@@ -250,7 +308,7 @@ function SimpleUpload({ value, onChange, path }: { value: string, onChange: (v: 
             </div>
             <div className="space-y-1">
               <span className="text-[12px] font-medium text-[#6b7280] uppercase tracking-widest block transition-colors group-hover:text-[#149655]">Uploader l&apos;image</span>
-              <span className="text-[11px] text-[#9ca3af] uppercase tracking-wide">JPG, PNG - MAX 5MB</span>
+              <span className="text-[11px] text-[#9ca3af] uppercase tracking-wide">Toute résolution (JPG, PNG, WEBP)</span>
             </div>
          </div>
        )}
@@ -259,20 +317,98 @@ function SimpleUpload({ value, onChange, path }: { value: string, onChange: (v: 
   );
 }
 
+function VideoUpload({ value, onChange, path }: { value: string, onChange: (v: string) => void, path: string }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [up, setUp] = useState(false);
+  
+  const handle = async (e: any) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    // Check file size (Supabase default limit is 50MB on free tier)
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+    if (f.size > MAX_SIZE) {
+      alert(lang === 'fr' 
+        ? "Le fichier est trop volumineux (max 50 Mo). Veuillez compresser votre vidéo ou utiliser un lien YouTube/Facebook/Vimeo." 
+        : "File is too large (max 50 MB). Please compress your video or use a YouTube/Facebook/Vimeo link.");
+      return;
+    }
+
+    setUp(true);
+    try {
+      const fileName = `${Date.now()}_${sanitizeFileName(f.name)}`;
+      let bucket = 'IMAGES';
+      let { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(`${path}/${fileName}`, f, { cacheControl: '3600', upsert: true });
+
+      if (error) {
+        if (error.message?.includes('exceeded the maximum allowed size')) {
+          throw new Error(lang === 'fr' ? "Le fichier dépasse la limite autorisée par le serveur." : "File exceeds the maximum allowed size on the server.");
+        }
+        bucket = 'DOCUMENTS';
+        const { data: fallbackData, error: fallbackError } = await supabase.storage
+          .from(bucket)
+          .upload(`${path}/${fileName}`, f, { cacheControl: '3600', upsert: true });
+        
+        if (fallbackError) throw fallbackError;
+        data = fallbackData;
+      }
+
+      if (data) {
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+        onChange(urlData.publicUrl);
+      }
+    } catch (err: any) {
+      console.error("Video upload error:", err);
+      alert(err.message || (lang === 'fr' ? "Erreur lors de l'upload" : "Upload error"));
+    }
+    setUp(false);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+       <input type="file" ref={fileRef} onChange={handle} accept="video/*" className="hidden" />
+       <button 
+         type="button"
+         onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileRef.current?.click(); }}
+         disabled={up}
+         className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm"
+       >
+         {up ? <Loader2 className="w-3 h-3 animate-spin text-[#149655]" /> : <Upload className="w-3 h-3 text-[#149655]" />}
+         {up ? "Upload..." : value ? "Changer" : "Uploader"}
+       </button>
+    </div>
+  );
+}
+
+
 function PdfUpload({ value, onChange, path }: { value: string, onChange: (v: string) => void, path: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [up, setUp] = useState(false);
   
   const handle = async (e: any) => {
     const f = e.target.files?.[0];
-    if (!f || !storage) return;
+    if (!f) return;
     setUp(true);
     try {
-      const r = ref(storage, `${path}/${Date.now()}_${f.name}`);
-      const s = await uploadBytes(r, f);
-      const url = await getDownloadURL(s.ref);
-      onChange(url);
-    } catch {}
+      const fileName = `${Date.now()}_${f.name.replace(/\s/g, '_')}`;
+      const bucket = 'DOCUMENTS';
+      const storagePath = path ? `${path}/${fileName}` : fileName;
+
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(storagePath, f, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+      
+      if (data) {
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+        onChange(urlData.publicUrl);
+      }
+    } catch (err) {
+      console.error("PDF Upload error:", err);
+    }
     setUp(false);
   };
 
@@ -304,6 +440,7 @@ function PdfUpload({ value, onChange, path }: { value: string, onChange: (v: str
 function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
   const { toast } = useToast();
   const router = useRouter();
+  const { lang } = useLanguage();
   const [data, setData] = useState<any>({ 
     title: '', name: '', category: '', content: '', description: '', 
     role: '', bio: '', linkedin: '', image: '', status: 'Publié',
@@ -312,14 +449,25 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
     date: '',
     capacity: '', surface: '', desc: '',
     employees: '', services: '',
-    isFeatured: false, pdfUrl: '',
+    isFeatured: false, isMainService: false, pdfUrl: '',
     detailTitle: '', detailShortDesc: '', detailLongDesc: '',
     serviceType: 'forestry', buttonText: 'En savoir plus',
     lat: '', lng: ''
   });
   const [saving, setSaving] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    if (showSuccessModal) {
+      const timer = setTimeout(() => {
+        setShowSuccessModal(false);
+        setTimeout(() => router.push('/admin'), 800);
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessModal, router]);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
@@ -334,12 +482,90 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
   }, []);
 
   useEffect(() => {
-    if (id && db) {
-      const col = type === 'projet' ? 'projects' : 
-                  type === 'actualite' ? 'news' : 
-                  type === 'membre' ? 'team' : 
-                  type === 'production_site' ? 'production_sites' : 'contacts';
-      getDoc(doc(db, col, id)).then(s => s.exists() && setData(s.data()));
+    if (id && type !== 'mediatheque') {
+      const table = type === 'projet' ? 'projets' : 
+                    type === 'actualite' ? 'actualites' : 
+                    type === 'membre' ? 'equipe' : 
+                    type === 'production_site' ? 'production_sites' : 
+                    type === 'service' ? 'services' : 'contacts';
+      
+      supabase
+        .from(table)
+        .select('*')
+        .eq('id', id)
+        .single()
+        .then(({ data: item }) => {
+          if (item) {
+            setData({
+              ...item,
+              title: item.titre || item.title,
+              description: item.description_courte || item.description,
+              image: item.image_url || item.image,
+              status: item.statut || item.status,
+              phone: item.telephone || item.phone,
+              location: item.message || item.location,
+              name: item.nom ? `${item.prenom || ''} ${item.nom}` : item.name,
+              role: item.poste || item.role,
+              bio: item.biographie || item.bio,
+              detailTitle: item.detail_title || item.detailTitle,
+              detailShortDesc: item.detail_short_desc || item.detailShortDesc,
+              detailLongDesc: item.detail_long_desc || item.detailLongDesc,
+              serviceType: item.service_type || item.serviceType || 'forestry',
+              isMainService: false,
+              // production_site specific field mapping
+              desc: item.description || item.desc || '',
+              lat: item.latitude?.toString() || item.lat || '',
+              lng: item.longitude?.toString() || item.lng || '',
+            });
+
+            if (type === 'service') {
+              supabase.from('contacts').select('*').eq('sujet', 'MainServices').single().then(({ data: config }) => {
+                if (config && config.message) {
+                  try {
+                    const mainIds = JSON.parse(config.message);
+                    if (Array.isArray(mainIds) && mainIds.includes(item.id)) {
+                      setData(prev => ({ ...prev, isMainService: true }));
+                    }
+                  } catch (e) {}
+                }
+              });
+            }
+          }
+        });
+    } else if (type === 'mediatheque') {
+      supabase
+        .from('contacts')
+        .select('*')
+        .eq('sujet', 'Mediatheque')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: item }) => {
+          if (item) {
+            try {
+              const mediathequeData = JSON.parse(item.message || '{}');
+              setData((prev) => ({ 
+                ...prev, 
+                id: item.id,
+                mediatheque: {
+                  images: mediathequeData.images || Array(8).fill(''),
+                  videos: mediathequeData.videos || Array(2).fill('')
+                }
+              }));
+            } catch (e) {
+              setData((prev) => ({ 
+                ...prev, 
+                id: item.id,
+                mediatheque: { images: Array(8).fill(''), videos: Array(2).fill('') }
+              }));
+            }
+          } else {
+            setData((prev) => ({ 
+              ...prev, 
+              mediatheque: { images: Array(8).fill(''), videos: Array(2).fill('') }
+            }));
+          }
+        });
     }
   }, [id, type]);
 
@@ -354,13 +580,15 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
     } else if (isContact) {
       hasRequiredFields = !!(data.email && data.phone && data.location);
     } else if (isProdSite) {
-      hasRequiredFields = !!(data.name && data.location && data.capacity && data.surface && data.image);
+      hasRequiredFields = !!(data.name && data.location && data.image);
     } else if (type === 'service') {
       hasRequiredFields = !!(data.title && data.description && data.image);
     } else if (type === 'projet') {
       hasRequiredFields = !!(data.title && data.description && data.image && data.location && data.year);
     } else if (type === 'actualite') {
       hasRequiredFields = !!(data.title && data.description && data.image);
+    } else if (type === 'mediatheque') {
+      hasRequiredFields = true;
     } else {
       hasRequiredFields = !!(data.title && (data.category || data.content || data.description) && data.image);
     }
@@ -372,37 +600,126 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
 
     setSaving(true);
     try {
-      const col = type === 'projet' ? 'projects' : 
-                  type === 'actualite' ? 'news' : 
-                  type === 'membre' ? 'team' : 
-                  type === 'production_site' ? 'production_sites' : 
-                  type === 'service' ? 'services' : 'contacts';
-      const refDoc = id ? doc(db!, col, id) : doc(collection(db!, col));
+      let table: any = type === 'membre' ? 'equipe' : type === 'projet' ? 'projets' : type === 'actualite' ? 'actualites' : 'services';
+      let payload: any = {};
+      if (id) payload.id = id;
+
+      if (type === 'projet') {
+        payload = { 
+          ...payload, 
+          titre: data.title, 
+          categorie: data.category, 
+          description_courte: data.description, 
+          image_url: data.image, 
+          localisation: data.location, 
+          is_featured: !!data.isFeatured,
+          statut: data.status || 'publie'
+        };
+      } else if (type === 'membre') {
+        const [prenom, ...nomParts] = (data.name || '').split(' ');
+        payload = { 
+          ...payload, 
+          prenom, 
+          nom: nomParts.join(' '), 
+          poste: data.role, 
+          biographie: data.bio, 
+          photo_url: data.image, 
+          email: data.email,
+          linkedin: data.linkedin,
+          statut: data.status || 'publie'
+        };
+      } else if (type === 'service') {
+        payload = { 
+          ...payload, 
+          titre: data.title || data.detailTitle, 
+          description_courte: data.description, 
+          image_url: data.image, 
+          service_type: data.serviceType,
+          description_complete: data.detailLongDesc,
+          statut: data.status || 'publie'
+        };
+      } else if (type === 'actualite') {
+        payload = { 
+          ...payload, 
+          titre: data.title, 
+          resume: data.description, 
+          contenu: data.content,
+          image_url: data.image,
+          statut: data.status || 'publie',
+          date_publication: data.date || new Date().toISOString()
+        };
+      } else if (type === 'contact') {
+        table = 'contacts';
+        payload = { ...payload, email: data.email, telephone: data.phone, sujet: 'Configuration', message: data.location, statut: 'publie' };
+      } else if (type === 'production_site') {
+        table = 'production_sites';
+        payload = { 
+          ...payload, 
+          nom: data.name, 
+          localisation: data.location, 
+          image_url: data.image,
+          description: data.desc || data.description,
+          ...(data.lat && { lat: parseFloat(data.lat) || data.lat }),
+          ...(data.lng && { lng: parseFloat(data.lng) || data.lng }),
+          statut: 'publie'
+        };
+      } else if (type === 'mediatheque') {
+        table = 'contacts';
+        payload = { 
+          ...payload, 
+          sujet: 'Mediatheque',
+          nom: 'Configuration',
+          email: 'admin@dronek.ci',
+          telephone: 'N/A',
+          message: JSON.stringify(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }),
+          statut: 'publie'
+        };
+      } else {
+        payload = { ...payload, titre: data.title, image_url: data.image, statut: data.status || 'publie' };
+      }
+
+      const targetId = id || (type === 'mediatheque' ? data.id : null);
+      const { data: savedData, error } = targetId 
+        ? await supabase.from(table).update(payload).eq('id', targetId).select().single()
+        : await supabase.from(table).insert([payload]).select().single();
       
-      const finalData = { 
-        ...data, 
-        ...(type === 'actualite' && !id ? { 
-          createdAt: serverTimestamp(),
-          date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) 
-        } : {}),
-        title: isContact ? 'Informations de Contact' : data.title,
-        category: isContact ? 'Configuration' : data.category
-      };
-      
-      await setDoc(refDoc, { ...finalData, updatedAt: serverTimestamp() }, { merge: true });
-      toast({ title: "Enregistré avec succès" });
-      router.push('/admin');
-    } catch (e) { toast({ title: "Erreur", variant: "destructive" }); }
+      if (error) throw new Error(`Supabase [${error.code}]: ${error.message}`);
+
+      if (type === 'service' && savedData) {
+        const { data: config } = await supabase.from('contacts').select('*').eq('sujet', 'MainServices').single();
+        let mainIds = [];
+        if (config && config.message) {
+          try { mainIds = JSON.parse(config.message); } catch (e) {}
+        }
+        if (data.isMainService) {
+          if (!mainIds.includes(savedData.id)) mainIds.push(savedData.id);
+        } else {
+          mainIds = mainIds.filter(mid => mid !== savedData.id);
+        }
+        if (config) {
+          await supabase.from('contacts').update({ message: JSON.stringify(mainIds) }).eq('id', config.id);
+        } else {
+          await supabase.from('contacts').insert([{ sujet: 'MainServices', message: JSON.stringify(mainIds), statut: 'publie' }]);
+        }
+      }
+
+      setShowSuccessModal(true);
+
+    } catch (e: any) {
+      console.error("❌ [CATCH]", e);
+      toast({ title: lang === 'fr' ? 'Erreur' : 'Error', description: e.message, variant: "destructive" });
+    }
     setSaving(false);
   };
 
-  const labels: any = { 
-    projet: <><span className="text-[#111]">Espace</span> <span className="text-[#149655]">Projet</span></>, 
-    actualite: <><span className="text-[#111]">Espace</span> <span className="text-[#149655]">Actualités</span></>, 
-    membre: <><span className="text-[#111]">Espace</span> <span className="text-[#149655]">Membres</span></>, 
-    contact: <><span className="text-[#111]">Espace</span> <span className="text-[#149655]">Contact</span></>,
-    production_site: <><span className="text-[#111]">Sites</span> <span className="text-[#149655]">Production</span></>,
-    service: <><span className="text-[#111]">Espace</span> <span className="text-[#149655]">Service</span></>
+  const labels: Record<string, JSX.Element> = {
+    projet: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Projet' : 'Project'}</span></>,
+    actualite: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Actualités' : 'News'}</span></>,
+    membre: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Membres' : 'Members'}</span></>,
+    contact: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">Contact</span></>,
+    production_site: <><span className="text-[#111]">{lang === 'fr' ? 'Sites' : 'Sites'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Production' : 'Production'}</span></>,
+    service: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">Service</span></>,
+    mediatheque: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Média' : 'Gallery'}</span></>,
   };
 
   return (
@@ -418,7 +735,7 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                      <Zap className={cn("w-5 h-5", data.isFeatured ? "text-[#149655] fill-[#149655]" : "text-gray-400")} />
                    </div>
                    <div>
-                     <p className="text-sm font-bold text-[#111] uppercase tracking-tight">Mettre en avant ce projet</p>
+                     <p className="text-sm font-bold text-[#111] uppercase tracking-tight">{lang === 'fr' ? 'Mettre en avant ce projet' : 'Feature this project'}</p>
                    </div>
                  </div>
                  <button
@@ -554,13 +871,30 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                    transition={{ duration: 0.8, ease: "easeOut" }}
                    className="space-y-6 border border-gray-100 p-8 rounded-[2rem] bg-[#fcfdfc] shadow-sm"
                  >
-                   <div className="flex items-center justify-center gap-3 pb-2">
-                     <ImageIcon className="w-5 h-5 text-[#149655]" />
-                     <h3 className="font-bold text-[#111] uppercase tracking-wider text-sm">CARTE</h3>
-                   </div>
+                    <div className="flex items-center justify-center gap-3 pb-2">
+                      <ImageIcon className="w-5 h-5 text-[#149655]" />
+                      <h3 className="font-bold text-[#111] uppercase tracking-wider text-sm">CARTE & CONFIGURATION</h3>
+                    </div>
+                    {/* Removed Titre de la Carte and Catégorie de Service as requested */}
+
+                    <div className="flex items-center justify-between bg-[#149655]/5 p-4 rounded-2xl border border-[#149655]/10">
+                      <div className="flex items-center gap-3">
+                        <Zap className="w-5 h-5 text-[#149655]" />
+                        <div>
+                          <p className="text-[12px] font-black text-[#111] uppercase tracking-wider">Service Principal</p>
+                          <p className="text-[10px] text-gray-500 font-medium italic">Afficher sur la page d'accueil</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setData({ ...data, isMainService: !data.isMainService })}
+                        className={"w-14 h-8 rounded-full transition-all duration-300 relative " + (data.isMainService ? "bg-[#149655]" : "bg-gray-200")}
+                      >
+                        <div className={"absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-sm " + (data.isMainService ? "left-7" : "left-1")} />
+                      </button>
+                    </div>
                    <HorizontalField labelSize="14px" label="Titre de la Carte" value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder="Titre principal..." />
-                   <HorizontalField labelSize="14px" label="Description Carte" type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder="Apparaît dans la colonne de droite de la carte..." />
-                   <HorizontalField labelSize="14px" label="Texte du Bouton" value={data.buttonText || "En savoir plus"} onChange={(v: string) => setData({ ...data, buttonText: v })} placeholder="ex: En savoir plus" />
+                   <HorizontalField labelSize="14px" label={lang === 'fr' ? 'Description du Service' : 'Service Description'} type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Apparaît dans la colonne de droite de la carte..." : 'Appears in the right column of the card...'} />
+                   <HorizontalField labelSize="14px" label={lang === 'fr' ? 'Texte du Bouton' : 'Button Text'} value={data.buttonText || (lang === 'fr' ? 'En savoir plus' : 'Learn more')} onChange={(v: string) => setData({ ...data, buttonText: v })} placeholder={lang === 'fr' ? 'ex: En savoir plus' : 'e.g. Learn more'} />
                  </motion.div>
 
                  {/* Detail Page Section */}
@@ -636,12 +970,161 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                  <HorizontalField label="Poste / Responsabilité" value={data.role} onChange={(v: string) => setData({ ...data, role: v })} placeholder="ex: Responsable Agricole" />
                  <HorizontalField label="Lien Facebook" value={data.facebook} onChange={(v: string) => setData({ ...data, facebook: v })} placeholder="https://facebook.com/..." />
                  <HorizontalField label="Lien LinkedIn" value={data.linkedin} onChange={(v: string) => setData({ ...data, linkedin: v })} placeholder="https://linkedin.com/in/..." />
-                 <HorizontalField label="Lien Email" value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="exemple@dronek.net" />
-               </div>
+                  <HorizontalField label="Lien Email" value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="exemple@dronek.net" />
+                </div>
              )}
-             
-             {/* Centered Image Upload Section - Hidden for Contacts, Production Sites and News */}
-             {type !== 'contact' && type !== 'production_site' && type !== 'actualite' && (
+
+              {type === 'mediatheque' && (
+                <div className="space-y-16">
+                  {/* Images Section */}
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+                      <ImageIcon className="w-6 h-6 text-[#149655]" />
+                      <h3 className="text-xl font-bold uppercase tracking-widest text-gray-800">
+                        {lang === 'fr' ? 'Images du Média (1 à 2)' : 'Gallery Images (1 to 8)'}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                      {Array(8).fill(0).map((_, i) => (
+                        <div key={i} className="space-y-3 bg-gray-50 p-4 rounded-[2rem] border border-gray-100 shadow-sm">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block text-center">Position {i + 1}</label>
+                          <SimpleUpload 
+                            value={data.mediatheque?.images?.[i] || ''} 
+                            onChange={(url) => {
+                              const newImages = [...(data.mediatheque?.images || Array(8).fill(''))];
+                              newImages[i] = url;
+                              setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), images: newImages } });
+                            }} 
+                            path="mediatheque" 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Videos Section */}
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+                      <FileText className="w-6 h-6 text-[#149655]" />
+                      <h3 className="text-xl font-bold uppercase tracking-widest text-gray-800">
+                        {lang === 'fr' ? 'Vidéos YouTube (2 maximum)' : 'YouTube Videos (2 maximum)'}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                      {/* Vidéo 1 */}
+                      <div className="space-y-3 bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Vidéo 1 (YouTube, FB, Vimeo, Local)</label>
+                          <VideoUpload 
+                            value={data.mediatheque?.videos?.[0] || ''} 
+                            onChange={(v) => {
+                              const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
+                              newVideos[0] = v;
+                              setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
+                            }}
+                            path={`mediatheque/${id || 'new'}`}
+                          />
+                        </div>
+                        <input 
+                          type="text" 
+                          value={data.mediatheque?.videos?.[0] || ''} 
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
+                            newVideos[0] = val;
+                            setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
+                          }} 
+                          placeholder="Lien YouTube, Facebook, Vimeo..."
+                          className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl focus:border-[#149655] outline-none text-sm font-bold placeholder:font-normal placeholder:text-gray-300"
+                        />
+                        {data.mediatheque?.videos?.[0] ? (
+                           <div className="relative aspect-video rounded-xl overflow-hidden mt-3 shadow-md border border-white bg-black">
+                             {(() => {
+                               const v = data.mediatheque.videos[0];
+                               const ytMatch = v.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                               const ytId = (ytMatch && ytMatch[2].length === 11) ? ytMatch[2] : (v.length === 11 ? v : '');
+                               
+                               if (ytId) {
+                                 return <img src={`https://img.youtube.com/vi/${ytId}/default.jpg`} className="w-full h-full object-cover" />;
+                               } else if (v.includes('facebook.com') || v.includes('fb.watch')) {
+                                 return <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white font-bold text-xs">Facebook Video</div>;
+                               } else if (v.includes('vimeo.com')) {
+                                 return <div className="w-full h-full flex items-center justify-center bg-blue-400 text-white font-bold text-xs">Vimeo Video</div>;
+                               } else {
+                                 return <video src={v} className="w-full h-full object-cover" />;
+                               }
+                             })()}
+                             <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+                               <Play className="w-6 h-6 text-white opacity-80" />
+                             </div>
+                           </div>
+                        ) : (
+                          <div className="aspect-video bg-white/50 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200 mt-3">
+                            <LayoutGrid className="w-5 h-5 text-gray-200" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Vidéo 2 */}
+                      <div className="space-y-3 bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Vidéo 2 (YouTube, FB, Vimeo, Local)</label>
+                          <VideoUpload 
+                            value={data.mediatheque?.videos?.[1] || ''} 
+                            onChange={(v) => {
+                              const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
+                              newVideos[1] = v;
+                              setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
+                            }}
+                            path={`mediatheque/${id || 'new'}`}
+                          />
+                        </div>
+                        <input 
+                          type="text" 
+                          value={data.mediatheque?.videos?.[1] || ''} 
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
+                            newVideos[1] = val;
+                            setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
+                          }} 
+                          placeholder="Lien YouTube, Facebook, Vimeo..."
+                          className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl focus:border-[#149655] outline-none text-sm font-bold placeholder:font-normal placeholder:text-gray-300"
+                        />
+                        {data.mediatheque?.videos?.[1] ? (
+                           <div className="relative aspect-video rounded-xl overflow-hidden mt-3 shadow-md border border-white bg-black">
+                             {(() => {
+                               const v = data.mediatheque.videos[1];
+                               const ytMatch = v.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                               const ytId = (ytMatch && ytMatch[2].length === 11) ? ytMatch[2] : (v.length === 11 ? v : '');
+                               
+                               if (ytId) {
+                                 return <img src={`https://img.youtube.com/vi/${ytId}/default.jpg`} className="w-full h-full object-cover" />;
+                               } else if (v.includes('facebook.com') || v.includes('fb.watch')) {
+                                 return <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white font-bold text-xs">Facebook Video</div>;
+                               } else if (v.includes('vimeo.com')) {
+                                 return <div className="w-full h-full flex items-center justify-center bg-blue-400 text-white font-bold text-xs">Vimeo Video</div>;
+                               } else {
+                                 return <video src={v} className="w-full h-full object-cover" />;
+                               }
+                             })()}
+                             <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+                               <Play className="w-6 h-6 text-white opacity-80" />
+                             </div>
+                           </div>
+                        ) : (
+                          <div className="aspect-video bg-white/50 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200 mt-3">
+                            <LayoutGrid className="w-5 h-5 text-gray-200" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Centered Image Upload Section - Hidden for Contacts, Production Sites, News and Mediatheque */}
+              {type !== 'contact' && type !== 'production_site' && type !== 'actualite' && type !== 'mediatheque' && (
                <div className="pt-4 space-y-8 flex flex-col items-center">
                  <label className="text-[12px] font-bold text-[#111827] uppercase tracking-[0.05em] block text-center">Image de Couverture</label>
                  <div className="w-full max-w-md mx-auto">
@@ -691,6 +1174,84 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
               >
                 Compris
               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSuccessModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-[#0b261a]/40 backdrop-blur-md"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8, y: 100, rotate: -5 }}
+              animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+              exit={{ 
+                opacity: 0, 
+                scale: 1.2, 
+                y: -100,
+                rotate: 5,
+                filter: "blur(20px)",
+                transition: { duration: 0.6, ease: "backIn" } 
+              }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="bg-white rounded-[3rem] p-12 text-center max-w-md w-full shadow-[0_32px_128px_-16px_rgba(20,150,85,0.3)] border border-white/20 relative overflow-hidden z-10"
+            >
+              <div className="relative w-32 h-32 mx-auto mb-10 flex items-center justify-center">
+                <motion.div 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, ease: "backOut" }}
+                  className="absolute inset-0 bg-[#149655]/5 rounded-[2.5rem] rotate-12"
+                />
+                <motion.div 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: [1, 1.2, 1], opacity: 0.2 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-0 border-[10px] border-[#149655]/10 rounded-[2.5rem] -rotate-6"
+                />
+                <motion.div
+                  initial={{ scale: 0, opacity: 0, rotate: -45 }}
+                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3, type: "spring", stiffness: 200 }}
+                >
+                  <CheckCircle2 className="w-20 h-20 text-[#149655] stroke-[2px] relative z-10" />
+                </motion.div>
+              </div>
+              
+              <motion.h2 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-5xl font-black text-gray-900 mb-4 uppercase tracking-tighter italic"
+              >
+                Génial !
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-gray-500 mb-4 font-medium text-lg leading-relaxed px-4"
+              >
+                {lang === 'fr' 
+                  ? "Votre contenu a été sauvegardé avec succès et est maintenant en ligne." 
+                  : "Your content has been successfully saved and is now live."}
+              </motion.p>
+              
+              <div className="flex justify-center mt-10">
+                 <motion.div
+                   initial={{ width: 0 }}
+                   animate={{ width: "6rem" }}
+                   transition={{ duration: 0.8, delay: 0.6 }}
+                   className="h-1.5 bg-gradient-to-r from-transparent via-[#149655] to-transparent rounded-full opacity-40"
+                 />
+              </div>
             </motion.div>
           </div>
         )}

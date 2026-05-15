@@ -82,8 +82,8 @@ export default function SuccessSection({ onNavigate }: SuccessSectionProps) {
             </motion.h2>
             <motion.p variants={fadeInUp} className="mt-6 text-dronek-medium text-lg lg:text-xl leading-relaxed">
               {lang === 'fr'
-                ? 'Des petits agriculteurs aux grandes exploitations forestières, DRONEK a aidé des centaines de clients à améliorer leur efficacité et à obtenir de meilleurs rendements.'
-                : 'From small farmers to large forestry operations, DRONEK has helped hundreds of clients improve efficiency and achieve better yields.'}
+                ? 'Des agriculteurs aux grandes exploitations forestières, DRONEK a aidé des centaines de clients à améliorer leur efficacité et à obtenir de meilleurs rendements.'
+                : 'From farmers to large forestry operations, DRONEK has helped hundreds of clients improve efficiency and achieve better yields.'}
             </motion.p>
             <motion.div variants={fadeInUp}>
               <Button

@@ -10,8 +10,7 @@ import { useLanguage } from './LanguageProvider';
 import type { PageView } from './Navbar';
 import SuccessSection from './SuccessSection';
 import { projects as hardcodedProjects } from '@/lib/projects';
-import { collection, getDocs, query, orderBy, onSnapshot, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { ScrollTitle } from './ScrollTitle';
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -67,68 +66,58 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
   };
 
   React.useEffect(() => {
-    if (!db) return;
-    
     setLoading(true);
     
-    // Fetch Projects
-    const qProjects = query(
-      collection(db, 'projects'), 
-      where('status', 'in', ['Publié', 'Published']),
-      orderBy('createdAt', 'desc')
-    );
-    // Fetch News to find archived ones
-    const qNews = query(
-      collection(db, 'news'), 
-      where('status', 'in', ['Publié', 'Published']),
-      orderBy('createdAt', 'desc')
-    );
-
     const loadData = async () => {
       try {
         const [projSnap, newsSnap] = await Promise.all([
-          getDocs(qProjects),
-          getDocs(qNews)
+          supabase.from('projets').select('*').in('statut', ['publie', 'Publié', 'Published']).order('created_at', { ascending: false }),
+          supabase.from('actualites').select('*').in('statut', ['publie', 'Publié', 'Published']).order('date_publication', { ascending: false })
         ]);
 
-        const projectsData = projSnap.docs.map(doc => ({
-          slug: doc.id,
-          ...doc.data()
-        })) as any[];
-
-        const newsData = newsSnap.docs.map(doc => ({
-          slug: doc.id,
-          ...doc.data()
-        })) as any[];
+        const projectsData = projSnap.data || [];
+        const newsData = newsSnap.data || [];
 
         // Standard Projects
-        const standardProjects: Project[] = projectsData.map(p => ({
-          slug: p.slug,
-          title: p.title,
-          summary: p.content || p.description || p.summary,
-          image: p.image || '/images/hero-main.jpg',
-          categoryLabel: p.category || 'Projet',
-          location: p.location || (lang === 'fr' ? 'Sénégal' : 'Senegal'),
-          year: p.year || '2023',
-          objectives: p.objectives,
-          impacts: p.impacts,
-          detail: p.description || p.content,
-          isFeatured: p.isFeatured || false
-        }));
+        const standardProjects: Project[] = projectsData.map(p => {
+          let imageUrl = p.image_url || '/images/hero-main.jpg';
+          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+            imageUrl = '/images/hero-main.jpg';
+          }
+          return {
+            slug: p.id,
+            title: p.titre,
+            summary: p.description_courte || p.description_complete || '',
+            image: imageUrl,
+            categoryLabel: p.categorie || 'Projet',
+            location: p.localisation || (lang === 'fr' ? 'Sénégal' : 'Senegal'),
+            year: p.year || '2023',
+            objectives: p.objectives || [],
+            impacts: p.impacts || [],
+            detail: p.description_complete,
+            isFeatured: p.is_featured || false
+          };
+        });
 
         // Archived News (> 6 months)
         const archivedNews: Project[] = newsData
-          .filter(n => isOlderThan6Months(n.date || n.createdAt))
-          .map(n => ({
-            slug: n.slug,
-            title: n.title,
-            summary: n.content,
-            image: n.image || '/images/hero-main.jpg',
-            categoryLabel: lang === 'fr' ? 'Archive Actualité' : 'News Archive',
-            location: n.location || 'DRONEK',
-            year: n.date ? n.date.split(' ').pop() : new Date(n.createdAt).getFullYear().toString(),
-            detail: n.content
-          }));
+          .filter(n => isOlderThan6Months(n.date_publication))
+          .map(n => {
+            let imageUrl = n.image_url || '/images/hero-main.jpg';
+            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+              imageUrl = '/images/hero-main.jpg';
+            }
+            return {
+              slug: n.id,
+              title: n.titre,
+              summary: n.resume || n.contenu,
+              image: imageUrl,
+              categoryLabel: lang === 'fr' ? 'Archive Actualité' : 'News Archive',
+              location: n.location || 'DRONEK',
+              year: n.date_publication ? n.date_publication.split('-')[0] : new Date().getFullYear().toString(),
+              detail: n.contenu
+            };
+          });
 
         setDynamicProjects([...standardProjects, ...archivedNews].sort((a, b) => {
           if (a.isFeatured && !b.isFeatured) return -1;
@@ -143,6 +132,14 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
     };
 
     loadData();
+
+    const subProj = supabase.channel('projets-list').on('postgres_changes', { event: '*', schema: 'public', table: 'projets' }, loadData).subscribe();
+    const subNews = supabase.channel('news-archive-list').on('postgres_changes', { event: '*', schema: 'public', table: 'actualites' }, loadData).subscribe();
+
+    return () => {
+      subProj.unsubscribe();
+      subNews.unsubscribe();
+    };
   }, [lang]);
 
   const allProjectsRaw = [...dynamicProjects, ...hardcodedProjects];
@@ -322,25 +319,22 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/0 to-transparent" />
                       
                       <div className="absolute top-4 left-4">
-                        <span className="inline-flex items-center rounded-full border border-white/60 bg-white/90 px-4 py-1.5 text-sm font-medium text-dronek-green shadow-sm backdrop-blur-sm">
+                        <span className="inline-flex items-center rounded-full border border-dronek-green/20 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-dronek-green shadow-sm backdrop-blur-sm">
                           {project.categoryLabel}
                         </span>
                       </div>
                     </div>
 
-                    <div className="p-6 lg:p-7 space-y-5 flex flex-col h-[calc(100%-300px)] sm:h-[calc(100%-340px)]">
-                      <h3 className="text-3xl lg:text-[2.05rem] leading-[1.06] font-bold text-black uppercase tracking-tight">
-                        {project.title}
+                    <div className="p-6 lg:p-7 flex flex-col items-center text-center h-[calc(100%-300px)] sm:h-[calc(100%-340px)]">
+                      <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-tight tracking-tight mb-5">
+                        {project.title.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </h3>
                       
-                      <div className="mt-auto flex items-center justify-between">
-                        <Button
-                          className="w-fit rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-8 py-6 text-lg font-medium shadow-none"
-                        >
-                          {t.projects.learnMore}
-                        </Button>
-                        
-                      </div>
+                      <Button
+                        className="mt-auto w-fit rounded-full bg-dronek-green hover:bg-green-700 text-white px-6 py-2 h-auto text-sm font-semibold"
+                      >
+                        {t.projects.learnMore}
+                      </Button>
                     </div>
                   </div>
                 </motion.article>
@@ -427,14 +421,14 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               {/* Content Side */}
               <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold text-dronek-green uppercase tracking-[0.2em]">{selectedProject.categoryLabel}</span>
+                  <span className="text-xs font-semibold text-dronek-green uppercase tracking-widest">{selectedProject.categoryLabel}</span>
                   <button onClick={() => setSelectedProjectSlug(null)} className="hidden md:block hover:scale-110 transition-transform">
                     <X className="w-6 h-6 text-gray-300 hover:text-dronek-text" />
                   </button>
                 </div>
                 
-                <h2 className="text-2xl md:text-3xl font-black text-dronek-text uppercase mb-4 leading-tight">
-                  {selectedProject.title}
+                <h2 className="text-2xl md:text-3xl font-bold text-[#149655] mb-4 leading-tight">
+                  {selectedProject.title.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                 </h2>
 
                 <div className="space-y-6">
@@ -458,7 +452,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                   {/* Objectives */}
                   {(selectedProject as any).objectives && (
                     <div>
-                      <h4 className="text-xs font-bold text-dronek-text uppercase tracking-widest mb-3">{t.projects.objectivesLabel}</h4>
+                      <h4 className="text-sm font-bold text-[#149655] tracking-widest mb-3">{t.projects.objectivesLabel}</h4>
                       <ul className="space-y-2">
                         {(selectedProject as any).objectives.map((obj: string, i: number) => (
                           <li key={i} className="flex items-start gap-2 text-xs text-gray-500">
@@ -473,7 +467,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                   {/* Results / Impacts */}
                   {(selectedProject as any).impacts && (
                     <div>
-                      <h4 className="text-xs font-bold text-dronek-text uppercase tracking-widest mb-3">{t.projects.impactsLabel}</h4>
+                      <h4 className="text-sm font-bold text-[#149655] tracking-widest mb-3">{t.projects.impactsLabel}</h4>
                       <ul className="space-y-2">
                         {(selectedProject as any).impacts.map((impact: string, i: number) => (
                           <li key={i} className="flex items-start gap-2 text-xs text-gray-500">

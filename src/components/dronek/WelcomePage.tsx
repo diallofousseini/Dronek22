@@ -21,13 +21,14 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
     <div className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center font-sans bg-[#0f3e28]">
       {/* Background Image with Blur and Green Overlay */}
       <div className="absolute inset-0 z-0">
-        <Image 
-          src="/images/hero-drone.jpg" 
-          alt="Drone Background"
-          fill
-          className="object-cover scale-[1.02]"
-          priority
+        <video
+          autoPlay
+          muted
+          playsInline
+          loop
+          className="absolute inset-0 w-full h-full object-cover scale-[1.02]"
           style={{ filter: 'blur(10px)' }}
+          src="https://res.cloudinary.com/dpcbr467k/video/upload/v1776869570/No-video-title-fdown.net_2_kuo0v5.mp4"
         />
         {/* Color Overlays to match the image tint */}
         <div className="absolute inset-0 bg-[#08482f]/50 mix-blend-multiply" />

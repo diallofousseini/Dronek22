@@ -10,8 +10,7 @@ import Partners from './Partners';
 import type { PageView } from './Navbar';
 import InteractiveMap from './InteractiveMap';
 import { nurseryZones } from './NurseriesMap';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -26,32 +25,48 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
   const { lang, t } = useLanguage();
   const [sites, setSites] = React.useState<any[]>(t.production.sites);
   const [loading, setLoading] = React.useState(true);
+  const [focusedSiteId, setFocusedSiteId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!db) return;
-    const q = query(
-      collection(db, 'production_sites'), 
-      where('status', 'in', ['Publié', 'Published']),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const fetchedSites = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setSites(fetchedSites);
+    const fetchSites = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('production_sites')
+        .select('*')
+        .in('statut', ['publie', 'Publié', 'Published'])
+        .order('created_at', { ascending: false });
+      
+      if (data && data.length > 0) {
+        const dynamicSites = data.map(site => {
+          let imageUrl = site.image_url || site.image || '';
+          return {
+            ...site,
+            name: site.nom || site.name || 'Site de production',
+            location: site.localisation || site.location || '',
+            image: imageUrl,
+            desc: site.description || site.desc || site.description_courte || site.content || ''
+          };
+        });
+        
+        // Deduplicate: filter out dynamic sites that have the same name as a static site
+        const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const staticNames = new Set(t.production.sites.map((s: any) => normalize(s.name)));
+        const filteredDynamic = dynamicSites.filter(site => !staticNames.has(normalize(site.name)));
+        
+        setSites([...t.production.sites, ...filteredDynamic]);
       } else {
-        // Fallback to i18n static data if Firestore is empty
         setSites(t.production.sites);
       }
       setLoading(false);
-    }, (error) => {
-      console.error("Error fetching production sites:", error);
-      setSites(t.production.sites);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    };
+
+    fetchSites();
+
+    const sub = supabase.channel('production-sites').on('postgres_changes', { event: '*', schema: 'public', table: 'production_sites' }, fetchSites).subscribe();
+
+    return () => {
+      sub.unsubscribe();
+    };
   }, [t.production.sites]);
 
   // Coordinate mapping for production sites
@@ -113,7 +128,7 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 lg:pt-48 pb-12">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-52 lg:pt-72 pb-12">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
             <motion.div initial="hidden" animate="visible" className="flex-1 min-w-0">
                 <motion.h1 
@@ -149,24 +164,30 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
 
       <div className="bg-white">
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14 space-y-10 lg:space-y-24">
-          {sites.map((site: any, index: number) => {
+          {sitesWithCoords.filter(s => !s.id.startsWith('nursery-zone')).map((site: any, index: number) => {
 
             const image = (
-              <div className="rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] h-[400px] lg:h-[500px] w-full relative">
-                <Image src={site.image || '/images/nursery.jpg'} alt={site.name} fill className="object-cover" />
+              <div className="rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] h-[300px] sm:h-[400px] lg:h-[500px] w-full relative">
+                <img 
+                  src={site.image || '/images/nursery.jpg'} 
+                  alt={site.name} 
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== '/images/nursery.jpg') {
+                      target.src = '/images/nursery.jpg';
+                    }
+                  }}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
             );
 
             const content = (
-              <div className="max-w-xl w-full p-8 lg:p-12 rounded-[2.5rem] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100/50 backdrop-blur-sm relative overflow-hidden group">
-                {/* Decorative background element */}
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-dronek-green/5 rounded-full blur-3xl group-hover:bg-dronek-green/10 transition-colors duration-500" />
-                
+              <div className="max-w-xl w-full p-8 lg:p-12 relative overflow-hidden group">
                 <div className="relative z-10 space-y-8">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-10 bg-dronek-green rounded-full" />
                       <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-montserrat-extrabold text-[#0f4c2e] leading-tight uppercase tracking-tight">
                         {site.name}
                       </h2>
@@ -178,20 +199,23 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
                     </p>
                   </div>
 
-                  <p className="text-[#1d3b34] text-base lg:text-lg leading-relaxed font-medium opacity-90 border-l-2 border-gray-100 pl-6 italic">
+                  <p className="text-[#1d3b34] text-base lg:text-lg leading-relaxed font-medium opacity-90">
                     {site.desc || site.description}
                   </p>
 
-                  <button 
-                    onClick={() => {
-                      const mapSection = document.getElementById('network-map');
-                      if (mapSection) mapSection.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="group/btn flex items-center gap-3 px-6 py-3 bg-[#114f2e] hover:bg-[#0f4c2e] text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-lg shadow-black/5 active:scale-95"
-                  >
-                    Voir sur la carte
-                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
+                  <div className="mt-10 flex justify-center">
+                    <button 
+                      onClick={() => {
+                        setFocusedSiteId(site.id);
+                        const mapSection = document.getElementById('network-map');
+                        if (mapSection) mapSection.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="group/btn flex items-center gap-3 px-8 py-3.5 bg-green-900 hover:bg-green-800 text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-lg shadow-black/5 active:scale-95"
+                    >
+                      Voir sur la carte
+                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -203,13 +227,13 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
               >
                 {index % 2 === 0 ? (
                   <>
-                    <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>{content}</motion.div>
+                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>{content}</motion.div>
                     <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>{image}</motion.div>
                   </>
                 ) : (
                   <>
                     <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="lg:order-1">{image}</motion.div>
-                    <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="lg:order-2">{content}</motion.div>
+                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="lg:order-2">{content}</motion.div>
                   </>
                 )}
               </div>
@@ -230,14 +254,14 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
               <h2 className="text-3xl lg:text-4xl font-montserrat-extrabold text-[#0f4c2e] uppercase tracking-tight">
                 {lang === 'fr' ? 'Notre Réseau en Côte d\'Ivoire' : 'Our Network in Ivory Coast'}
               </h2>
-              <p className="text-gray-500 max-w-2xl mx-auto text-lg">
+              <p className="text-[#71807e] max-w-2xl mx-auto text-lg font-medium">
                 {lang === 'fr' 
                   ? 'Explorez nos sites de production et centres technologiques répartis stratégiquement sur l\'ensemble du territoire national.' 
                   : 'Explore our production sites and technological centers strategically distributed across the national territory.'}
               </p>
             </div>
 
-            <InteractiveMap sites={sitesWithCoords} />
+            <InteractiveMap sites={sitesWithCoords} focusedSiteId={focusedSiteId} />
           </motion.div>
         </section>
       </div>

@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { 
   Activity, Server, Eye, Save, Zap, Terminal, 
   ArrowRight, Shield, Globe, Clock, CheckCircle2, Loader2
@@ -59,49 +58,67 @@ export default function SyncTestPage() {
 
   // === Visitor Listener (Real-time) ===
   useEffect(() => {
-    if (!db) {
-      addLog("Erreur: Base de données non connectée", "system");
-      return;
-    }
-
-    addLog("Initialisation de l'écouteur WebSocket Firebase...", "system");
+    addLog("Initialisation de l'écouteur Realtime Supabase...", "system");
     
-    const docRef = doc(db, 'projects', TEST_DOC_ID);
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        setVisitorData(data);
-        addLog(`📡 Visiteur : Mise à jour reçue en temps réel -> "${data.title}"`, "visitor");
-        
-        // Visual ping effect
+    const fetchTestData = async () => {
+      const { data, error } = await supabase
+        .from('projets')
+        .select('*')
+        .eq('id', TEST_DOC_ID)
+        .single();
+      
+      if (data) {
+        setVisitorData({
+          ...data,
+          title: data.titre,
+          category: data.categorie,
+          isFeatured: data.is_featured,
+          image: data.image_url,
+          updatedAt: data.updated_at
+        });
+        addLog(`📡 Visiteur : Mise à jour reçue en temps réel -> "${data.titre}"`, "visitor");
         setLastUpdatePing(true);
         setTimeout(() => setLastUpdatePing(false), 500);
-      } else {
-        addLog("Le document de test n'existe pas encore. L'administrateur doit le créer.", "system");
       }
-    }, (error) => {
-      addLog(`Erreur de connexion : ${error.message}`, "system");
-    });
+    };
+
+    fetchTestData();
+
+    const channel = supabase.channel('test-sync')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'projets', 
+        filter: `id=eq.${TEST_DOC_ID}` 
+      }, (payload) => {
+        addLog(`📡 Supabase : Changement détecté via WebSocket`, "system");
+        fetchTestData();
+      })
+      .subscribe();
 
     return () => {
-      unsubscribe();
-      addLog("Fermeture de l'écouteur.", "system");
+      supabase.removeChannel(channel);
+      addLog("Fermeture du canal Realtime.", "system");
     };
   }, []);
 
   // === Admin Actions ===
   const handleAdminSave = async () => {
     setIsSaving(true);
-    addLog(`📤 Admin : Envoi de la modification -> "${adminData.title}"...`, "admin");
+    addLog(`📤 Admin : Envoi de la modification via Supabase UPSERT -> "${adminData.title}"...`, "admin");
     
     try {
-      const docRef = doc(db, 'projects', TEST_DOC_ID);
-      await setDoc(docRef, {
-        ...adminData,
-        updatedAt: serverTimestamp(),
-        isTest: true // Just a flag
+      const { error } = await supabase.from('projets').upsert({
+        id: TEST_DOC_ID,
+        titre: adminData.title,
+        categorie: adminData.category,
+        is_featured: adminData.isFeatured,
+        image_url: adminData.image,
+        updated_at: new Date().toISOString()
       });
-      addLog("✅ Admin : Sauvegarde confirmée par le serveur Firebase.", "admin");
+
+      if (error) throw error;
+      addLog("✅ Admin : Sauvegarde confirmée par le serveur PostgreSQL.", "admin");
     } catch (error: any) {
       addLog(`❌ Admin : Erreur lors de la sauvegarde (${error.message})`, "admin");
     } finally {
@@ -119,7 +136,7 @@ export default function SyncTestPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold uppercase tracking-tight text-gray-900">Synchronisation Temps Réel</h1>
-            <p className="text-xs text-gray-500 font-medium tracking-wide">Test de latence Admin ↔ Visiteur via Firebase WebSockets</p>
+            <p className="text-xs text-gray-500 font-medium tracking-wide">Test de latence Admin ↔ Visiteur via Supabase Channels</p>
           </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-bold uppercase tracking-wider">
@@ -188,7 +205,7 @@ export default function SyncTestPage() {
                 Sauvegarder la modification
               </button>
               <p className="text-center text-[10px] text-gray-400 mt-3 uppercase tracking-wide">
-                Envoie une requête d'écriture à Firestore
+                Envoie une requête d'écriture à Supabase
               </p>
             </div>
           </div>
@@ -232,7 +249,7 @@ export default function SyncTestPage() {
 
             {visitorData ? (
               <motion.div 
-                key={visitorData.updatedAt?.toMillis() || 'init'}
+                key={visitorData.updated_at || 'init'}
                 initial={{ y: 5, opacity: 0.8 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl relative border border-gray-100"

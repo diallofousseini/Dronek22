@@ -3,12 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
+import { useLanguage } from './LanguageProvider';
 
 // Dynamically import Map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
+const useMap = dynamic(() => import('react-leaflet').then(mod => mod.useMap), { ssr: false }) as any;
 
 // Dronek green SVG pin — encoded inline so no external file is needed
 const PIN_SVG = (color: string) =>
@@ -28,20 +30,33 @@ const PIN_SVG = (color: string) =>
     </svg>
   `)}`;
 
-interface Site {
-  id: string;
-  name: string;
-  location: string;
-  description?: string;
-  desc?: string;
-  center?: { lat: number; lng: number };
+// Internal component to control map focus
+function MapController({ sites, focusedSiteId }: { sites: Site[], focusedSiteId: string | null }) {
+  const map = (require('react-leaflet') as any).useMap();
+  
+  useEffect(() => {
+    if (focusedSiteId) {
+      const site = sites.find(s => s.id === focusedSiteId);
+      if (site && site.center) {
+        map.flyTo([site.center.lat, site.center.lng], 13, {
+          duration: 1.5
+        });
+      }
+    }
+  }, [focusedSiteId, sites, map]);
+  
+  return null;
 }
+
+// ... (PIN_SVG and interfaces remain unchanged)
 
 interface InteractiveMapProps {
   sites: Site[];
+  focusedSiteId?: string | null;
 }
 
-export default function InteractiveMap({ sites }: InteractiveMapProps) {
+export default function InteractiveMap({ sites, focusedSiteId = null }: InteractiveMapProps) {
+  const { lang } = useLanguage();
   const [L, setL] = useState<any>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -95,9 +110,8 @@ export default function InteractiveMap({ sites }: InteractiveMapProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
+      className="w-full h-[400px] sm:h-[500px] lg:h-[650px]"
       style={{
-        width: '100%',
-        height: 650,
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
@@ -116,6 +130,8 @@ export default function InteractiveMap({ sites }: InteractiveMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        <MapController sites={sites} focusedSiteId={focusedSiteId} />
 
         {sites.map((site, index) => {
           if (!site.center) return null;
@@ -151,25 +167,13 @@ export default function InteractiveMap({ sites }: InteractiveMapProps) {
       </MapContainer>
 
       {/* Badge overlay */}
-      <div style={{
-        position: 'absolute', bottom: 24, right: 24, zIndex: 1000,
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(8px)',
-        borderRadius: 999,
-        padding: '6px 14px',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-        border: '1px solid rgba(20,150,85,0.15)',
-        display: 'flex', alignItems: 'center', gap: 8,
-        pointerEvents: 'none',
-      }}>
-        <span style={{
-          display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-          background: '#149655', animation: 'pulse 2s ease-in-out infinite',
-        }} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: '#149655', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Sites Actifs — Côte d'Ivoire
+      <div 
+        className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-[1000] flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-dronek-green/15 pointer-events-none"
+      >
+        <span className="inline-block w-2 h-2 rounded-full bg-dronek-green animate-pulse" />
+        <span className="text-[9px] sm:text-[10px] font-extrabold color-[#149655] uppercase tracking-widest">
+          {lang === 'fr' ? 'Sites Actifs — Côte d\'Ivoire' : 'Active Sites — Ivory Coast'}
         </span>
-        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
       </div>
     </motion.div>
   );

@@ -7,8 +7,7 @@ import { Users, Linkedin, Mail, X, Quote, Facebook } from 'lucide-react';
 import AnimatedSection from './AnimatedSection';
 import { useLanguage } from './LanguageProvider';
 import { Button } from '@/components/ui/button';
-import { db } from '@/lib/firebase';
-import { collection, query, onSnapshot, orderBy, where } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
 import SuccessSection from './SuccessSection';
 import { ScrollTitle } from './ScrollTitle';
 
@@ -42,19 +41,50 @@ export default function TeamPage() {
   const [dynamicMembers, setDynamicMembers] = useState<TeamMember[]>([]);
 
   useEffect(() => {
-    if (!db) return;
-    const q = query(
-      collection(db, 'team'), 
-      where('status', 'in', ['Publié', 'Published']),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setDynamicMembers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember)));
-    });
-    return () => unsubscribe();
+    const fetchTeam = async () => {
+      const { data, error } = await supabase
+        .from('equipe')
+        .select('*')
+        .in('statut', ['publie', 'Publié', 'Published', 'actif']) // Match SQL schema status
+        .order('created_at', { ascending: false });
+      
+      if (data) {
+        setDynamicMembers(data.map(m => {
+          let imageUrl = m.photo_url || 'hero-main.jpg'; // just the filename so it prepends /images/ correctly below
+          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http') && !imageUrl.includes('.')) {
+             imageUrl = 'hero-main.jpg'; // Fallback if it's completely invalid text
+          } else if (imageUrl && imageUrl.startsWith('/images/')) {
+             imageUrl = imageUrl.replace('/images/', '');
+          }
+          return {
+            id: m.id,
+            name: `${m.prenom} ${m.nom}`,
+            role: m.poste,
+            image: imageUrl,
+            bio: m.biographie,
+            email: m.email,
+            linkedin: m.linkedin
+          };
+        }));
+      }
+    };
+
+    fetchTeam();
+
+    const subscription = supabase.channel('team-news').on('postgres_changes', { event: '*', schema: 'public', table: 'equipe' }, fetchTeam).subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const members = [...dynamicMembers, ...t.team.members];
+  const members = React.useMemo(() => {
+    const staticMembers = t.team.members || [];
+    // Normalize names to compare (lowercase, trimmed)
+    const dynamicNames = new Set(dynamicMembers.map(m => m.name.toLowerCase().trim()));
+    const filteredStatic = staticMembers.filter((m: any) => !dynamicNames.has(m.name.toLowerCase().trim()));
+    return [...dynamicMembers, ...filteredStatic];
+  }, [dynamicMembers, t.team.members]);
 
   return (
     <div className="bg-white min-h-screen">
@@ -115,7 +145,7 @@ export default function TeamPage() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center"
           >
             <motion.div variants={fadeInUp} className="lg:col-span-4 relative">
-              <div className="aspect-[4/5] rounded-[3rem] rounded-tl-[8rem] overflow-hidden shadow-2xl relative z-10 bg-[#ac96af]">
+              <div className="aspect-[4/5] rounded-[2rem] sm:rounded-[3rem] lg:rounded-tl-[8rem] overflow-hidden shadow-2xl relative z-10 bg-[#ac96af]">
                 <Image 
                   src="/images/founder.jpg" 
                   alt="Founder" 
@@ -123,15 +153,24 @@ export default function TeamPage() {
                   className="object-cover object-top mix-blend-multiply opacity-90" 
                 />
               </div>
-
-
             </motion.div>
 
             <motion.div variants={fadeInUp} className="lg:col-span-8 space-y-6">
-              <ScrollTitle className="inline-flex items-center gap-2 text-dronek-green font-bold tracking-widest uppercase text-xs">
+              <div className="inline-flex items-center gap-2 text-dronek-green font-bold tracking-widest uppercase text-xs">
                 <div className="h-px w-6 bg-dronek-green" />
-                {t.team.founderWord.title}
-              </ScrollTitle>
+                {t.team.founderWord.title.split('').map((char: string, i: number) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.1, delay: i * 0.05 }}
+                    className="inline-block"
+                  >
+                    {char === ' ' ? '\u00A0' : char}
+                  </motion.span>
+                ))}
+              </div>
               <h2 className="text-2xl lg:text-3xl font-bold text-dronek-text leading-tight italic">
                 {t.team.founderWord.quote}
               </h2>
@@ -140,7 +179,7 @@ export default function TeamPage() {
                 <p>{t.team.founderWord.desc2}</p>
                 <div className="flex flex-col pt-2">
                   <span className="text-xl font-bold text-dronek-text">{t.team.founderWord.name}</span>
-                  <span className="text-sm font-semibold">{t.team.founderWord.signature}</span>
+                  <span className="text-sm font-semibold text-dronek-green">{t.team.founderWord.signature}</span>
                 </div>
               </div>
             </motion.div>
@@ -161,63 +200,96 @@ export default function TeamPage() {
             whileInView="visible"
             viewport={{ once: true, margin: '-50px' }}
             variants={stagger}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16 max-w-6xl mx-auto"
           >
             {members.map((member, idx) => (
-              <motion.div 
-                key={idx} 
-                initial={{ opacity: 0, y: 150 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 2.0, delay: idx * 0.4, ease: "easeOut" }}
-                className="h-full"
-              >
-                <div className="group flex flex-col items-center text-center p-4">
-                  {/* Circular Image with Hover Socials (No border) */}
-                  <div className="relative w-48 h-48 sm:w-60 sm:h-60 lg:w-64 lg:h-64 rounded-full overflow-hidden shadow-2xl mb-8 group-hover:shadow-dronek-green/20 transition-all duration-500">
-                    <Image
-                      src={member.image.startsWith('http') ? member.image : `/images/${member.image}`}
-                      alt={member.name}
-                      fill
-                      className="object-cover object-top transition-transform duration-700 group-hover:scale-110"
-                    />
-                    
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 px-4">
-                      {[
-                        { icon: Facebook, href: member.facebook },
-                        { icon: Linkedin, href: member.linkedin },
-                        { icon: Mail, href: member.email ? `mailto:${member.email}` : null }
-                      ].map((social, sIdx) => social.href ? (
-                        <a
-                          key={sIdx}
-                          href={social.href}
-                          target={social.icon === Mail ? "_self" : "_blank"}
-                          rel="noopener noreferrer"
-                          className="w-10 h-10 sm:w-12 sm:h-12 bg-dronek-green rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-110 transition-transform duration-200"
-                        >
-                          <social.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </a>
-                      ) : null)}
-                    </div>
-                  </div>
-
-                  {/* Name & Role — Matches image style */}
-                  <div className="space-y-4 max-w-xs">
-                    <h3 className="text-2xl lg:text-3xl font-black text-black leading-[1.1] uppercase tracking-tighter">
-                      {member.name}
-                    </h3>
-                    <p className="text-dronek-green font-semibold text-lg lg:text-xl leading-snug">
-                      {member.role}
-                    </p>
-                    {/* Bio removed to match image style, can be restored if needed */}
-                  </div>
-                </div>
-              </motion.div>
+              <MemberCard key={member.id || idx} member={member} idx={idx} />
             ))}
           </motion.div>
         </div>
       </section>
 
     </div>
+  );
+}
+
+function MemberCard({ member, idx }: { member: TeamMember; idx: number }) {
+  const [imageError, setImageError] = useState(false);
+  const { lang } = useLanguage();
+
+  // Handle name repetition: If prenom and nom were same or name already has repetition
+  const formattedName = React.useMemo(() => {
+    let name = member.name.trim();
+    const parts = name.split(' ');
+    
+    // If name has 4 parts and first two are same as last two, it's a duplication
+    if (parts.length === 4 && 
+        parts[0].toLowerCase() === parts[2].toLowerCase() && 
+        parts[1].toLowerCase() === parts[3].toLowerCase()) {
+      name = `${parts[0]} ${parts[1]}`;
+    } else if (parts.length === 2 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
+      name = parts[0];
+    }
+
+    return name.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  }, [member.name]);
+
+  const imgSrc = imageError 
+    ? '/images/founder.jpg' // Use founder as high-quality fallback or a specific team-placeholder
+    : (member.image.startsWith('http') || member.image.startsWith('/') ? member.image : `/images/${member.image}`);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 150 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 1.5, delay: idx * 0.2, ease: "easeOut" }}
+      className="h-full"
+    >
+      <div className="group flex flex-col items-center text-center p-2 sm:p-4">
+        {/* Circular Image with Hover Socials (No border) */}
+        <div className="relative rounded-full overflow-hidden shadow-2xl mb-6 lg:mb-8 group-hover:shadow-dronek-green/20 transition-all duration-500 bg-gray-100"
+             style={{ 
+               width: 'clamp(140px, 40vw, 256px)', 
+               height: 'clamp(140px, 40vw, 256px)' 
+             }}
+        >
+          <img
+            src={imgSrc}
+            alt={member.name}
+            className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+            onError={() => setImageError(true)}
+          />
+          
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 px-4">
+            {[
+              { icon: Facebook, href: member.facebook },
+              { icon: Linkedin, href: member.linkedin },
+              { icon: Mail, href: member.email ? `mailto:${member.email}` : null }
+            ].map((social, sIdx) => social.href ? (
+              <a
+                key={sIdx}
+                href={social.href}
+                target={social.icon === Mail ? "_self" : "_blank"}
+                rel="noopener noreferrer"
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-dronek-green rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-110 transition-transform duration-200"
+              >
+                <social.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </a>
+            ) : null)}
+          </div>
+        </div>
+
+        {/* Name & Role — Matches project card style */}
+        <div className="flex flex-col items-center text-center h-full">
+          <h3 className="text-xl lg:text-2xl font-bold text-[#149655] leading-tight tracking-tight mb-3">
+            {formattedName}
+          </h3>
+          <p className="text-[#71807e] font-medium text-base lg:text-xl leading-relaxed whitespace-pre-line">
+            {member.role}
+          </p>
+        </div>
+      </div>
+    </motion.div>
   );
 }
