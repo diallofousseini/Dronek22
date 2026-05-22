@@ -44,15 +44,4 @@ const nextConfig: NextConfig = {
   transpilePackages: ['react-leaflet', 'leaflet'],
 };
 
-export default withSentryConfig(
-  nextConfig,
-  {
-    silent: true,
-    org: "dronek",
-    project: "nextjs",
-    // Upload sourcemaps only in production build and when auth token is present
-    sourcemaps: {
-      disable: process.env.NODE_ENV === 'development' || !process.env.SENTRY_AUTH_TOKEN,
-    },
-  }
-);
+export default nextConfig;
