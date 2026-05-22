@@ -17,7 +17,7 @@ export default function Footer({ onNavigate, onOpenNewsMenu }: FooterProps) {
 
   const handleNav = (page: 'home' | 'services' | 'projects' | 'blog' | 'team' | 'production' | 'contact' | 'admin') => {
     if (page === 'admin') {
-      window.location.href = '/admin/login';
+      window.location.assign('/admin/login');
       return;
     }
     
@@ -38,7 +38,9 @@ export default function Footer({ onNavigate, onOpenNewsMenu }: FooterProps) {
         .from('contacts')
         .select('*')
         .eq('sujet', 'Configuration')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
       if (data) {
         setDynamicInfo(data);
@@ -46,12 +48,6 @@ export default function Footer({ onNavigate, onOpenNewsMenu }: FooterProps) {
     };
 
     fetchContactInfo();
-
-    const sub = supabase.channel('footer-contact').on('postgres_changes', { event: '*', schema: 'public', table: 'contacts', filter: 'sujet=eq.Configuration' }, fetchContactInfo).subscribe();
-
-    return () => {
-      sub.unsubscribe();
-    };
   }, []);
   const quickLinks = [
     { label: t.nav.services, page: 'services' as const },

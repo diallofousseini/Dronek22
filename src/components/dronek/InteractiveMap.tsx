@@ -5,12 +5,8 @@ import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { useLanguage } from './LanguageProvider';
 
-// Dynamically import Map components to avoid SSR issues
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
-const useMap = dynamic(() => import('react-leaflet').then(mod => mod.useMap), { ssr: false }) as any;
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 // Dronek green SVG pin — encoded inline so no external file is needed
 const PIN_SVG = (color: string) =>
@@ -31,8 +27,8 @@ const PIN_SVG = (color: string) =>
   `)}`;
 
 // Internal component to control map focus
-function MapController({ sites, focusedSiteId }: { sites: Site[], focusedSiteId: string | null }) {
-  const map = (require('react-leaflet') as any).useMap();
+function MapController({ sites, focusedSiteId }: { sites: any[], focusedSiteId: string | null }) {
+  const map = useMap();
   
   useEffect(() => {
     if (focusedSiteId) {
@@ -49,6 +45,15 @@ function MapController({ sites, focusedSiteId }: { sites: Site[], focusedSiteId:
 }
 
 // ... (PIN_SVG and interfaces remain unchanged)
+
+interface Site {
+  id: string;
+  name: string;
+  location: string;
+  desc?: string;
+  description?: string;
+  center?: { lat: number; lng: number };
+}
 
 interface InteractiveMapProps {
   sites: Site[];
@@ -90,20 +95,36 @@ export default function InteractiveMap({ sites, focusedSiteId = null }: Interact
     );
   }
 
+  // Animation CSS for marker
+  const vibrateStyles = `
+    @keyframes vibrateMarker {
+      0% { transform: translate(-2px, 2px); }
+      20% { transform: translate(-2px, -2px); }
+      40% { transform: translate(2px, 2px); }
+      60% { transform: translate(2px, -2px); }
+      80% { transform: translate(-2px, 2px); }
+      100% { transform: translate(0, 0); }
+    }
+    .leaflet-marker-vibrate {
+      animation: vibrateMarker 0.15s linear 20; /* 0.15s * 20 = 3s */
+    }
+  `;
+
   // Côte d'Ivoire center
   const center: [number, number] = [7.2, -5.4];
   const zoom = 7;
 
   // Build Leaflet icon from SVG data URL — rock-solid, no CSS dependency
-  const makeIcon = (color: string) =>
+  const makeIcon = (color: string, isFocused: boolean) =>
     L.icon({
       iconUrl: PIN_SVG(color),
       iconSize: [30, 44],
       iconAnchor: [15, 44],
       popupAnchor: [0, -44],
+      className: isFocused ? 'leaflet-marker-vibrate' : '',
     });
 
-  const greenIcon = makeIcon('#149655');  // Dronek footer green
+  const greenIcon = (isFocused: boolean) => makeIcon('#149655', isFocused);
 
   return (
     <motion.div
@@ -120,6 +141,7 @@ export default function InteractiveMap({ sites, focusedSiteId = null }: Interact
         zIndex: 0,
       }}
     >
+      <style>{vibrateStyles}</style>
       <MapContainer
         center={center}
         zoom={zoom}
@@ -141,7 +163,7 @@ export default function InteractiveMap({ sites, focusedSiteId = null }: Interact
             <Marker
               key={site.id || ('marker-' + index)}
               position={position}
-              icon={greenIcon}
+              icon={greenIcon(site.id === focusedSiteId)}
             >
               <Popup>
                 <div style={{ minWidth: 180, padding: '4px 2px' }}>

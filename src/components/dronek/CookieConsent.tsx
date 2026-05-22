@@ -46,7 +46,9 @@ export default function CookieConsent() {
   }, [setPreferences]);
 
   const saveConsent = (status: ConsentStatus) => {
-    localStorage.setItem('dronek-cookie-consent', status);
+    if (status) {
+      localStorage.setItem('dronek-cookie-consent', status);
+    }
     if (status === 'custom') {
       localStorage.setItem('dronek-cookie-preferences', JSON.stringify(preferences));
     }

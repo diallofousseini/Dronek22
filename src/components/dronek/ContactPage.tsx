@@ -42,7 +42,9 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
         .from('contacts')
         .select('*')
         .eq('sujet', 'Configuration')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
       if (data) {
         setDynamicInfo(data);
@@ -50,12 +52,6 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
     };
 
     fetchContactInfo();
-
-    const sub = supabase.channel('contact-config').on('postgres_changes', { event: '*', schema: 'public', table: 'contacts', filter: 'sujet=eq.Configuration' }, fetchContactInfo).subscribe();
-
-    return () => {
-      sub.unsubscribe();
-    };
   }, []);
 
   const validate = () => {
@@ -79,6 +75,7 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
     if (validate()) {
       setIsSubmitting(true);
       try {
+        // 1. Enregistrer dans la base de données Supabase
         const { error } = await supabase
           .from('contacts')
           .insert([
@@ -94,6 +91,25 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
             }
           ]);
         if (error) throw error;
+
+        // 2. Envoyer l'e-mail via l'API locale /api/contact
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: `${formData.prenom} ${formData.nom}`,
+            email: formData.email,
+            subject: formData.objet,
+            message: formData.message
+          })
+        });
+
+        if (!response.ok) {
+          console.warn("L'e-mail n'a pas pu être envoyé via /api/contact");
+        }
+
         setIsSuccess(true);
         setFormData({ prenom: '', nom: '', email: '', telephone: '', objet: '', message: '' });
         setTimeout(() => setIsSuccess(false), 5000);
@@ -115,7 +131,7 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
   return (
     <div className="bg-white min-h-screen">
       {/* 🚀 BANNER HERO — Centered Dronek Style */}
-      <AnimatedSection className="relative h-auto min-h-[160px] lg:min-h-[180px] flex items-start overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] lg:rounded-tl-[8rem] lg:rounded-br-[8rem] mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl bg-[#1a4a2e]">
+      <AnimatedSection className="relative h-auto min-h-[100px] lg:min-h-[120px] flex items-start overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] lg:rounded-tl-[8rem] lg:rounded-br-[8rem] mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl bg-[#1a4a2e]">
         {/* Background Accents */}
         <div className="absolute inset-0 bg-gradient-to-br from-dronek-dark via-[#0a2118] to-dronek-green/20 opacity-90" />
         <div className="absolute inset-0 pattern-dots-light opacity-10" />
@@ -127,7 +143,7 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
           className="absolute right-0 bottom-0 translate-x-1/4 translate-y-1/4 w-[400px] lg:w-[600px] h-auto opacity-20 pointer-events-none"
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 pt-12 lg:pt-14 pb-8 flex justify-center items-center">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 pt-8 lg:pt-10 pb-6 flex justify-center items-center">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -154,7 +170,7 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
       </AnimatedSection>
 
       {/* Main Content */}
-      <section className="py-16 lg:py-24 relative bg-white">
+      <section className="pt-8 pb-16 lg:pt-12 lg:pb-24 relative bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             

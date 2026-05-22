@@ -83,7 +83,7 @@ function AppContent({ initialPage }: AppContentProps) {
       case 'production':
         return <ProductionSitesPage onNavigate={handleNavigate} />;
       case 'contact':
-        return <ContactPage />;
+        return <ContactPage onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

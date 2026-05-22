@@ -28,7 +28,7 @@ interface HomePageProps {
 /* ─────── Animation Helpers ─────── */
 const fadeInUp = {
   hidden: { opacity: 0, y: 100, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] as const } },
 };
 
 const fadeIn = {
@@ -141,7 +141,7 @@ function Section({ children, className = '', id }: { children: React.ReactNode; 
         visible: {
           opacity: 1,
           y: 0,
-          transition: { duration: 0.9, staggerChildren: 0.15, ease: [0.22, 1, 0.36, 1] },
+          transition: { duration: 0.9, staggerChildren: 0.15, ease: [0.22, 1, 0.36, 1] as const },
         },
       }}
       className={cn('py-4 lg:py-6', className)}
@@ -286,9 +286,102 @@ const featuredProjectsFallback = [
   },
 ];
 
+const getFallbackServices = (lang: string) => [
+  {
+    id: 'agriculture',
+    titre: lang === 'fr' ? 'Agriculture' : 'Agriculture',
+    description: lang === 'fr' ? "Soutenir les acteurs de la chaîne de valeur agricole grâce à l'agriculture de précision." : "Supporting agricultural value chain players through precision agriculture.",
+    image: '/images/hero-agriculture.jpg'
+  },
+  {
+    id: 'drone',
+    titre: lang === 'fr' ? 'Drone et Cartographie' : 'Drone and Mapping',
+    description: lang === 'fr' ? "Analyse de précision et cartographie aérienne haute résolution." : "Precision analysis and high-resolution aerial mapping.",
+    image: '/images/drone-work.jpg'
+  },
+  {
+    id: 'agroforestry',
+    titre: lang === 'fr' ? 'Agroforesterie' : 'Agroforestry',
+    description: lang === 'fr' ? "Intégration durable d'arbres dans vos systèmes agricoles." : "Sustainable integration of trees into your farming systems.",
+    image: '/images/hero-agroforestry.jpg'
+  },
+  {
+    id: 'forestry',
+    titre: lang === 'fr' ? 'Foresterie' : 'Forestry',
+    description: lang === 'fr' ? "Développer la performance des secteurs de la foresterie et du reboisement durable." : "Developing the performance of forestry and sustainable reforestation sectors.",
+    image: '/images/hero-forest.jpg'
+  }
+];
+
+const getGridStyle = (count: number) => {
+  if (count <= 2) return {
+    gridTemplateColumns: `repeat(${count}, 1fr)`,
+    gridTemplateRows: '1fr',
+    height: '50vh',
+    minHeight: '400px'
+  }
+  if (count === 3) return {
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gridTemplateRows: '1fr',
+    height: '50vh',
+    minHeight: '400px'
+  }
+  if (count === 4) return {
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gridTemplateRows: '1fr 1fr',
+    height: '80vh',
+    minHeight: '680px'
+  }
+  if (count === 5) return {
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateRows: 'repeat(2, 1fr)',
+    height: '80vh',
+    gap: '2px'
+  };
+  const rows = Math.ceil(count / 3);
+  return {
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateRows: `repeat(${rows}, 1fr)`,
+    height: 'auto',
+    minHeight: `${rows * 340}px`
+  }
+}
+
+const getCardStyle = (index: number, total: number) => {
+  if (total === 4) {
+    if (index === 0) return { gridRow: '1 / 3' }
+    if (index === 3) return { gridRow: '1 / 3', gridColumn: '3' }
+  }
+  if (total === 5) {
+    if (index === 0) return { gridRow: '1 / 3' }
+  }
+  return {}
+}
+
+const getCardLabel = (s: any, lang: string) => {
+  if (s.label) return s.label;
+  if (s.service_type) {
+    const st = s.service_type.toLowerCase();
+    if (st === 'forestry') return lang === 'fr' ? 'Foresterie' : 'Forestry';
+    if (st === 'agriculture') return lang === 'fr' ? 'Agriculture' : 'Agriculture';
+    if (st === 'drone') return lang === 'fr' ? 'Drone & Cartographie' : 'Drone & Mapping';
+    if (st === 'agroforestry') return lang === 'fr' ? 'Agroforesterie' : 'Agroforestry';
+    return s.service_type;
+  }
+  const id = (s.id || '').toLowerCase();
+  if (id.includes('agriculture')) return lang === 'fr' ? 'Secteur' : 'Sector';
+  if (id.includes('drone')) return lang === 'fr' ? 'Drone & Cartographie' : 'Drone & Mapping';
+  if (id.includes('agroforestry')) return lang === 'fr' ? 'Agroforesterie' : 'Agroforestry';
+  if (id.includes('forestry')) return lang === 'fr' ? 'Foresterie' : 'Forestry';
+  if (id.includes('academy')) return lang === 'fr' ? 'Innovation' : 'Innovation';
+  if (id.includes('boutique')) return lang === 'fr' ? 'Boutique' : 'Shop';
+  return lang === 'fr' ? 'Expertise' : 'Expertise';
+};
+
 /* ═══════════════════════════════════
    HOME PAGE
    ═══════════════════════════════════ */
+
 export default function HomePage({ onNavigate }: HomePageProps) {
   const { t, lang } = useLanguage();
   const [heroIndex, setHeroIndex] = useState(0);
@@ -304,9 +397,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [onNavigate]);
 
-  const getPartnerFallbackLabel = (name: string) => {
-    const label = name
-      .split(' ')
+  const getInitials = (name: string) => {
+    if (!name) return 'DK';
+    const clean = name.trim();
+    if (!clean.includes(' ')) return clean.slice(0, 2).toUpperCase();
+    
+    const parts = clean.split(' ').filter(Boolean);
+    const label = parts
+      .slice(0, 3)
       .map((part) => part[0])
       .join('')
       .replace(/[^A-Za-z0-9]/g, '')
@@ -315,7 +413,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     return label || name.slice(0, 6);
   };
 
-  const [dynamicNews, setDynamicNews] = useState<any[]>([]);
   const [dynamicHeroImages, setDynamicHeroImages] = useState<string[]>(defaultHeroImages);
   const [dynamicServices, setDynamicServices] = useState<any[]>([]);
 
@@ -352,9 +449,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
           return {
             ...p,
-            title: p.titre || p.title || '',
+            title: (lang === 'en' && p.titre_en) ? p.titre_en : (p.titre || p.title || ''),
             image: imageUrl,
-            service: p.categorie || 'PROJET'
+            service: (lang === 'en' && p.categorie_en) ? p.categorie_en : (p.categorie || 'PROJET')
           };
         }));
       }
@@ -374,9 +471,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
           return {
             ...p,
-            title: p.titre || p.title || '',
+            title: (lang === 'en' && p.titre_en) ? p.titre_en : (p.titre || p.title || ''),
             image: imageUrl,
-            service: p.categorie || 'PROJET PHARE'
+            service: (lang === 'en' && p.categorie_en) ? p.categorie_en : (p.categorie || (lang === 'en' ? 'FEATURED PROJECT' : 'PROJET PHARE'))
           };
         }));
       } else {
@@ -393,34 +490,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
             return {
               ...p,
-              title: p.titre || p.title || '',
+              title: (lang === 'en' && p.titre_en) ? p.titre_en : (p.titre || p.title || ''),
               image: imageUrl,
-              service: p.categorie || 'PROJET'
+              service: (lang === 'en' && p.categorie_en) ? p.categorie_en : (p.categorie || 'PROJET')
             };
           }));
         }
-      }
-
-      // 3. Fetch News
-      const { data: newsData } = await supabase
-        .from('actualites')
-        .select('*')
-        .in('statut', ['publie', 'Publié', 'Published'])
-        .order('date_publication', { ascending: false })
-        .limit(3);
-      
-      if (newsData) {
-        setDynamicNews(newsData.map(n => {
-          let imageUrl = n.image_url || '/images/hero-main.jpg';
-          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
-          return {
-            ...n,
-            title: n.titre || n.title || '',
-            desc: n.resume || n.contenu,
-            image: imageUrl,
-            createdAt: n.date_publication
-          };
-        }));
       }
 
       // 4. Fetch Services
@@ -428,7 +503,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         .from('services')
         .select('*')
         .in('statut', ['publie', 'Publié', 'Published'])
-        .order('ordre', { ascending: true });
+        .order('created_at', { ascending: false });
       
       if (servicesData) {
         // Fetch MainServices config from contacts table
@@ -444,17 +519,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           return {
             ...s,
             id: s.id,
-            titre: s.titre || s.title,
-            description: s.description_courte || s.description,
+            titre: (lang === 'en' && s.titre_en) ? s.titre_en : (s.titre || s.title),
+            description: (lang === 'en' && s.description_en) ? s.description_en : (s.description_courte || s.description),
             image: imageUrl,
             is_main_service: mainIds.includes(s.id)
           };
         });
         
-        const mainServices = mapped
-          .filter((s: any) => s.is_main_service === true)
-          .slice(0, 4);
-        setDynamicServices(mainServices);
+        const mainServices = mapped.filter((s: any) => s.is_main_service === true);
+        setDynamicServices(mainServices.length > 0 ? mainServices : getFallbackServices(lang));
+      } else {
+        setDynamicServices(getFallbackServices(lang));
       }
 
       // 5. Fetch Hero Media
@@ -470,28 +545,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     };
 
     fetchAll();
-
-    // Real-time subscriptions
-    const channelProjets = supabase.channel('projets-all').on('postgres_changes', { event: '*', schema: 'public', table: 'projets' }, fetchAll).subscribe();
-    const channelNews = supabase.channel('actualites-all').on('postgres_changes', { event: '*', schema: 'public', table: 'actualites' }, fetchAll).subscribe();
-    const channelServices = supabase.channel('services-all').on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, fetchAll).subscribe();
-    const channelMedia = supabase.channel('media-all').on('postgres_changes', { event: '*', schema: 'public', table: 'media' }, fetchAll).subscribe();
-    const channelContacts = supabase.channel('contacts-all').on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, fetchAll).subscribe();
-
-    return () => {
-      channelProjets.unsubscribe();
-      channelNews.unsubscribe();
-      channelServices.unsubscribe();
-      channelMedia.unsubscribe();
-      channelContacts.unsubscribe();
-    };
   }, [lang]);
  // Added lang to dependencies
 
   // Auto-rotate hero items
   const heroItems = [
-    ...dynamicHeroImages.map(img => ({ type: 'image', image: img })),
-    ...dynamicNews.slice(0, 3).map(news => ({ type: 'news', ...news }))
+    ...dynamicHeroImages.map(img => ({ type: 'image', image: img }))
   ];
 
   useEffect(() => {
@@ -517,12 +576,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   ];
 
   const rotatingPhrases = lang === 'fr'
-    ? ['Foresterie Durable', 'Cartographie par Drone', 'Agroforesterie', 'Agriculture Innovante', 'Inventaire Forestier', 'SIG & Télédétection']
-    : ['Sustainable Forestry', 'Drone Mapping', 'Agroforestry', 'Innovative Agriculture', 'Forest Inventory', 'GIS & Remote Sensing'];
+    ? ['Foresterie Durable', 'Cartographie 3D', 'Agroforesterie', 'Solutions Innovantes', 'Inventaire Forestier', 'SIG & Télédétection']
+    : ['Sustainable Forestry', '3D Mapping', 'Agroforestry', 'Innovative Solutions', 'Forest Inventory', 'GIS & Remote Sensing'];
 
   const heroSlogans = lang === 'fr'
-    ? ['Gestion Durable des Forêts', 'Cartographie par Drone', 'Agroforesterie', 'Agriculture Durable', 'Inventaire Forestier', 'Technologies pour la Nature']
-    : ['Sustainable Forest Management', 'Drone Mapping', 'Agroforestry', 'Sustainable Agriculture', 'Forest Inventory', 'Technology for Nature'];
+    ? ['Gestion Durable des Forêts', 'Analyses Végétales', 'Surveillance Agricole', 'Agriculture de Précision', 'Inventaire Forestier', 'Technologies pour la Nature']
+    : ['Sustainable Forest Management', 'Vegetation Analysis', 'Agricultural Monitoring', 'Precision Agriculture', 'Forest Inventory', 'Technology for Nature'];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -539,12 +598,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   }, [rotatingPhrases.length]);
 
   const prevHeroSlide = useCallback(() => {
-    setHeroIndex((prev) => (prev === 0 ? heroImages.length - 1 : prev - 1));
-  }, []);
+    setHeroIndex((prev) => (prev === 0 ? heroItems.length - 1 : prev - 1));
+  }, [heroItems.length]);
 
   const nextHeroSlide = useCallback(() => {
-    setHeroIndex((prev) => (prev + 1) % heroImages.length);
-  }, []);
+    setHeroIndex((prev) => (prev + 1) % heroItems.length);
+  }, [heroItems.length]);
 
   const prevHeroSlogan = useCallback(() => {
     setHeroSloganIndex((prev) => (prev === 0 ? heroSlogans.length - 1 : prev - 1));
@@ -613,32 +672,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 priority
               />
               
-              {heroItems[heroIndex]?.type === 'news' && (
-                <div className="absolute top-32 left-8 sm:left-12 lg:left-24 z-20 max-w-sm md:max-w-md">
-                   <motion.div 
-                     initial={{ x: -100, opacity: 0 }}
-                     animate={{ x: 0, opacity: 1 }}
-                     className="bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-2xl border border-white/20 text-left"
-                   >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full border border-gray-100 flex items-center justify-center bg-white overflow-hidden p-1">
-                           <img src="/Typographie/logoV.png" alt="logo" className="w-full h-full object-contain" />
-                        </div>
-                        <div>
-                          <p className="text-[12px] font-black text-black uppercase tracking-wider">DRONEK</p>
-                          <p className="text-[10px] text-gray-400 font-bold">{timeAgo(heroItems[heroIndex].createdAt)}</p>
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-black uppercase leading-tight mb-3 line-clamp-2">{heroItems[heroIndex].title}</h3>
-                      <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed mb-4">
-                        {heroItems[heroIndex].desc}
-                      </p>
-                      <Button onClick={() => handleNav('blog')} className="w-full rounded-xl bg-dronek-green text-white text-[10px] font-bold uppercase tracking-widest py-3">
-                         Lire l&apos;actualité
-                      </Button>
-                   </motion.div>
-                </div>
-              )}
             </motion.div>
           </AnimatePresence>
         </motion.div>
@@ -684,7 +717,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   <ChevronLeft className="w-4 h-4 sm:w-5 h-5" />
                 </button>
                 <span className="leading-[1.08] font-bold" style={{ fontSize: 'clamp(1.5rem, 6vw, 4.5rem)' }}>
-                  {lang === 'fr' ? "ET de l'Agriculture par Drone" : 'AND Agriculture by Drone'}
+                  {lang === 'fr' ? "& DE LA TECHNOLOGIE PAR DRONE" : '& DRONE TECHNOLOGY'}
                 </span>
                 <button
                   onClick={nextHeroSlogan}
@@ -702,7 +735,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               className="min-h-[3rem] sm:min-h-[3.5rem] flex flex-wrap items-center justify-center overflow-visible px-4"
             >
               <span className="text-sm sm:text-lg lg:text-2xl font-medium mr-1.5 text-white whitespace-nowrap">
-                {lang === 'fr' ? 'Nous sommes experts en' : 'We are experts in'}
+                {lang === 'fr' ? 'Notre expertise :' : 'Our expertise:'}
               </span>
               <div className="relative inline-flex items-center">
                 <AnimatePresence mode="wait">
@@ -823,20 +856,32 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   variants={stagger}
                   className="mb-12 text-center"
                 >
-                  <span className="text-dronek-green font-black uppercase text-3xl lg:text-4xl block leading-tight tracking-tighter">
-                    {(lang === 'fr' ? 'Qui sommes-nous ?' : 'Who are we?').split('').map((char, i) => (
-                      <motion.span
-                        key={i}
-                        variants={{
-                          hidden: { opacity: 0, y: 10 },
-                          visible: { opacity: 1, y: 0 }
-                        }}
-                        transition={{ duration: 0.1, delay: i * 0.03 }}
-                        className="inline-block"
-                      >
-                        {char === ' ' ? '\u00A0' : char}
-                      </motion.span>
-                    ))}
+                  <span className="block text-3xl lg:text-5xl leading-tight tracking-normal text-center flex items-baseline justify-center flex-nowrap whitespace-nowrap gap-2">
+                    <span className="text-black font-[var(--font-montserrat)] font-black tracking-tighter uppercase flex">
+                      {(lang === 'fr' ? 'Qui sommes-' : 'Who are ').split('').map((char, i) => (
+                        <motion.span
+                          key={i}
+                          variants={{
+                            hidden: { opacity: 0, y: 15 },
+                            visible: { opacity: 1, y: 0 }
+                          }}
+                          transition={{ duration: 0.2, delay: i * 0.06 }}
+                          className="inline-block"
+                        >
+                          {char === ' ' ? '\u00A0' : char}
+                        </motion.span>
+                      ))}
+                    </span>
+                    <motion.span 
+                      variants={{
+                        hidden: { opacity: 0, y: 15 },
+                        visible: { opacity: 1, y: 0 }
+                      }}
+                      transition={{ duration: 0.2, delay: (lang === 'fr' ? 11 : 8) * 0.06 }}
+                      className="text-[#149655] font-['Brush_Script_MT',cursive] font-normal inline-block text-[1.5em] ml-1"
+                    >
+                      {lang === 'fr' ? 'nous ?' : 'we?'}
+                    </motion.span>
                   </span>
                   <div className="flex justify-center mt-4">
                     <div className="section-divider-wide" />
@@ -890,7 +935,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   className="object-cover transition-transform duration-[3000ms] group-hover:scale-110"
                 />
                 {/* Dark Glass Overlay (Vitre noire transparente) */}
-                <div className="absolute inset-0 bg-black/10 backdrop-blur-sm transition-all duration-700" />
+                <div className="absolute inset-0 transition-all duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-dronek-green/30 pointer-events-none" />
 
                 <div className="flex flex-col gap-4">
@@ -977,13 +1022,15 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 transition={{ duration: 0.8 }}
                 className="sticky top-32 h-[90vh] w-full overflow-hidden shadow-2xl group rounded-2xl -translate-x-4"
               >
-                <Image 
-                  src="/images/about-forest.jpg" 
-                  alt="DRONEK Vision" 
-                  fill 
-                  className="object-cover transition-transform duration-1000 group-hover:scale-105" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                <div className="relative w-full h-full">
+                  <Image 
+                    src="/images/about-forest.jpg" 
+                    alt="DRONEK Vision" 
+                    fill 
+                    className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                </div>
               </motion.div>
             </div>
             
@@ -1009,12 +1056,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
         variants={expertiseSectionVariants}
-        className="relative overflow-hidden bg-[#ffffff] pt-0 pb-4 lg:pt-0 lg:pb-6"
+        className="relative overflow-hidden bg-[#ffffff] pt-0 pb-0 lg:pt-0 lg:pb-0"
       >
 
         <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-0">
           {/* Header */}
-          <div className="text-center mb-10 lg:mb-14 mt-12 lg:mt-20">
+          <div className="text-center mb-6 lg:mb-10 mt-6 lg:mt-10">
             <div
               className="relative inline-flex flex-col items-center group max-w-3xl"
             >
@@ -1035,212 +1082,108 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
               <div className="text-center">
                 <span className="block text-black text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight mb-1">
-                  {"Nos domaines".split('').map((char, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: i * 0.04, ease: "easeOut" }}
-                      className="inline-block"
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </motion.span>
-                  ))}
+                  {(() => {
+                    const text = lang === 'fr' ? "Nos domaines" : "Our areas of";
+                    const words = text.split(' ');
+                    let charCount = 0;
+                    return words.map((word, wIdx) => (
+                      <span key={wIdx} className="inline-block mr-[0.2em] last:mr-0">
+                        {word.split('').map((char, cIdx) => {
+                          const delayIdx = charCount++;
+                          return (
+                            <motion.span
+                              key={cIdx}
+                              initial={{ opacity: 0, y: 10 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.3, delay: delayIdx * 0.04, ease: "easeOut" }}
+                              className="inline-block"
+                            >
+                              {char}
+                            </motion.span>
+                          );
+                        })}
+                      </span>
+                    ));
+                  })()}
                 </span>
                 <h2 className="text-[#149655] text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
-                  {"d'expertises".split('').map((char, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: (i + 5) * 0.04, ease: "easeOut" }}
-                      className="inline-block"
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </motion.span>
-                  ))}
+                  {(() => {
+                    const text = lang === 'fr' ? "d'expertises" : "expertise";
+                    const words = text.split(' ');
+                    let charCount = 12;
+                    return words.map((word, wIdx) => (
+                      <span key={wIdx} className="inline-block mr-[0.2em] last:mr-0">
+                        {word.split('').map((char, cIdx) => {
+                          const delayIdx = charCount++;
+                          return (
+                            <motion.span
+                              key={cIdx}
+                              initial={{ opacity: 0, y: 10 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.3, delay: delayIdx * 0.04, ease: "easeOut" }}
+                              className="inline-block"
+                            >
+                              {char}
+                            </motion.span>
+                          );
+                        })}
+                      </span>
+                    ));
+                  })()}
                 </h2>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Service cards grid - Dynamic asymmetric layout */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            {/* Slot 0: Tall Left (Agriculture style) */}
+        {/* Service cards grid - Dynamic & Full-bleed layout */}
+        <div 
+          className="expertise-grid mt-12 gap-2 px-2 lg:gap-4 lg:px-4" 
+          style={getGridStyle(dynamicServices.length)}
+        >
+          {dynamicServices.map((s, index) => (
             <motion.div 
+              key={`${s.id}-${index}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "0px" }}
-              transition={{ duration: 0.6 }}
-              className="md:row-span-2 h-auto md:h-auto"
+              transition={{ duration: 0.6, delay: (index % 3) * 0.1 }}
+              className="expertise-card card group"
+              style={getCardStyle(index, dynamicServices.length)}
+              onClick={() => {
+                sessionStorage.setItem('scroll_to_service', s.id);
+                handleNav('services');
+              }}
             >
-              {(() => {
-                const s = dynamicServices[0] || { 
-                  id: 'agriculture', 
-                  titre: 'Agriculture', 
-                  description: "Soutenir les acteurs de la chaîne de valeur agricole grâce à l'agriculture de précision.",
-                  image: '/images/hero-agriculture.jpg'
-                };
-                return (
-                  <button
-                    type="button"
-                    className="group relative w-full h-full min-h-[420px] overflow-hidden rounded-2xl text-left shadow-2xl transition-all duration-500 hover:-translate-y-2"
-                    onClick={() => {
-                      sessionStorage.setItem('scroll_to_service', s.id);
-                      handleNav('services');
-                    }}
-                  >
-                    <Image src={s.image} alt={s.titre} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70" />
-                    <div className="relative z-10 h-full p-8 lg:p-10 flex flex-col justify-between text-white">
-                      <div>
-                        <h3 className="text-3xl lg:text-4xl font-semibold mt-3 uppercase tracking-tighter leading-[1] text-white">{s.titre}</h3>
-                      </div>
-                      <div className="flex items-end justify-between gap-6">
-                        <p className="text-xs lg:text-sm text-white/90 font-medium leading-relaxed max-w-[85%]">{s.description}</p>
-                        <div className="flex-shrink-0 h-12 w-12 rounded-full bg-white flex items-center justify-center text-black shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:bg-dronek-green group-hover:text-white">
-                          <ArrowRight className="w-6 h-6" />
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })()}
+              {s.image && (
+                <Image 
+                  src={s.image} 
+                  alt={s.titre} 
+                  fill 
+                  className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                />
+              )}
+              <div className="expertise-card-overlay" />
+              <div className="expertise-card-content p-6 h-full flex flex-col justify-between">
+                {/* Title Centered */}
+                <div className="flex-1 flex items-center justify-center pointer-events-none z-10">
+                  <h3 className="expertise-card-title text-center text-3xl md:text-4xl px-2 opacity-100 transition-opacity duration-300 group-hover:opacity-0">{s.titre}</h3>
+                </div>
+                
+                {/* Bottom Section */}
+                <div className="expertise-card-bottom flex justify-between items-end mt-auto z-10 pointer-events-none opacity-100 transition-opacity duration-300 group-hover:opacity-0">
+                  <p className="expertise-card-description line-clamp-3 text-sm md:text-base pr-4">
+                    {s.description}
+                  </p>
+                  <div className="expertise-card-arrow bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#149655] group-hover:text-white shrink-0 pointer-events-auto">
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
             </motion.div>
-
-            {/* Middle Column: Stacked Cards */}
-            <div className="flex flex-col gap-4 sm:gap-5">
-              {/* Slot 1: Small Middle-Top (Drone style - Black) */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "0px" }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="h-auto"
-              >
-                {(() => {
-                  const s = dynamicServices[1] || { 
-                    id: 'drone', 
-                    titre: 'Drone et Cartographie', 
-                    description: "Analyse de précision et cartographie aérienne haute résolution.",
-                    image: '/images/drone-work.jpg'
-                  };
-                  return (
-                    <button
-                      type="button"
-                      className="group relative w-full h-full min-h-[200px] sm:min-h-[250px] overflow-hidden rounded-2xl text-left bg-[#080808] shadow-2xl transition-all duration-500 hover:-translate-y-2"
-                      onClick={() => {
-                        sessionStorage.setItem('scroll_to_service', s.id);
-                        handleNav('services');
-                      }}
-                    >
-                      <div className="absolute inset-0 z-0">
-                        <Image src={s.image} alt={s.titre} fill className="object-cover opacity-20 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110" />
-                      </div>
-                      <div className="relative z-10 h-full p-7 lg:p-8 flex flex-col justify-between text-white">
-                        <div>
-                          <h3 className="text-2xl lg:text-3xl font-semibold mt-3 uppercase tracking-tighter leading-[1] text-white">{s.titre}</h3>
-                        </div>
-                        <div className="flex items-end justify-between gap-6">
-                          <p className="text-xs text-white/60 font-medium leading-snug max-w-[75%]">{s.description}</p>
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white flex items-center justify-center text-black shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:bg-dronek-green group-hover:text-white">
-                            <ArrowRight className="w-5 h-5" />
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })()}
-              </motion.div>
-
-              {/* Slot 2: Small Middle-Bottom (Agroforesterie style - Green) */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "0px" }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="h-auto"
-              >
-                {(() => {
-                  const s = dynamicServices[2] || { 
-                    id: 'agroforestry', 
-                    titre: 'Agroforesterie', 
-                    description: "Intégration durable d'arbres dans vos systèmes agricoles.",
-                    image: '/images/hero-agriculture.jpg'
-                  };
-                  return (
-                    <button
-                      type="button"
-                      className="group relative w-full h-full min-h-[200px] sm:min-h-[250px] overflow-hidden rounded-2xl text-left bg-[#0a4d34] shadow-2xl transition-all duration-500 hover:-translate-y-2"
-                      onClick={() => {
-                        sessionStorage.setItem('scroll_to_service', s.id);
-                        handleNav('services');
-                      }}
-                    >
-                      <div className="absolute inset-0 z-0">
-                        <Image src={s.image} alt={s.titre} fill className="object-cover opacity-20 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110" />
-                      </div>
-                      <div className="relative z-10 h-full p-7 lg:p-8 flex flex-col justify-between text-white">
-                        <div>
-                          <h3 className="text-2xl lg:text-3xl font-semibold mt-3 uppercase tracking-tighter leading-[1] text-white">{s.titre}</h3>
-                        </div>
-                        <div className="flex items-end justify-between gap-6">
-                          <p className="text-xs text-white/80 font-medium leading-snug max-w-[75%]">{s.description}</p>
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white flex items-center justify-center text-black shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:bg-black group-hover:text-white">
-                            <ArrowRight className="w-5 h-5" />
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })()}
-              </motion.div>
-            </div>
-
-            {/* Slot 3: Tall Right (Forestry style) */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "0px" }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="md:row-span-2 h-auto md:h-auto"
-            >
-              {(() => {
-                const s = dynamicServices[3] || { 
-                  id: 'forestry', 
-                  titre: 'Foresterie', 
-                  description: "Développer la performance des secteurs de la foresterie et du reboisement durable.",
-                  image: '/images/hero-forest.jpg'
-                };
-                return (
-                  <button
-                    type="button"
-                    className="group relative w-full h-full min-h-[350px] sm:min-h-[420px] overflow-hidden rounded-2xl text-left shadow-2xl transition-all duration-500 hover:-translate-y-2"
-                    onClick={() => {
-                      sessionStorage.setItem('scroll_to_service', s.id);
-                      handleNav('services');
-                    }}
-                  >
-                    <Image src={s.image} alt={s.titre} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70" />
-                    <div className="relative z-10 h-full p-8 lg:p-10 flex flex-col justify-between text-white">
-                      <div>
-                        <h3 className="text-3xl lg:text-4xl font-semibold mt-3 uppercase tracking-tighter leading-[1] text-white">{s.titre}</h3>
-                      </div>
-                      <div className="flex items-end justify-between gap-6">
-                        <p className="text-xs lg:text-sm text-white/90 font-medium leading-relaxed max-w-[85%]">{s.description}</p>
-                        <div className="flex-shrink-0 h-12 w-12 rounded-full bg-white flex items-center justify-center text-black shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:bg-dronek-green group-hover:text-white">
-                          <ArrowRight className="w-6 h-6" />
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })()}
-            </motion.div>
-          </div>
+          ))}
         </div>
       </motion.section>
 
@@ -1254,7 +1197,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-4 lg:mb-6">
+          <div className="text-center mb-6 lg:mb-8">
             <div
               className="relative inline-flex flex-col items-center group max-w-2xl"
             >
@@ -1274,36 +1217,62 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </motion.div>
 
               <div className="text-center">
-                <span className="block text-black text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight mb-1">
-                  {"Pourquoi nous choisir".split('').map((char, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: i * 0.06, ease: "easeOut" }}
-                      className="inline-block"
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </motion.span>
-                  ))}
-                </span>
-                <h2 className="text-[#149655] text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
-                  {"Dronek ?".split('').map((char, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: (i + 21) * 0.06, ease: "easeOut" }}
-                      className="inline-block"
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </motion.span>
-                  ))}
+                <h2 className="text-black text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight mb-1">
+                  {(() => {
+                    const words = lang === 'fr' 
+                      ? [
+                          { text: "Pourquoi", isGreen: false, isSlanted: false },
+                          { text: "nous", isGreen: false, isSlanted: false },
+                          { text: "choisir", isGreen: true, isSlanted: true },
+                          { text: "?", isGreen: true, isSlanted: false },
+                        ]
+                      : [
+                          { text: "Why", isGreen: false, isSlanted: false },
+                          { text: "choose", isGreen: true, isSlanted: true },
+                          { text: "us", isGreen: false, isSlanted: false },
+                          { text: "?", isGreen: true, isSlanted: false },
+                        ];
+                    let globalIdx = 0;
+                    return words.map((w, wIdx) => (
+                      <span key={wIdx} className="inline-block mr-[0.22em] last:mr-0">
+                        {w.text.split('').map((char, cIdx) => {
+                          const idx = globalIdx++;
+                          return (
+                            <motion.span
+                              key={cIdx}
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.5, delay: idx * 0.05, ease: "easeOut" }}
+                              className={`inline-block ${
+                                w.isGreen ? 'text-[#149655]' : 'text-black'
+                              } ${
+                                w.isSlanted ? 'slanted-text font-style-normal' : ''
+                              }`}
+                            >
+                              {char}
+                            </motion.span>
+                          );
+                        })}
+                      </span>
+                    ));
+                  })()}
                 </h2>
               </div>
             </div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="mt-6 text-[#444] text-base sm:text-lg max-w-3xl mx-auto leading-relaxed font-medium"
+            >
+              {lang === 'fr' 
+                ? "DRONEK propose une large gamme de services en foresterie, agroforesterie, gestion de l'environnement et en agriculture. Notre technologie permet d'alléger considérablement le travail de terrain par l'élimination de l'échantillonnage et la prise de données manuelles."
+                : "DRONEK offers a wide range of services in forestry, agroforestry, environmental management, and agriculture. Our technology significantly reduces fieldwork by eliminating sampling and manual data collection."
+              }
+            </motion.p>
           </div>
 
           {/* Feature blocks */}
@@ -1351,8 +1320,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           FEATURED PROJECTS HEADER (OUTSIDE)
           ═══════════════════════════════════ */}
       <Section className="bg-white pb-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-0">
+        <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 lg:mb-8">
             <div
               className="relative inline-flex flex-col items-center group max-w-3xl"
             >
@@ -1402,6 +1371,19 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 </h2>
               </div>
             </div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="mt-6 text-[#444] text-base sm:text-lg max-w-3xl mx-auto leading-relaxed font-medium"
+            >
+              {lang === 'fr'
+                ? "Dronek se distingue par une solide expertise technique et une maîtrise des innovations technologiques dans les secteurs de la foresterie et de l'agriculture."
+                : "Dronek distinguishes itself with solid technical expertise and mastery of technological innovations in the forestry and agriculture sectors."
+              }
+            </motion.p>
           </div>
         </div>
       </Section>
@@ -1409,7 +1391,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       {/* ═══════════════════════════════════
           FEATURED PROJECTS CARDS (WITH BACKGROUND)
           ═══════════════════════════════════ */}
-      <Section className="relative overflow-hidden pt-12 pb-16 lg:py-24">
+      <Section className="relative overflow-hidden pt-8 pb-12 lg:py-16">
         {/* Background Image with Overlay — Only for cards */}
         <div className="absolute inset-0 z-0 overflow-hidden -top-[76px]">
           <Image 
@@ -1419,10 +1401,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             className="object-cover" 
             priority
           />
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
+          <div className="absolute inset-0 transition-all" />
           
           {/* Abstract Shadow Background Transition — Premium look restored */}
-          <div className="absolute top-0 left-0 right-0 h-96 z-10 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-96 z-10 pointer-events-none overflow-hidden hidden md:block">
             <Image 
               src="/images/abstract-shadow.png" 
               alt="Abstract Shadow" 
@@ -1440,18 +1422,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {allFeaturedProjects.map((project, index) => {
-              const row = Math.floor(index / 3);
-              const isEvenRow = row % 2 === 0;
-              const initialX = isEvenRow ? 400 : -400;
-
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, x: initialX }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 60 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   transition={{ 
-                    duration: 1.4, 
-                    delay: (index % 3) * 0.2, 
+                    duration: 1.2, 
+                    delay: (index % 3) * 0.15, 
                     ease: "easeOut" 
                   }}
                   viewport={{ once: true }}
@@ -1480,7 +1458,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     <Button
                       className="mt-auto w-fit rounded-full bg-dronek-green hover:bg-green-700 text-white px-6 py-2 h-auto text-sm font-semibold"
                     >
-                      En savoir plus
+                      {t.services.learnMore}
                     </Button>
                   </div>
                 </div>
@@ -1551,7 +1529,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedHomeProject(null)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-md"
+              className="absolute inset-0 transition-all"
             />
             
             {/* Popup Container */}

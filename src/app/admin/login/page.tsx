@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -12,14 +12,33 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/components/dronek/LanguageProvider';
 
 export default function AdminLogin() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [progress, setProgress] = useState(0);
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (showCountdown) {
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        currentProgress += 1;
+        setProgress(currentProgress);
+        if (currentProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            window.location.href = '/admin';
+          }, 300);
+        }
+      }, 30); // 100 * 30ms = 3000ms = 3 seconds
+      return () => clearInterval(interval);
+    }
+  }, [showCountdown]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,9 +51,7 @@ export default function AdminLogin() {
     if (email === adminEmail && password === masterPassword) {
       setLoading(true);
       localStorage.setItem('dronek_mock_auth', 'true');
-      setTimeout(() => {
-        window.location.href = '/admin';
-      }, 500);
+      setShowCountdown(true);
       return;
     }
 
@@ -57,8 +74,8 @@ export default function AdminLogin() {
       return;
     }
 
-    router.push('/admin');
-    setLoading(false);
+    setLoading(true);
+    setShowCountdown(true);
   };
 
   return (
@@ -174,6 +191,44 @@ export default function AdminLogin() {
         </div>
 
       </div>
+
+      <AnimatePresence>
+        {showCountdown && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[9999] bg-[#f7fbf8] flex flex-col items-center justify-center backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="relative flex items-center justify-center w-48 h-48"
+            >
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-200" />
+                <circle 
+                  cx="96" cy="96" r="88" 
+                  stroke="currentColor" strokeWidth="8" fill="transparent" 
+                  strokeDasharray={2 * Math.PI * 88}
+                  strokeDashoffset={2 * Math.PI * 88 * (1 - progress / 100)}
+                  strokeLinecap="round"
+                  className="text-[#149655] transition-all duration-75 ease-linear" 
+                />
+              </svg>
+              <div className="absolute text-5xl font-black text-[#149655] drop-shadow-md">{progress}%</div>
+            </motion.div>
+            <motion.p 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-8 text-xl font-black text-[#111] uppercase tracking-widest drop-shadow-sm"
+            >
+              {lang === 'fr' ? 'Connexion en cours...' : 'Connecting...'}
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showErrorModal && (

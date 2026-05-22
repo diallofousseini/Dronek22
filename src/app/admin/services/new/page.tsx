@@ -318,6 +318,7 @@ function SimpleUpload({ value, onChange, path }: { value: string, onChange: (v: 
 }
 
 function VideoUpload({ value, onChange, path }: { value: string, onChange: (v: string) => void, path: string }) {
+  const { lang } = useLanguage();
   const fileRef = useRef<HTMLInputElement>(null);
   const [up, setUp] = useState(false);
   
@@ -463,8 +464,8 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
     if (showSuccessModal) {
       const timer = setTimeout(() => {
         setShowSuccessModal(false);
-        setTimeout(() => router.push('/admin'), 800);
-      }, 1800);
+        setTimeout(() => router.push('/admin'), 300);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [showSuccessModal, router]);
@@ -563,6 +564,25 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
             setData((prev) => ({ 
               ...prev, 
               mediatheque: { images: Array(8).fill(''), videos: Array(2).fill('') }
+            }));
+          }
+        });
+    } else if (type === 'contact' && !id) {
+      supabase
+        .from('contacts')
+        .select('*')
+        .eq('sujet', 'Configuration')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: item }) => {
+          if (item) {
+            setData((prev: any) => ({
+              ...prev,
+              ...item,
+              email: item.email || '',
+              phone: item.telephone || '',
+              location: item.message || '',
             }));
           }
         });
@@ -678,7 +698,7 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
         payload = { ...payload, titre: data.title, image_url: data.image, statut: data.status || 'publie' };
       }
 
-      const targetId = id || (type === 'mediatheque' ? data.id : null);
+      const targetId = id || (type === 'mediatheque' || type === 'contact' ? data.id : null);
       const { data: savedData, error } = targetId 
         ? await supabase.from(table).update(payload).eq('id', targetId).select().single()
         : await supabase.from(table).insert([payload]).select().single();
@@ -687,7 +707,7 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
 
       if (type === 'service' && savedData) {
         const { data: config } = await supabase.from('contacts').select('*').eq('sujet', 'MainServices').single();
-        let mainIds = [];
+        let mainIds: string[] = [];
         if (config && config.message) {
           try { mainIds = JSON.parse(config.message); } catch (e) {}
         }
@@ -712,7 +732,7 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
     setSaving(false);
   };
 
-  const labels: Record<string, JSX.Element> = {
+  const labels: Record<string, React.ReactNode> = {
     projet: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Projet' : 'Project'}</span></>,
     actualite: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Actualités' : 'News'}</span></>,
     membre: <><span className="text-[#111]">{lang === 'fr' ? 'Espace' : 'Space'}</span> <span className="text-[#149655]">{lang === 'fr' ? 'Membres' : 'Members'}</span></>,
@@ -875,7 +895,20 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                       <ImageIcon className="w-5 h-5 text-[#149655]" />
                       <h3 className="font-bold text-[#111] uppercase tracking-wider text-sm">CARTE & CONFIGURATION</h3>
                     </div>
-                    {/* Removed Titre de la Carte and Catégorie de Service as requested */}
+                    <HorizontalField 
+                      labelSize="14px" 
+                      label="Catégorie de Service" 
+                      type="select" 
+                      value={data.serviceType} 
+                      onChange={(v: string) => setData({ ...data, serviceType: v })} 
+                      options={[
+                        { value: 'forestry', label: 'Foresterie' },
+                        { value: 'drone', label: 'Drone et Cartographie' },
+                        { value: 'agroforestry', label: 'Agroforesterie' },
+                        { value: 'surveillance', label: 'Surveillance' },
+                        { value: 'agriculture', label: 'Agriculture' }
+                      ]} 
+                    />
 
                     <div className="flex items-center justify-between bg-[#149655]/5 p-4 rounded-2xl border border-[#149655]/10">
                       <div className="flex items-center gap-3">
@@ -927,8 +960,15 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                       viewport={{ once: true }}
                       className="bg-gray-50 p-6 rounded-2xl space-y-6 border border-gray-100"
                     >
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Colonne de Droite</p>
-                      <HorizontalField labelSize="12px" label="Description Longue" type="textarea" value={data.detailLongDesc} onChange={(v: string) => setData({ ...data, detailLongDesc: v })} placeholder="Contenu principal et détaillé..." />
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Colonne de Droite / Points clés (Un par ligne)</p>
+                      <HorizontalField 
+                        labelSize="12px" 
+                        label="Description Longue / Puces" 
+                        type="textarea" 
+                        value={data.detailLongDesc} 
+                        onChange={(v: string) => setData({ ...data, detailLongDesc: v })} 
+                        placeholder="Entrez vos points clés (un par ligne), par exemple :&#10;FORMATION. Formations aux métiers forestiers...&#10;PÉPINIÈRES. Production de plantes maraîchères...&#10;INVENTAIRE. Inventaire forestier..." 
+                      />
                       
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pt-4">
                         <label className="md:col-span-3 font-bold text-[#111827] uppercase tracking-[0.05em]" style={{ fontSize: '12px' }}>Fichier à télécharger</label>
@@ -1190,68 +1230,131 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
             />
             
             <motion.div 
-              initial={{ opacity: 0, scale: 0.8, y: 100, rotate: -5 }}
-              animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-              exit={{ 
-                opacity: 0, 
-                scale: 1.2, 
-                y: -100,
-                rotate: 5,
-                filter: "blur(20px)",
-                transition: { duration: 0.6, ease: "backIn" } 
+              initial={{ scale: 0, y: 100 }}
+              animate={{ 
+                scale: 1, 
+                y: 0,
+                transition: { type: "spring", stiffness: 200, damping: 15 }
               }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="bg-white rounded-[3rem] p-12 text-center max-w-md w-full shadow-[0_32px_128px_-16px_rgba(20,150,85,0.3)] border border-white/20 relative overflow-hidden z-10"
+              exit={{ scale: 0, y: -100 }}
+              className="relative z-10"
             >
-              <div className="relative w-32 h-32 mx-auto mb-10 flex items-center justify-center">
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.6, ease: "backOut" }}
-                  className="absolute inset-0 bg-[#149655]/5 rounded-[2.5rem] rotate-12"
-                />
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: [1, 1.2, 1], opacity: 0.2 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute inset-0 border-[10px] border-[#149655]/10 rounded-[2.5rem] -rotate-6"
-                />
-                <motion.div
-                  initial={{ scale: 0, opacity: 0, rotate: -45 }}
-                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3, type: "spring", stiffness: 200 }}
+              <motion.div
+                animate={{
+                  y: [0, 12, 0], // Gentle emoji float
+                  scale: [1, 1.03, 1],
+                  rotate: [-2, 2, -2]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="origin-bottom w-[280px] h-[280px] rounded-[2.5rem] bg-white border-4 border-white shadow-[0_30px_70px_-10px_rgba(20,150,85,0.3)] relative flex flex-col items-center justify-center p-6 select-none"
+              >
+                {/* Modern Innovative Success Icon Container */}
+                <div className="relative w-32 h-32 flex items-center justify-center">
+                  {/* Glowing background radial gradient pulse */}
+                  <motion.div 
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: [0.8, 1.1, 0.95], opacity: [0, 0.15, 0.08] }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
+                    className="absolute inset-0 rounded-full bg-radial from-[#149655] to-transparent blur-md"
+                  />
+
+                  <svg className="w-full h-full text-[#149655]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Rotating Dashed Outer Ring */}
+                    <motion.circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      stroke="#149655"
+                      strokeWidth="1.5"
+                      strokeDasharray="5 6"
+                      initial={{ rotate: 0 }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+                      className="origin-center"
+                    />
+
+                    {/* Self-drawing Inner Ring */}
+                    <motion.circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      stroke="#149655"
+                      strokeWidth="3.5"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ duration: 0.7, ease: "easeInOut", delay: 0.1 }}
+                    />
+
+                    {/* Elastic-drawing Checkmark */}
+                    <motion.path
+                      d="M34 50.5 L45 61.5 L67 38.5"
+                      stroke="#149655"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ type: "spring", stiffness: 150, damping: 11, delay: 0.45 }}
+                    />
+
+                    {/* Radial Micro-Particles flaring out */}
+                    {[...Array(6)].map((_, i) => {
+                      const angle = (i * 360) / 6;
+                      const angleRad = (angle * Math.PI) / 180;
+                      const distance = 42;
+                      const targetX = 50 + Math.cos(angleRad) * distance;
+                      const targetY = 50 + Math.sin(angleRad) * distance;
+                      return (
+                        <motion.circle
+                          key={i}
+                          cx={50}
+                          cy={50}
+                          r="2.5"
+                          fill="#149655"
+                          initial={{ cx: 50, cy: 50, opacity: 0 }}
+                          animate={{
+                            cx: targetX,
+                            cy: targetY,
+                            opacity: [0, 1, 0]
+                          }}
+                          transition={{
+                            delay: 0.55,
+                            duration: 0.55,
+                            ease: "easeOut"
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* Expanding Wave Shockwave */}
+                    <motion.circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      stroke="#149655"
+                      strokeWidth="1.5"
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1.25, opacity: [0, 0.4, 0] }}
+                      transition={{ delay: 0.5, duration: 0.7, ease: "easeOut" }}
+                      className="origin-center"
+                    />
+                  </svg>
+                </div>
+
+                {/* Tracking tracked success text */}
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.4 }}
+                  className="text-[#149655] font-black text-[11px] uppercase tracking-[0.25em] text-center mt-5"
                 >
-                  <CheckCircle2 className="w-20 h-20 text-[#149655] stroke-[2px] relative z-10" />
-                </motion.div>
-              </div>
-              
-              <motion.h2 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-5xl font-black text-gray-900 mb-4 uppercase tracking-tighter italic"
-              >
-                Génial !
-              </motion.h2>
-              <motion.p 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-gray-500 mb-4 font-medium text-lg leading-relaxed px-4"
-              >
-                {lang === 'fr' 
-                  ? "Votre contenu a été sauvegardé avec succès et est maintenant en ligne." 
-                  : "Your content has been successfully saved and is now live."}
-              </motion.p>
-              
-              <div className="flex justify-center mt-10">
-                 <motion.div
-                   initial={{ width: 0 }}
-                   animate={{ width: "6rem" }}
-                   transition={{ duration: 0.8, delay: 0.6 }}
-                   className="h-1.5 bg-gradient-to-r from-transparent via-[#149655] to-transparent rounded-full opacity-40"
-                 />
-              </div>
+                  {lang === 'fr' ? 'Sauvegarde réussie' : 'Saved successfully'}
+                </motion.p>
+              </motion.div>
             </motion.div>
           </div>
         )}

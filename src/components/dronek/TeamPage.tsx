@@ -70,26 +70,24 @@ export default function TeamPage() {
     };
 
     fetchTeam();
-
-    const subscription = supabase.channel('team-news').on('postgres_changes', { event: '*', schema: 'public', table: 'equipe' }, fetchTeam).subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const members = React.useMemo(() => {
     const staticMembers = t.team.members || [];
-    // Normalize names to compare (lowercase, trimmed)
     const dynamicNames = new Set(dynamicMembers.map(m => m.name.toLowerCase().trim()));
-    const filteredStatic = staticMembers.filter((m: any) => !dynamicNames.has(m.name.toLowerCase().trim()));
-    return [...dynamicMembers, ...filteredStatic];
+    const filteredStatic = staticMembers
+      .filter((m: any) => !dynamicNames.has(m.name.toLowerCase().trim()))
+      .map((m: any, i: number) => ({
+        ...m,
+        id: `static-${i}`
+      }));
+    return [...dynamicMembers, ...filteredStatic] as TeamMember[];
   }, [dynamicMembers, t.team.members]);
 
   return (
     <div className="bg-white min-h-screen">
       {/* 🚀 BANNER HERO — Standardized Dronek Style */}
-      <AnimatedSection className="relative h-auto min-h-[400px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
+      <AnimatedSection className="relative h-auto min-h-[250px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
         <div className="absolute inset-0">
           <Image 
             src="/images/hero-tech.jpg" 
@@ -102,7 +100,7 @@ export default function TeamPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full pl-0 pr-4 sm:pr-6 lg:pr-8 pt-48 lg:pt-64 pb-12">
+        <div className="relative z-10 max-w-7xl mx-auto w-full pl-0 pr-4 sm:pr-6 lg:pr-8 pt-24 lg:pt-32 pb-12">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
             <motion.div initial="hidden" animate="visible" variants={stagger} className="flex-1 min-w-0">
                 <ScrollTitle as="h1" className="text-xl lg:text-3xl font-montserrat-extrabold text-white leading-[1.1] uppercase tracking-tight ml-[26px]">
@@ -261,7 +259,7 @@ function MemberCard({ member, idx }: { member: TeamMember; idx: number }) {
             onError={() => setImageError(true)}
           />
           
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 px-4">
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 px-4">
             {[
               { icon: Facebook, href: member.facebook },
               { icon: Linkedin, href: member.linkedin },

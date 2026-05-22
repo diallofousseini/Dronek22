@@ -19,17 +19,17 @@ export default function SolutionsPerformantes() {
 
   const leftVariants = {
     hidden: { opacity: 0, x: -50 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" as const } },
   };
 
   const rightVariants = {
     hidden: { opacity: 0, x: 50 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" as const } },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
   };
 
   return (
@@ -58,7 +58,7 @@ export default function SolutionsPerformantes() {
               {/* Decorative Background Pattern */}
               <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden opacity-20">
                 <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
-                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-black/20 blur-3xl"></div>
+                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-transparent"></div>
                 {/* Subtle intersecting circles like in the design */}
                 <div className="absolute top-[20%] left-[10%] w-32 h-32 rounded-full border-[20px] border-white/5 mix-blend-overlay"></div>
                 <div className="absolute bottom-[10%] left-[30%] w-48 h-48 rounded-full border-[30px] border-white/5 mix-blend-overlay"></div>

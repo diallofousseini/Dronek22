@@ -32,6 +32,7 @@ export default function ProjectDetailPage({ slug, onNavigate }: ProjectDetailPag
       <section className="relative min-h-[26rem] lg:min-h-[32rem] overflow-hidden flex items-end">
         <div className="absolute inset-0">
           <Image src={project.image} alt={project.title} fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-dronek-dark/92 via-dronek-dark/65 to-dronek-dark/25" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 lg:pb-12 w-full">

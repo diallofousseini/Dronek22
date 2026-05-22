@@ -48,6 +48,7 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
   const [blogOpen, setBlogOpen] = useState(false);
   const [mobileBlogOpen, setMobileBlogOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (triggerNewsMenu) {
@@ -149,8 +150,10 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
     <>
       <nav
         className={cn(
-          'sticky top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl transition-all duration-300',
-          isScrolled ? 'shadow-sm' : 'shadow-none',
+          'sticky top-0 left-0 right-0 z-50 transition-all duration-500 w-full',
+          isScrolled 
+            ? 'bg-white/65 backdrop-blur-[24px] saturate-[1.2] shadow-[0_8px_32px_rgba(0,0,0,0.08)] border-b border-white/60' 
+            : 'bg-white/40 backdrop-blur-lg border-b border-white/30 shadow-sm'
         )}
       >
         {/* ✨ Professional Scroll Progress Bar */}
@@ -274,8 +277,9 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
 
             {/* Language & Mobile Toggle */}
             <div className="flex items-center justify-end gap-3 lg:gap-5 pl-2 lg:pl-4">
-              <div className="relative group/lang">
+              <div className="relative">
                 <button
+                  onClick={() => setLangDropdownOpen(!langDropdownOpen)}
                   className="flex items-center gap-[9px] px-3 py-3 bg-transparent transition-all duration-300"
                 >
                   <div className="w-[30px] h-[30px] rounded-none overflow-hidden">
@@ -285,31 +289,41 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <ChevronDown className="w-[21px] h-[21px] text-dronek-dark/40 transition-transform duration-300 group-hover/lang:rotate-180" />
+                  <ChevronDown className={cn("w-[21px] h-[21px] text-dronek-dark/40 transition-transform duration-300", langDropdownOpen && "rotate-180")} />
                 </button>
 
-                <div className="absolute top-full right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-none shadow-2xl border border-gray-100 p-1.5 opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all duration-300 translate-y-2 group-hover/lang:translate-y-0">
-                  <button
-                    onClick={() => setLang('fr')}
-                    className={cn(
-                      "flex items-center gap-4 w-full p-3 rounded-none transition-all duration-300 text-left",
-                      lang === 'fr' ? "bg-dronek-green text-white" : "text-dronek-dark hover:bg-gray-100"
-                    )}
-                  >
-                    <img src="/istockphoto-1226387448-612x612-removebg-preview.png" className="w-[30px] h-[30px] rounded-none" />
-                    <span className="text-[16px] font-bold">FRANÇAIS</span>
-                  </button>
-                  <button
-                    onClick={() => setLang('en')}
-                    className={cn(
-                      "flex items-center gap-4 w-full p-3 rounded-none transition-all duration-300 text-left mt-1.5",
-                      lang === 'en' ? "bg-dronek-green text-white" : "text-dronek-dark hover:bg-gray-100"
-                    )}
-                  >
-                    <img src="/istockphoto-542201926-612x612-removebg-preview.png" className="w-[30px] h-[30px] rounded-none" />
-                    <span className="text-[16px] font-bold">ENGLISH</span>
-                  </button>
-                </div>
+                <AnimatePresence>
+                  {langDropdownOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-none shadow-2xl border border-gray-100 p-1.5"
+                    >
+                      <button
+                        onClick={() => { setLang('fr'); setLangDropdownOpen(false); }}
+                        className={cn(
+                          "flex items-center gap-4 w-full p-3 rounded-none transition-all duration-300 text-left",
+                          lang === 'fr' ? "bg-dronek-green text-white" : "text-dronek-dark hover:bg-gray-100"
+                        )}
+                      >
+                        <img src="/istockphoto-1226387448-612x612-removebg-preview.png" className="w-[30px] h-[30px] rounded-none" />
+                        <span className="text-[16px] font-bold">FRANÇAIS</span>
+                      </button>
+                      <button
+                        onClick={() => { setLang('en'); setLangDropdownOpen(false); }}
+                        className={cn(
+                          "flex items-center gap-4 w-full p-3 rounded-none transition-all duration-300 text-left mt-1.5",
+                          lang === 'en' ? "bg-dronek-green text-white" : "text-dronek-dark hover:bg-gray-100"
+                        )}
+                      >
+                        <img src="/istockphoto-542201926-612x612-removebg-preview.png" className="w-[30px] h-[30px] rounded-none" />
+                        <span className="text-[16px] font-bold">ENGLISH</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 transition-colors">

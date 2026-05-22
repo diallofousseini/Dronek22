@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.vercel
+scratch
+*.log
+.gemini
+coverage
+out
+build
+tmp
+.env*
+! .env.vercel
+deploy-ready
+upload
+*.zip
+.config

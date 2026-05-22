@@ -30,50 +30,9 @@ type ProductionCard = {
   image: string;
   stats?: Stat[];
 };
-
 export default function ProductionSitesView() {
   const { lang } = useLanguage();
   const [dynamicCards, setDynamicCards] = React.useState<ProductionCard[]>([]);
-
-  React.useEffect(() => {
-    const fetchSites = async () => {
-      const { data } = await supabase
-        .from('production_sites')
-        .select('*')
-        .in('statut', ['publie', 'Publié', 'Published', 'actif'])
-        .order('created_at', { ascending: true });
-      
-      if (data && data.length > 0) {
-        const dynamic = data.map(site => {
-          let imageUrl = site.image_url || site.image || '/images/hero-forest.jpg';
-          return {
-            badge: lang === 'fr' ? 'Site Opérationnel' : 'Operational Site',
-            title: site.nom || site.name || 'Site',
-            location: site.localisation || site.location || '',
-            desc: site.description || site.desc || site.description_courte || site.content || (lang === 'fr' ? 'Installation spécialisée.' : 'Specialized facility.'),
-            employees: site.employees || (lang === 'fr' ? 'Équipe Dronek' : 'Dronek Team'),
-            services: site.services ? site.services.split(',').map((s: string) => s.trim()) : [],
-            image: imageUrl,
-            stats: [
-              { label: 'CAPACITÉ', value: site.capacite || site.capacity || 'N/A', progress: 85, icon: Layers, color: 'bg-[#114f2e]' },
-              { label: 'SUPERFICIE', value: site.surface || 'N/A', progress: 100, icon: MapPin, color: 'bg-[#114f2e]' }
-            ]
-          };
-        });
-
-        // Deduplicate
-        const staticNames = new Set(defaultCards.map(c => c.title.toLowerCase().trim()));
-        const filteredDynamic = dynamic.filter(card => !staticNames.has(card.title.toLowerCase().trim()));
-
-        setDynamicCards(filteredDynamic);
-      }
-    };
-
-    fetchSites();
-
-    const sub = supabase.channel('sites-all').on('postgres_changes', { event: '*', schema: 'public', table: 'production_sites' }, fetchSites).subscribe();
-    return () => { sub.unsubscribe(); };
-  }, [lang]);
 
   const defaultCards: ProductionCard[] = [
     {
@@ -132,6 +91,42 @@ export default function ProductionSitesView() {
     },
   ];
 
+  React.useEffect(() => {
+    const fetchSites = async () => {
+      const { data } = await supabase
+        .from('production_sites')
+        .select('*')
+        .in('statut', ['publie', 'Publié', 'Published', 'actif'])
+        .order('created_at', { ascending: true });
+      
+      if (data && data.length > 0) {
+        const dynamic = data.map(site => {
+          let imageUrl = site.image_url || site.image || '/images/hero-forest.jpg';
+          return {
+            badge: lang === 'fr' ? 'Site Opérationnel' : 'Operational Site',
+            title: site.nom || site.name || 'Site',
+            location: site.localisation || site.location || '',
+            desc: site.description || site.desc || site.description_courte || site.content || (lang === 'fr' ? 'Installation spécialisée.' : 'Specialized facility.'),
+            employees: site.employees || (lang === 'fr' ? 'Équipe Dronek' : 'Dronek Team'),
+            services: site.services ? site.services.split(',').map((s: string) => s.trim()) : [],
+            image: imageUrl,
+            stats: [
+              { label: 'CAPACITÉ', value: site.capacite || site.capacity || 'N/A', progress: 85, icon: Layers, color: 'bg-[#114f2e]' },
+              { label: 'SUPERFICIE', value: site.surface || 'N/A', progress: 100, icon: MapPin, color: 'bg-[#114f2e]' }
+            ]
+          };
+        });
+
+        // Deduplicate
+        const staticNames = new Set(defaultCards.map(c => c.title.toLowerCase().trim()));
+        const filteredDynamic = dynamic.filter(card => !staticNames.has(card.title.toLowerCase().trim()));
+
+        setDynamicCards(filteredDynamic);
+      }
+    };
+
+    fetchSites();
+  }, [lang]);
   const cards = dynamicCards.length > 0 ? [...defaultCards, ...dynamicCards] : defaultCards;
 
   return (

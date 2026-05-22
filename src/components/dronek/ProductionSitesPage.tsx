@@ -8,7 +8,8 @@ import AnimatedSection from './AnimatedSection';
 import { useLanguage } from './LanguageProvider';
 import Partners from './Partners';
 import type { PageView } from './Navbar';
-import InteractiveMap from './InteractiveMap';
+import dynamic from 'next/dynamic';
+const InteractiveMap = dynamic(() => import('./InteractiveMap'), { ssr: false });
 import { nurseryZones } from './NurseriesMap';
 import { supabase } from '@/lib/supabase';
 
@@ -23,7 +24,7 @@ interface ProductionSitesPageProps {
 
 export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageProps) {
   const { lang, t } = useLanguage();
-  const [sites, setSites] = React.useState<any[]>(t.production.sites);
+  const [sites, setSites] = React.useState<any[]>([...t.production.sites]);
   const [loading, setLoading] = React.useState(true);
   const [focusedSiteId, setFocusedSiteId] = React.useState<string | null>(null);
 
@@ -55,18 +56,12 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
         
         setSites([...t.production.sites, ...filteredDynamic]);
       } else {
-        setSites(t.production.sites);
+        setSites([...t.production.sites]);
       }
       setLoading(false);
     };
 
     fetchSites();
-
-    const sub = supabase.channel('production-sites').on('postgres_changes', { event: '*', schema: 'public', table: 'production_sites' }, fetchSites).subscribe();
-
-    return () => {
-      sub.unsubscribe();
-    };
   }, [t.production.sites]);
 
   // Coordinate mapping for production sites
@@ -97,25 +92,32 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
     };
   };
 
-  const sitesWithCoords = React.useMemo(() => [
-    ...sites.map((site, idx) => ({
-      ...site,
-      id: site.id || `main-site-${idx}`,
-      center: getSiteCoords(site)
-    })),
-    ...nurseryZones.map(zone => ({
-      id: `nursery-zone-${zone.id}`,
-      name: zone.nursery,
-      location: `${zone.city}, Côte d'Ivoire`,
-      center: zone.center,
-      desc: lang === 'fr' ? `Site de production spécialisé - Zone ${zone.city}` : `Specialized production site - ${zone.city} Zone`
-    }))
-  ], [sites, lang]);
+  const sitesWithCoords = React.useMemo(() => {
+    const allSites = [
+      ...sites.map((site, idx) => ({
+        ...site,
+        id: site.id || `main-site-${idx}`,
+        center: getSiteCoords(site)
+      })),
+      ...nurseryZones.map(zone => ({
+        id: `nursery-zone-${zone.id}`,
+        name: zone.nursery,
+        location: `${zone.city}, Côte d'Ivoire`,
+        center: zone.center,
+        desc: lang === 'fr' ? `Site de production spécialisé - Zone ${zone.city}` : `Specialized production site - ${zone.city} Zone`
+      }))
+    ];
+
+    return allSites.filter(s => {
+      const searchStr = (s.location + " " + s.name).toLowerCase();
+      return searchStr.includes('bonoua') || searchStr.includes('yamoussoukro') || searchStr.includes('san pedro') || searchStr.includes('san-pédro');
+    });
+  }, [sites, lang]);
 
   return (
     <div className="bg-white">
       {/* 🚀 BANNER HERO */}
-      <AnimatedSection className="relative h-auto min-h-[400px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
+      <AnimatedSection className="relative h-auto min-h-[250px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
         <div className="absolute inset-0">
           <Image 
             src="/images/nursery.jpg" 
@@ -128,7 +130,7 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-52 lg:pt-72 pb-12">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-12">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
             <motion.div initial="hidden" animate="visible" className="flex-1 min-w-0">
                 <motion.h1 

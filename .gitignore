@@ -58,3 +58,16 @@ prisma/db/
 server.log
 # Skills directory
 /skills/
+
+# Deploys, Backups, and temporary logs
+/deploy-ready/
+/deploy-ready.zip
+/backups/
+/logs/
+/scratch/
+*.bak
+*.zip
+*.log
+tsc-output.log
+build_output.txt
+"upload/~$HIER DES CHARGES POUR LA CRÉATION DU SITE WEB DE DRONEK.docx"

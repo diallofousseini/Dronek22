@@ -79,14 +79,17 @@ export default function Partners() {
         >
           <div className="partners-carousel-track hover:[animation-play-state:paused] py-2">
             {[...partners, ...partners, ...partners].map((partner, idx) => (
-              <div 
+              <a 
+                href={partner.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 key={`${partner.name}-${idx}`} 
-                className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-black/5 h-20 sm:h-24 w-[140px] sm:w-[180px] flex items-center justify-center p-4 flex-none mx-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-dronek-green/10"
+                className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-black/5 h-20 sm:h-24 w-[140px] sm:w-[180px] flex items-center justify-center p-2 flex-none mx-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-dronek-green/10"
               >
                 <img
                   src={partner.image}
                   alt={partner.name}
-                  className="max-w-full max-h-12 sm:max-h-16 object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
+                  className="w-full h-full object-contain transition-all duration-300"
                   loading="lazy"
                   onError={(event) => {
                     const image = event.currentTarget;
@@ -98,7 +101,7 @@ export default function Partners() {
                 <span className="hidden items-center justify-center text-center text-sm font-bold text-dronek-medium uppercase leading-tight px-2">
                   {getPartnerFallbackLabel(partner.name)}
                 </span>
-              </div>
+              </a>
             ))}
           </div>
         </motion.div>
@@ -115,7 +118,7 @@ export default function Partners() {
           display: flex;
           align-items: center;
           width: max-content;
-          animation: partners-scroll 35s linear infinite;
+          animation: partners-scroll 45s linear infinite;
         }
 
         @keyframes partners-scroll {
@@ -129,7 +132,7 @@ export default function Partners() {
 
         @media (max-width: 640px) {
           .partners-carousel-track {
-            animation-duration: 25s;
+            animation-duration: 35s;
           }
         }
       `}</style>

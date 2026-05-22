@@ -6,8 +6,10 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Mail, Shield, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/components/dronek/LanguageProvider';
 
 export default function ForgotPassword() {
+  const { t, lang } = useLanguage();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -22,6 +24,13 @@ export default function ForgotPassword() {
     setLoading(true);
     setError(null);
     setSuccess(false);
+
+    const officialEmail = t.contact.email;
+    if (email !== officialEmail) {
+      setError(lang === 'fr' ? "Seul l'email officiel du site est autorisé pour la réinitialisation." : "Only the official site email is allowed for password reset.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {

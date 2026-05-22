@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-type AnimatedSectionProps = React.ComponentPropsWithoutRef<'section'>;
+type AnimatedSectionProps = React.ComponentPropsWithoutRef<typeof motion.section>;
 
 export default function AnimatedSection({ className, children, ...props }: AnimatedSectionProps) {
   return (

@@ -101,7 +101,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
         .from('services')
         .select('*')
         .in('statut', ['publie', 'Publié', 'Published'])
-        .order('ordre', { ascending: true });
+        .order('created_at', { ascending: false });
       
       if (data) {
         const mapped = data.map(s => {
@@ -116,7 +116,11 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
             description: s.description_courte || s.description || s.resume || '',
             image: imageUrl,
             pdfUrl: s.pdf_url || s.pdfUrl || '',
-            items: s.items || []
+            items: s.items && s.items.length > 0 
+              ? s.items 
+              : (s.description_complete 
+                  ? s.description_complete.split('\n').filter((l: string) => l.trim() !== '').map((l: string) => ({ title: l.trim() })) 
+                  : [])
           };
         });
         
@@ -134,12 +138,6 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
     };
 
     fetchServices();
-
-    const subscription = supabase.channel('all-services').on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, fetchServices).subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [lang, t]);
 
   const handleNav = (page: PageView) => {
@@ -205,7 +203,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
   return (
     <div className="bg-white">
       {/* 🚀 BANNER HERO */}
-      <AnimatedSection className="relative h-auto min-h-[400px] flex items-start overflow-hidden rounded-[2.5rem] lg:rounded-tl-[10rem] lg:rounded-br-[10rem] mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
+      <AnimatedSection className="relative h-auto min-h-[250px] flex items-start overflow-hidden rounded-[2.5rem] lg:rounded-tl-[10rem] lg:rounded-br-[10rem] mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
         <div className="absolute inset-0">
           <Image 
             src="/images/hero-agriculture.jpg" 
@@ -218,7 +216,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-44 lg:pt-60 pb-4">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-4">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
             <motion.div initial="hidden" animate="visible" className="flex-1 min-w-0">
                 <motion.h1 
@@ -260,7 +258,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
       </AnimatedSection>
 
       {/* 🌟 INTRODUCTION SECTION */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 text-center">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-8 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -341,7 +339,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                           className="object-cover"
                           priority={sIdx === 0}
                         />
-                        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-300" />
+                        <div className="absolute inset-0 transition-colors duration-300" />
                       </motion.div>
                     </div>
 
@@ -378,7 +376,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                           onClick={() => setSelectedService(service)}
                           className="inline-flex items-center gap-3 bg-dronek-green hover:bg-dronek-dark text-white px-8 py-5 rounded-full font-bold transition-all shadow-lg shadow-dronek-green/30 group/btn"
                         >
-                          <span className="uppercase tracking-widest text-sm">{lang === 'fr' ? 'En savoir plus' : 'Learn more'}</span>
+                          <span className="uppercase tracking-widest text-sm">{t.services.learnMore}</span>
                           <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                         </button>
                       </div>
@@ -402,7 +400,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedService(null)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-md"
+              className="absolute inset-0"
             />
             
             <motion.div 

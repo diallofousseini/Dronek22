@@ -1,0 +1,66 @@
+========================================================================
+GUIDE DE DÉPLOIEMENT FINAL : DRONEK SUR LWS (CPANEL)
+========================================================================
+
+Ce pack contient tout le nécessaire (y compris les dépendances node_modules) pour faire fonctionner votre site Dronek sur un hébergement mutualisé LWS avec Phusion Passenger.
+
+------------------------------------------------------------------------
+ÉTAPE 1 : PRÉPARATION DU SERVEUR
+------------------------------------------------------------------------
+1. Connectez-vous à votre cPanel LWS.
+2. Allez dans le "Gestionnaire de fichiers" (File Manager).
+3. Localisez le dossier de destination. Si vous souhaitez déployer dans un sous-dossier, allez dans `public_html/dronek/`.
+4. Si un ancien dossier existe, SUPPRIMEZ-LE (ou videz son contenu) pour éviter les conflits de fichiers.
+
+------------------------------------------------------------------------
+ÉTAPE 2 : TRANSFERT ET EXTRACTION
+------------------------------------------------------------------------
+1. Cliquez sur "Uploader" et choisissez le fichier `dronek-deploy.zip`.
+2. Une fois l'upload terminé, faites un clic droit sur le fichier ZIP dans cPanel et choisissez "Extract" (Extraire).
+3. Vérifiez que `server.js` se trouve bien directement dans le dossier `dronek/`.
+
+------------------------------------------------------------------------
+ÉTAPE 3 : CONFIGURATION NODE.JS (SETUP NODE.JS APP)
+------------------------------------------------------------------------
+1. Dans cPanel, cherchez l'icône "Setup Node.js App".
+2. Si une ancienne application existe pour ce chemin, supprimez-la.
+3. Cliquez sur "Create Application" :
+   - Node.js version : 22.x (ou 20.x minimum)
+   - Application mode : Production
+   - Application root : `public_html/dronek`
+   - Application URL : `votre-domaine.com/dronek` (ou la racine de votre domaine)
+   - Application startup file : `server.js`
+4. Cliquez sur "CREATE".
+
+------------------------------------------------------------------------
+ÉTAPE 4 : VARIABLES D'ENVIRONNEMENT (CRUCIAL)
+------------------------------------------------------------------------
+Dans la même interface "Setup Node.js App", descendez jusqu'à "Environment variables" et ajoutez les suivantes avec vos valeurs réelles :
+
+[Firebase]
+- NEXT_PUBLIC_FIREBASE_API_KEY
+- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+- NEXT_PUBLIC_FIREBASE_PROJECT_ID
+- NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+- NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+- NEXT_PUBLIC_FIREBASE_APP_ID
+- NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+
+[Supabase]
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+[Base de données & Admin]
+- DATABASE_URL = file:./db/custom.db
+- NEXT_PUBLIC_ADMIN_EMAIL
+- ADMIN_EMAIL
+- NEXT_PUBLIC_POST_ACCESS_CODE
+
+------------------------------------------------------------------------
+ÉTAPE 5 : DÉMARRAGE
+------------------------------------------------------------------------
+1. Cliquez sur "SAVE" puis sur "RESTART" pour charger les variables.
+2. Votre site est maintenant en ligne !
+
+Note : Si vous voyez une erreur "ChunkLoadError" sur la carte, n'oubliez pas de vider le cache de votre navigateur ou de redémarrer l'application une seconde fois.
+========================================================================

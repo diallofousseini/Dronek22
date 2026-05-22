@@ -181,12 +181,6 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
     };
 
     fetchNews();
-
-    const sub = supabase.channel('actualites-page').on('postgres_changes', { event: '*', schema: 'public', table: 'actualites' }, fetchNews).subscribe();
-
-    return () => {
-      sub.unsubscribe();
-    };
   }, []);
 
   const totalPages = Math.ceil(posts.length / itemsPerPage);
@@ -329,7 +323,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                     />
                     
                     {/* Hover Overlay with Buttons */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 z-20 backdrop-blur-[2px]">
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 z-20">
                        <motion.button 
                           whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
                           whileTap={{ scale: 0.9 }}
@@ -350,7 +344,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                           whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
                           whileTap={{ scale: 0.9 }}
                           className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-xl transition-all duration-300"
-                          title="En savoir plus"
+                          title={t.blog.readMore}
                        >
                           <LinkIcon size={20} />
                        </motion.button>
@@ -405,7 +399,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                         <Button
                           className="w-fit rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-6 py-4 text-sm font-medium shadow-none transition-all duration-300"
                         >
-                          {lang === 'fr' ? 'En savoir plus' : 'Learn more'}
+                          {t.blog.readMore}
                         </Button>
                       </div>
                     </div>
@@ -427,7 +421,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               onClick={() => setSelectedPost(null)} 
-              className="absolute inset-0 bg-black/40 backdrop-blur-md" 
+              className="absolute inset-0" 
             />
             
             {/* Popup Container */}

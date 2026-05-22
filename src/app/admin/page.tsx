@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogOut, Plus, Search, Zap, Briefcase, FileText, Users, MessageSquare, Globe, Loader2, Edit2, Trash2, ExternalLink, LayoutGrid, ChevronRight, Image as ImageIcon, AlertTriangle, X } from 'lucide-react';
+import { LogOut, Plus, Search, Zap, Briefcase, FileText, Users, MessageSquare, Globe, Loader2, Edit2, Trash2, ExternalLink, LayoutGrid, ChevronRight, Image as ImageIcon, AlertTriangle, X, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
@@ -19,6 +19,7 @@ interface DashboardItem {
   date: string;
   table: string;
   url?: string;
+  sujet?: string;
 }
 
 const StatusToggle = ({ item, onToggle, lang }: { item: DashboardItem, onToggle: (item: DashboardItem) => void, lang: string }) => {
@@ -102,6 +103,9 @@ export default function AdminDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{id: string, title: string, table: string} | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showThumbsUp, setShowThumbsUp] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   // Helper to format date based on language
   const formatDate = (date: any) => {
@@ -155,11 +159,9 @@ export default function AdminDashboard() {
         
         if (table === 'contacts' && activeTab === 'mediatheque') {
           query = query.eq('sujet', 'Mediatheque');
-        } else if (table === 'contacts' && activeTab === 'all') {
-          // In 'all', we show everything including Mediatheque config
         } else if (table === 'contacts') {
-          // In 'contacts' tab, maybe we only want real contacts?
-          // Let's keep it consistent: if they click contacts, show all contacts including config
+          // Exclude configuration and media settings from the general contact messages list
+          query = query.neq('sujet', 'Configuration').neq('sujet', 'Mediatheque').neq('sujet', 'MainServices');
         }
 
         const { data } = await query;
@@ -226,6 +228,11 @@ export default function AdminDashboard() {
   const handleToggleStatus = async (item: any) => {
     const isPublished = item.status === 'Publié' || item.status === 'Published' || item.status === 'publie';
     const newStatus = isPublished ? 'brouillon' : 'publie';
+    
+    if (newStatus === 'publie') {
+      setShowThumbsUp(true);
+      setTimeout(() => setShowThumbsUp(false), 3000);
+    }
     
     // Optimistic update
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i));
@@ -316,13 +323,20 @@ export default function AdminDashboard() {
                 <ImageIcon className="w-5 h-5" />
                 {lang === 'fr' ? 'Ajouter Média' : 'Add Media'}
               </Link>
+            ) : activeTab === 'contacts' ? (
+              <Link 
+                href="/admin/services/new?type=contact"
+                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
+              >
+                <Edit2 className="w-4 h-4" />
+                {lang === 'fr' ? 'Modifier coordonnées' : 'Edit Coordinates'}
+              </Link>
             ) : (
               <Link 
                 href={`/admin/services/new?type=${
                   activeTab === 'projets' ? 'projet' : 
                   activeTab === 'actualites' ? 'actualite' : 
                   activeTab === 'equipe' ? 'membre' : 
-                  activeTab === 'contacts' ? 'contact' : 
                   activeTab === 'production_sites' ? 'production_site' : 'service'
                 }`}
                 className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
@@ -334,8 +348,7 @@ export default function AdminDashboard() {
                   activeTab === 'actualites' ? t.admin.tabs.news.slice(0, -1) : 
                   activeTab === 'equipe' ? t.admin.tabs.team : 
                   activeTab === 'production_sites' ? (lang === 'fr' ? 'Site' : 'Site') :
-                  activeTab === 'services' ? (lang === 'fr' ? 'Service' : 'Service') :
-                  t.admin.tabs.contacts.slice(0, -1)
+                  (lang === 'fr' ? 'Service' : 'Service')
                 }
               </Link>
             )}
@@ -444,8 +457,33 @@ export default function AdminDashboard() {
                       <td className="px-6 py-6 text-sm text-gray-500 font-normal">{item.date}</td>
                       <td className="px-6 py-6 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleEdit(item.id, item.table)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#149655] hover:bg-[#149655]/10 rounded-xl transition-all" title={t.admin.actions.edit}><Edit2 className="w-5 h-5" /></button>
-                          <button onClick={() => handleDelete(item.id, item.title, item.table)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title={t.admin.actions.delete}><Trash2 className="w-5 h-5" /></button>
+                          {item.table === 'contacts' ? (
+                            <button 
+                              onClick={() => {
+                                setSelectedContact(item);
+                                setShowContactModal(true);
+                              }} 
+                              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#149655] hover:bg-[#149655]/10 rounded-xl transition-all" 
+                              title={lang === 'fr' ? 'Visualiser le message' : 'View message'}
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleEdit(item.id, item.table)} 
+                              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#149655] hover:bg-[#149655]/10 rounded-xl transition-all" 
+                              title={t.admin.actions.edit}
+                            >
+                              <Edit2 className="w-5 h-5" />
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDelete(item.id, item.title, item.table)} 
+                            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" 
+                            title={t.admin.actions.delete}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -533,6 +571,152 @@ export default function AdminDashboard() {
                   )}
                   {lang === 'fr' ? 'Supprimer' : 'Delete'}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showThumbsUp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center backdrop-blur-[2px] bg-white/10"
+          >
+            <motion.div
+              initial={{ scale: 0, y: 100 }}
+              animate={{ 
+                scale: 1, 
+                y: 0,
+                transition: { type: "spring", stiffness: 200, damping: 15 }
+              }}
+              exit={{ scale: 0, y: -100 }}
+            >
+              <motion.div
+                animate={{
+                  y: [0, 15, 0], // Descend doucement puis remonte (effet bounce naturel)
+                  scale: [1, 1.05, 1], // Léger zoom
+                  rotate: [-3, 3, -3] // Petite rotation subtile
+                }}
+                transition={{
+                  duration: 2.2, // Animation fluide et lente
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="origin-bottom w-[280px] h-[280px] rounded-[2.5rem] overflow-hidden bg-white border-4 border-white shadow-[0_25px_60px_-15px_rgba(20,150,85,0.45)] relative flex items-center justify-center"
+              >
+                <video
+                  src="/images/thumbs-up-green.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{ 
+                    filter: 'brightness(1.45) contrast(1.15) saturate(1.1)', 
+                    transform: 'scale(1.35)',
+                    mixBlendMode: 'multiply'
+                  }}
+                  className="w-full h-full object-cover origin-center"
+                />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showContactModal && selectedContact && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowContactModal(false)}
+              className="absolute inset-0 bg-[#0b261a]/60 backdrop-blur-md"
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 40 }}
+              className="bg-white rounded-[2.5rem] p-10 lg:p-12 max-w-2xl w-full shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] border border-white/20 relative overflow-hidden z-10"
+            >
+              {/* Header Accent */}
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#149655]/60 via-[#149655] to-[#0b3b24]" />
+              
+              <button 
+                onClick={() => setShowContactModal(false)}
+                className="absolute top-6 right-6 p-2.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all active:scale-95"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-[#149655]/10 rounded-xl flex items-center justify-center">
+                  <MessageSquare className="w-6 h-6 text-[#149655]" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
+                    {lang === 'fr' ? 'Détails du Message' : 'Message Details'}
+                  </h3>
+                  <p className="text-sm text-gray-500 font-medium">{selectedContact.date}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
+                <div>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{lang === 'fr' ? 'Expéditeur' : 'Sender'}</h4>
+                  <p className="font-bold text-gray-900 text-lg">{selectedContact.title}</p>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{lang === 'fr' ? 'Sujet / Intérêt' : 'Subject / Interest'}</h4>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#149655]/10 text-[#149655] uppercase tracking-wide">
+                    {selectedContact.category}
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Email</h4>
+                  <a href={`mailto:${selectedContact.email}`} className="font-bold text-[#149655] hover:underline flex items-center gap-1.5 group text-lg break-all">
+                    {selectedContact.email}
+                    <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{lang === 'fr' ? 'Téléphone' : 'Phone'}</h4>
+                  {selectedContact.telephone ? (
+                    <a href={`tel:${selectedContact.telephone}`} className="font-bold text-gray-900 hover:text-[#149655] hover:underline flex items-center gap-1.5 group text-lg">
+                      {selectedContact.telephone}
+                      <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  ) : (
+                    <p className="text-gray-400 font-medium italic text-lg">{lang === 'fr' ? 'Non fourni' : 'Not provided'}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-10 text-left">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{lang === 'fr' ? 'Message' : 'Message'}</h4>
+                <div className="bg-[#f8faf9] border border-gray-100 p-6 rounded-2xl max-h-[250px] overflow-y-auto text-gray-700 leading-relaxed font-medium whitespace-pre-wrap text-left">
+                  {selectedContact.message}
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="flex-1 py-5 px-6 rounded-2xl bg-gray-50 text-gray-600 font-bold uppercase tracking-widest text-xs hover:bg-gray-100 transition-all active:scale-95 border border-gray-200"
+                >
+                  {lang === 'fr' ? 'Fermer' : 'Close'}
+                </button>
+                <a
+                  href={`mailto:${selectedContact.email}?subject=Re: ${selectedContact.category}`}
+                  className="flex-1 py-5 px-6 rounded-2xl bg-[#149655] text-white font-bold uppercase tracking-widest text-xs hover:bg-[#0b3b24] transition-all active:scale-95 shadow-xl shadow-[#149655]/20 flex items-center justify-center gap-3 text-center"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {lang === 'fr' ? 'Répondre' : 'Reply'}
+                </a>
               </div>
             </motion.div>
           </div>

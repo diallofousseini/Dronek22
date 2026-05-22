@@ -2,8 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { ArrowRight, TreePine, Navigation, Sprout, Wheat, ShieldCheck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, TreePine, Navigation, Sprout, Wheat, ShieldCheck, FileText, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from './LanguageProvider';
@@ -71,7 +71,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
         .select('*')
         .in('statut', ['publie', 'Publié', 'Published'])
         .eq('service_type', service) // adapted field name
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
       
       if (cardsData) {
         const mapped = cardsData.map(c => {
@@ -88,7 +88,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
             // Support for both 'detail_short_desc' and 'detail_long_desc' columns
             detailTitle: c.detail_title || c.detailTitle,
             detailShortDesc: c.detail_short_desc || c.detailShortDesc,
-            detailLongDesc: c.detail_long_desc || c.detailLongDesc
+            detailLongDesc: c.detail_long_desc || c.detailLongDesc || c.description_complete
           };
         });
         setDynamicCards(mapped);
@@ -98,36 +98,35 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
 
     fetchServices();
 
-    // Subscriptions
-    const subConfig = supabase.channel(`config-${service}`).on('postgres_changes', { event: '*', schema: 'public', table: 'service_configs', filter: `id=eq.${service}` }, fetchServices).subscribe();
-    const subCards = supabase.channel(`cards-${service}`).on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, fetchServices).subscribe();
-
-    return () => {
-      subConfig.unsubscribe();
-      subCards.unsubscribe();
-    };
   }, [service]);
 
   // Merge CMS cards with Translation items as fallback
-  const allServiceItems = dynamicCards.length > 0 
-    ? dynamicCards 
-    : (pageData?.cards?.map((c: any) => ({
-        title: c.title,
-        desc: c.description,
-        image: c.image || config.image,
-        pdfUrl: c.pdfUrl || '#',
-        buttonText: c.buttonText || t.services.learnMore,
-        detailTitle: c.detailTitle || c.title,
-        detailShortDesc: c.detailShortDesc || c.description,
-        detailLongDesc: c.detailLongDesc || c.description
-      })) || data.items.map((item: any) => ({
-        ...item,
-        pdfUrl: item.pdfUrl || '#',
-        buttonText: t.services.learnMore,
-        detailTitle: item.title,
-        detailShortDesc: item.desc,
-        detailLongDesc: item.desc
-      })));
+  const defaultItems = (pageData?.cards?.map((c: any) => ({
+    id: c.id || c.title,
+    title: c.title,
+    desc: c.description,
+    image: c.image || config.image,
+    pdfUrl: c.pdfUrl || '#',
+    buttonText: c.buttonText || t.services.learnMore,
+    detailTitle: c.detailTitle || c.title,
+    detailShortDesc: c.detailShortDesc || c.description,
+    detailLongDesc: c.detailLongDesc || c.description
+  })) || data.items.map((item: any) => ({
+    ...item,
+    id: item.id || item.title,
+    pdfUrl: item.pdfUrl || '#',
+    buttonText: t.services.learnMore,
+    detailTitle: item.title,
+    detailShortDesc: item.desc,
+    detailLongDesc: item.desc
+  })));
+
+  const allServiceItems = [...dynamicCards];
+  defaultItems.forEach((di: any) => {
+    if (!allServiceItems.some(c => c.title === di.title || c.id === di.id)) {
+      allServiceItems.push(di);
+    }
+  });
 
   const bannerInfo = {
     title: pageData?.banner?.title || data.name,
@@ -209,23 +208,27 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
     setConsultationError('');
 
     try {
-      if (!db) {
-        throw new Error('Firebase not configured');
-      }
+      const { error } = await supabase
+        .from('contacts')
+        .insert([
+          {
+            prenom: consultationData.prenom,
+            nom: consultationData.nom,
+            email: consultationData.email,
+            telephone: '',
+            sujet: `Consultation: ${data.name || service}`,
+            message: consultationData.message,
+            statut: 'non_traite',
+            created_at: new Date().toISOString()
+          }
+        ]);
 
-      await addDoc(collection(db, 'consultations'), {
-        nom: consultationData.nom,
-        prenom: consultationData.prenom,
-        email: consultationData.email,
-        message: consultationData.message,
-        service,
-        serviceName: data.name,
-        createdAt: serverTimestamp(),
-      });
+      if (error) throw error;
 
       setConsultationData({ nom: '', prenom: '', email: '', message: '' });
       setConsultationSuccess(t.services.success);
-    } catch {
+    } catch (err) {
+      console.error('Error submitting consultation:', err);
       setConsultationError(t.services.error);
     } finally {
       setSendingConsultation(false);
@@ -278,7 +281,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
           className="sticky top-0 transform-gpu transition-transform duration-300 ease-out origin-top"
           style={getStackStyle(0)}
         >
-          <AnimatedSection className="relative h-auto min-h-[400px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl group">
+          <AnimatedSection className="relative h-auto min-h-[250px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl group">
             <div className="absolute inset-0 overflow-hidden">
               <motion.div
                 initial={{ scale: 1.1 }}
@@ -288,11 +291,12 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
               >
                 <Image src={bannerInfo.image || config.image} alt={bannerInfo.title} fill className="object-cover" priority />
               </motion.div>
+              <div className="absolute inset-0 bg-black/40" />
               <div className={`absolute inset-0 bg-gradient-to-t ${config.color} opacity-80`} />
-              <div className="absolute inset-0 bg-black/10" />
+              <div className="absolute inset-0" />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-44 lg:pt-60 pb-16">
+            <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-12">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-12 lg:gap-24">
                 <div className="flex-1 min-w-0">
                     <ScrollTitle as="h1" className="text-3xl lg:text-5xl font-montserrat-extrabold text-white leading-[1.1] uppercase tracking-tighter">
@@ -352,19 +356,20 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                   marginBottom: idx === allServiceItems.length - 1 ? '10vh' : '30vh',
                   background: 'white',
                   borderRadius: '24px',
+                  overflow: 'hidden',
                   boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
                 }}
                 className={`stack-card stack-card-${idx} w-full group`}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
                   {/* Left Column - Image */}
-                  <div className="relative h-72 sm:h-80 lg:h-full overflow-hidden rounded-t-[24px] lg:rounded-l-[24px] lg:rounded-tr-none">
+                  <div className="relative h-72 sm:h-80 lg:h-full w-full">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.6 }}
-                      className="absolute inset-0"
+                      className="absolute inset-0 w-full h-full"
                     >
-                      <Image src={item.image || config.image} alt={item.title} fill className="object-cover" />
+                      <Image src={item.image || config.image} alt={item.title} fill className="object-cover object-center" />
                     </motion.div>
                   </div>
                   {/* Right Column - Text Content */}
@@ -421,7 +426,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedItem(null)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 transition-all"
             />
             
             <motion.div 

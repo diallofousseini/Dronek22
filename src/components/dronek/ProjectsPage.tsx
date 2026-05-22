@@ -132,20 +132,12 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
     };
 
     loadData();
-
-    const subProj = supabase.channel('projets-list').on('postgres_changes', { event: '*', schema: 'public', table: 'projets' }, loadData).subscribe();
-    const subNews = supabase.channel('news-archive-list').on('postgres_changes', { event: '*', schema: 'public', table: 'actualites' }, loadData).subscribe();
-
-    return () => {
-      subProj.unsubscribe();
-      subNews.unsubscribe();
-    };
   }, [lang]);
 
   const allProjectsRaw = [...dynamicProjects, ...hardcodedProjects];
   const allProjects = selectedCategory === 'Tous' 
     ? allProjectsRaw 
-    : allProjectsRaw.filter(p => p.categoryLabel === selectedCategory || p.category === selectedCategory);
+    : allProjectsRaw.filter((p: any) => p.categoryLabel === selectedCategory || p.category === selectedCategory);
 
   const totalPages = Math.ceil(allProjects.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -176,7 +168,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             {/* Left Content */}
-            <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-xl relative min-h-[400px] flex flex-col justify-center">
+            <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-xl relative min-h-[250px] flex flex-col justify-center">
               {/* Decorative background image for the left section - Optimized for full visibility */}
               <div className="absolute inset-0 z-0 opacity-[0.12] pointer-events-none select-none flex items-center justify-center lg:justify-start">
                 <div className="relative w-full h-full max-w-[650px] max-h-[650px]">
@@ -247,7 +239,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
       <section className="bg-white pt-4 lg:pt-6 pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* 🏷️ TABS NAVIGATION — Project Filter */}
-          <div id="projects-grid-start" className="flex items-center justify-center gap-6 sm:gap-8 overflow-x-auto no-scrollbar mb-12">
+          <div id="projects-grid-start" className="flex items-center justify-start md:justify-center px-4 md:px-0 gap-6 sm:gap-8 overflow-x-auto no-scrollbar mb-12">
             {categories.map((category) => (
               <button
                 key={category.id}
@@ -394,7 +386,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedProjectSlug(null)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-md"
+              className="absolute inset-0 transition-all"
             />
             
             {/* Popup Container */}
@@ -503,7 +495,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAboutModal(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 transition-all"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}

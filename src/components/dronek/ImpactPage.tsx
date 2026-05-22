@@ -138,7 +138,7 @@ export default function ImpactPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
              <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="md:col-span-2 relative h-[240px] md:h-[350px] rounded-none overflow-hidden group cursor-pointer">
                <img src={images[0] || "/images/team-photo.jpg"} alt="Impact 1" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+               <div className="absolute inset-0 transition-colors" />
              </motion.div>
              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="md:col-span-1 relative h-[240px] md:h-[350px] rounded-none overflow-hidden group cursor-pointer">
                <img src={images[1] || "/images/about-forest.jpg"} alt="Impact 2" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
@@ -148,11 +148,11 @@ export default function ImpactPage() {
              </motion.div>
              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="md:col-span-2 relative h-[240px] md:h-[350px] rounded-none overflow-hidden group cursor-pointer">
                <img src={images[3] || "/images/project-training.jpg"} alt="Impact 4" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+               <div className="absolute inset-0 transition-colors" />
              </motion.div>
              <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="md:col-span-2 relative h-[240px] md:h-[350px] rounded-none overflow-hidden group cursor-pointer">
                <img src={images[4] || "/images/nursery.jpg"} alt="Impact 5" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+               <div className="absolute inset-0 transition-colors" />
              </motion.div>
              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="md:col-span-1 relative h-[240px] md:h-[350px] rounded-none overflow-hidden group cursor-pointer">
                <img src={images[5] || "/images/hero-drone.jpg"} alt="Impact 6" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
@@ -162,7 +162,7 @@ export default function ImpactPage() {
              </motion.div>
              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="md:col-span-2 relative h-[240px] md:h-[350px] rounded-none overflow-hidden group cursor-pointer">
                <img src={images[7] || "/images/project-carbon.jpg"} alt="Impact 8" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+               <div className="absolute inset-0 transition-colors" />
              </motion.div>
           </div>
         </div>

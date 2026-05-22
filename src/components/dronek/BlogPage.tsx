@@ -74,14 +74,6 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
 
     fetchNews();
     fetchMediatheque();
-
-    const subNews = supabase.channel('blog-news').on('postgres_changes', { event: '*', schema: 'public', table: 'actualites' }, fetchNews).subscribe();
-    const subMedia = supabase.channel('blog-media').on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, fetchMediatheque).subscribe();
-
-    return () => {
-      subNews.unsubscribe();
-      subMedia.unsubscribe();
-    };
   }, []);
 
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
@@ -91,12 +83,13 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Banner */}
-      <section className="relative h-48 lg:h-56 flex items-end overflow-hidden rounded-[2rem] mx-4 sm:mx-6 lg:mx-8 mt-12 lg:mt-14">
+      <section className="relative h-auto min-h-[100px] lg:min-h-[120px] flex items-end overflow-hidden rounded-[2rem] mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3">
         <div className="absolute inset-0">
           <Image src="/images/hero-forest.jpg" alt="Actualités" fill className="object-cover" />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/65 via-dronek-green/35 to-black/75" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-black/65 via-dronek-green/35 to-black/75" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4 w-full">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-medium mb-2">
               <Newspaper className="w-4 h-4" />
@@ -171,7 +164,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
                   </button>
                   <button 
                     className="action-btn"
-                    title="En savoir plus"
+                    title={t.blog.readMore}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedNewsId(item.id || String(idx));
@@ -213,7 +206,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
           {/* Big Featured Image */}
           <div className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group">
             <Image src={mediatheque.images[0] || "/images/hero-forest.jpg"} alt="Media 1" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
+            <div className="absolute inset-0 transition-colors" />
           </div>
 
           {/* Small Block 1 */}
@@ -294,7 +287,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
                         />
                         <div 
                           onClick={() => setPlayingIndex(idx)}
-                          className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/10 group-hover:bg-transparent transition-colors"
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer transition-colors"
                         >
                           <motion.div 
                             whileHover={{ scale: 1.1 }}
@@ -355,7 +348,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedNewsId(null)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-md"
+              className="absolute inset-0 transition-all"
             />
             
             <motion.div 

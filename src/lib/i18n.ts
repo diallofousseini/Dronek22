@@ -368,7 +368,7 @@ export const translations = {
       members: [
         {
           name: "Diallo Fousseini",
-          role: "Dévéloppeur Fullsatck",
+          role: "Développeur Full-stack",
           image: "team2.jpg",
         },
         {
