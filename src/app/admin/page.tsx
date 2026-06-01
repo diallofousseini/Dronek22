@@ -106,6 +106,8 @@ export default function AdminDashboard() {
   const [showThumbsUp, setShowThumbsUp] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [errorState, setErrorState] = useState<string | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
 
   // Helper to format date based on language
   const formatDate = (date: any) => {
@@ -144,6 +146,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setLoading(true);
+    setErrorState(null);
     
     const tablesToFetch = activeTab === 'all' 
       ? ['projets', 'actualites', 'equipe', 'contacts', 'production_sites', 'services']
@@ -151,37 +154,58 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
       let combined: any[] = [];
-      for (const table of tablesToFetch) {
-        let query = supabase
-          .from(table)
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (table === 'contacts' && activeTab === 'mediatheque') {
-          query = query.eq('sujet', 'Mediatheque');
-        } else if (table === 'contacts') {
-          // Exclude configuration and media settings from the general contact messages list
-          query = query.neq('sujet', 'Configuration').neq('sujet', 'Mediatheque').neq('sujet', 'MainServices');
+      let fetchFailed = false;
+      let lastErrorMessage = '';
+
+      try {
+        for (const table of tablesToFetch) {
+          let query = supabase
+            .from(table)
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (table === 'contacts' && activeTab === 'mediatheque') {
+            query = query.eq('sujet', 'Mediatheque');
+          } else if (table === 'contacts') {
+            // Exclude configuration and media settings from the general contact messages list
+            query = query.neq('sujet', 'Configuration').neq('sujet', 'Mediatheque').neq('sujet', 'MainServices');
+          }
+
+          const { data, error } = await query;
+          
+          if (error) {
+            console.error(`[Admin Fetch] Error on table "${table}":`, error);
+            fetchFailed = true;
+            lastErrorMessage = error.message;
+            continue;
+          }
+
+          if (data) {
+            combined = [...combined, ...data.map(item => ({
+              ...item,
+              id: item.id,
+              title: item.prenom || item.nom ? `${item.prenom || ''} ${item.nom || ''}`.trim() : (item.sujet || item.titre || item.name || item.title || (lang === 'fr' ? 'Sans titre' : 'Untitled')),
+              category: item.sujet === 'Mediatheque' ? 'Média' : (item.categorie || item.category || table),
+              status: item.statut || item.status || (lang === 'fr' ? 'Publié' : 'Published'),
+              date: formatDate(item.created_at),
+              table: table,
+              url: item.url || item.image_url || item.photo_url || item.image || item.photo,
+              rawDate: new Date(item.created_at)
+            }))];
+          }
         }
 
-        const { data } = await query;
-        
-        if (data) {
-          combined = [...combined, ...data.map(item => ({
-            ...item,
-            id: item.id,
-            title: item.prenom || item.nom ? `${item.prenom || ''} ${item.nom || ''}`.trim() : (item.sujet || item.titre || item.name || item.title || (lang === 'fr' ? 'Sans titre' : 'Untitled')),
-            category: item.sujet === 'Mediatheque' ? 'Média' : (item.categorie || item.category || table),
-            status: item.statut || item.status || (lang === 'fr' ? 'Publié' : 'Published'),
-            date: formatDate(item.created_at),
-            table: table,
-            url: item.url || item.image_url || item.photo_url || item.image || item.photo,
-            rawDate: new Date(item.created_at)
-          }))];
+        if (fetchFailed && combined.length === 0) {
+          setErrorState(lastErrorMessage || (lang === 'fr' ? 'Échec de connexion à la base de données' : 'Database connection failed'));
+        } else {
+          setItems(combined.sort((a, b) => b.rawDate - a.rawDate));
         }
+      } catch (err: any) {
+        console.error('[Admin Fetch] Request exception:', err);
+        setErrorState(err.message || String(err));
+      } finally {
+        setLoading(false);
       }
-      setItems(combined.sort((a, b) => b.rawDate - a.rawDate));
-      setLoading(false);
     };
 
     fetchData();
@@ -194,7 +218,7 @@ export default function AdminDashboard() {
     return () => {
       channels.forEach(c => c.unsubscribe());
     };
-  }, [activeTab, lang]);
+  }, [activeTab, lang, refreshCount]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -432,6 +456,35 @@ export default function AdminDashboard() {
                       <div className="flex flex-col items-center gap-3">
                         <Loader2 className="w-10 h-10 text-[#149655] animate-spin" />
                         <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{t.admin.table.loading}</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : errorState ? (
+                  <tr>
+                    <td colSpan={5} className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-4 max-w-md mx-auto px-4">
+                        <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                          <AlertTriangle className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800 text-lg uppercase tracking-tight">
+                            {lang === 'fr' ? 'Erreur de Connexion' : 'Connection Error'}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                            {lang === 'fr' 
+                              ? 'La base de données Supabase est temporairement inactive ou inaccessible. Veuillez essayer de la réveiller.'
+                              : 'The Supabase database is temporarily inactive or offline. Please try to wake it up.'}
+                          </p>
+                          <code className="block bg-gray-50 text-[11px] text-gray-400 p-2.5 rounded-lg border border-gray-100 mt-3 font-mono break-all text-left">
+                            {errorState}
+                          </code>
+                        </div>
+                        <button
+                          onClick={() => setRefreshCount(prev => prev + 1)}
+                          className="mt-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 text-xs uppercase tracking-wider shadow-lg shadow-[#149655]/20"
+                        >
+                          {lang === 'fr' ? 'Réessayer' : 'Retry'}
+                        </button>
                       </div>
                     </td>
                   </tr>

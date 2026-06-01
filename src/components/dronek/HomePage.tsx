@@ -436,56 +436,18 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   useEffect(() => {
     const fetchAll = async () => {
       // 1. Fetch Projects
-      const { data: projectsData } = await supabase
-        .from('projets')
-        .select('*')
-        .in('statut', ['publie', 'Publié', 'Published'])
-        .order('created_at', { ascending: false })
-        .limit(3);
-      
-      if (projectsData) {
-        setDynamicProjects(projectsData.map(p => {
-          let imageUrl = p.image_url || '/images/hero-main.jpg';
-          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
-          return {
-            ...p,
-            title: (lang === 'en' && p.titre_en) ? p.titre_en : (p.titre || p.title || ''),
-            image: imageUrl,
-            service: (lang === 'en' && p.categorie_en) ? p.categorie_en : (p.categorie || 'PROJET')
-          };
-        }));
-      }
-
-      // 2. Fetch Featured Projects
-      const { data: featuredData } = await supabase
-        .from('projets')
-        .select('*')
-        .eq('is_featured', true) // assuming this column exists or will be added
-        .in('statut', ['publie', 'Publié', 'Published'])
-        .order('created_at', { ascending: false })
-        .limit(6);
-      
-      if (featuredData) {
-        setFeaturedProjects(featuredData.map(p => {
-          let imageUrl = p.image_url || '/images/hero-main.jpg';
-          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
-          return {
-            ...p,
-            title: (lang === 'en' && p.titre_en) ? p.titre_en : (p.titre || p.title || ''),
-            image: imageUrl,
-            service: (lang === 'en' && p.categorie_en) ? p.categorie_en : (p.categorie || (lang === 'en' ? 'FEATURED PROJECT' : 'PROJET PHARE'))
-          };
-        }));
-      } else {
-        // Fallback
-        const { data: fallbackData } = await supabase
+      try {
+        const { data: projectsData, error: projectsError } = await supabase
           .from('projets')
           .select('*')
           .in('statut', ['publie', 'Publié', 'Published'])
           .order('created_at', { ascending: false })
-          .limit(6);
-        if (fallbackData) {
-          setFeaturedProjects(fallbackData.map(p => {
+          .limit(3);
+        
+        if (projectsError) {
+          console.error('[HomePage Fetch] Error fetching projects:', projectsError);
+        } else if (projectsData) {
+          setDynamicProjects(projectsData.map(p => {
             let imageUrl = p.image_url || '/images/hero-main.jpg';
             if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
             return {
@@ -496,51 +458,120 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             };
           }));
         }
+      } catch (err) {
+        console.error('[HomePage Fetch] Exception fetching projects:', err);
+      }
+
+      // 2. Fetch Featured Projects
+      try {
+        const { data: featuredData, error: featuredError } = await supabase
+          .from('projets')
+          .select('*')
+          .eq('is_featured', true)
+          .in('statut', ['publie', 'Publié', 'Published'])
+          .order('created_at', { ascending: false })
+          .limit(6);
+        
+        if (featuredError) {
+          console.error('[HomePage Fetch] Error fetching featured projects:', featuredError);
+        }
+        
+        if (featuredData && !featuredError) {
+          setFeaturedProjects(featuredData.map(p => {
+            let imageUrl = p.image_url || '/images/hero-main.jpg';
+            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
+            return {
+              ...p,
+              title: (lang === 'en' && p.titre_en) ? p.titre_en : (p.titre || p.title || ''),
+              image: imageUrl,
+              service: (lang === 'en' && p.categorie_en) ? p.categorie_en : (p.categorie || (lang === 'en' ? 'FEATURED PROJECT' : 'PROJET PHARE'))
+            };
+          }));
+        } else {
+          // Fallback
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('projets')
+            .select('*')
+            .in('statut', ['publie', 'Publié', 'Published'])
+            .order('created_at', { ascending: false })
+            .limit(6);
+          
+          if (fallbackError) {
+            console.error('[HomePage Fetch] Error fetching fallback projects:', fallbackError);
+          } else if (fallbackData) {
+            setFeaturedProjects(fallbackData.map(p => {
+              let imageUrl = p.image_url || '/images/hero-main.jpg';
+              if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-main.jpg';
+              return {
+                ...p,
+                title: (lang === 'en' && p.titre_en) ? p.titre_en : (p.titre || p.title || ''),
+                image: imageUrl,
+                service: (lang === 'en' && p.categorie_en) ? p.categorie_en : (p.categorie || 'PROJET')
+              };
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('[HomePage Fetch] Exception fetching featured projects:', err);
       }
 
       // 4. Fetch Services
-      const { data: servicesData } = await supabase
-        .from('services')
-        .select('*')
-        .in('statut', ['publie', 'Publié', 'Published'])
-        .order('created_at', { ascending: false });
-      
-      if (servicesData) {
-        // Fetch MainServices config from contacts table
-        const { data: config } = await supabase.from('contacts').select('*').eq('sujet', 'MainServices').single();
-        let mainIds: string[] = [];
-        if (config && config.message) {
-          try { mainIds = JSON.parse(config.message); } catch (e) {}
-        }
-
-        const mapped = servicesData.map(s => {
-          let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
-          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-forest.jpg';
-          return {
-            ...s,
-            id: s.id,
-            titre: (lang === 'en' && s.titre_en) ? s.titre_en : (s.titre || s.title),
-            description: (lang === 'en' && s.description_en) ? s.description_en : (s.description_courte || s.description),
-            image: imageUrl,
-            is_main_service: mainIds.includes(s.id)
-          };
-        });
+      try {
+        const { data: servicesData, error: servicesError } = await supabase
+          .from('services')
+          .select('*')
+          .in('statut', ['publie', 'Publié', 'Published'])
+          .order('created_at', { ascending: false });
         
-        const mainServices = mapped.filter((s: any) => s.is_main_service === true);
-        setDynamicServices(mainServices.length > 0 ? mainServices : getFallbackServices(lang));
-      } else {
+        if (servicesError) {
+          console.error('[HomePage Fetch] Error fetching services:', servicesError);
+          setDynamicServices(getFallbackServices(lang));
+        } else if (servicesData) {
+          // Fetch MainServices config from contacts table
+          const { data: config } = await supabase.from('contacts').select('*').eq('sujet', 'MainServices').single();
+          let mainIds: string[] = [];
+          if (config && config.message) {
+            try { mainIds = JSON.parse(config.message); } catch (e) {}
+          }
+
+          const mapped = servicesData.map(s => {
+            let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
+            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-forest.jpg';
+            return {
+              ...s,
+              id: s.id,
+              titre: (lang === 'en' && s.titre_en) ? s.titre_en : (s.titre || s.title),
+              description: (lang === 'en' && s.description_en) ? s.description_en : (s.description_courte || s.description),
+              image: imageUrl,
+              is_main_service: mainIds.includes(s.id)
+            };
+          });
+          
+          const mainServices = mapped.filter((s: any) => s.is_main_service === true);
+          setDynamicServices(mainServices.length > 0 ? mainServices : getFallbackServices(lang));
+        } else {
+          setDynamicServices(getFallbackServices(lang));
+        }
+      } catch (err) {
+        console.error('[HomePage Fetch] Exception fetching services:', err);
         setDynamicServices(getFallbackServices(lang));
       }
 
       // 5. Fetch Hero Media
-      const { data: mediaData } = await supabase
-        .from('media')
-        .select('*')
-        .eq('type', 'hero')
-        .in('statut', ['publie', 'Publié', 'Published']);
-      
-      if (mediaData && mediaData.length > 0) {
-        setDynamicHeroImages(mediaData.map(m => m.url));
+      try {
+        const { data: mediaData, error: mediaError } = await supabase
+          .from('media')
+          .select('*')
+          .eq('type', 'hero')
+          .in('statut', ['publie', 'Publié', 'Published']);
+        
+        if (mediaError) {
+          console.error('[HomePage Fetch] Error fetching media:', mediaError);
+        } else if (mediaData && mediaData.length > 0) {
+          setDynamicHeroImages(mediaData.map(m => m.url));
+        }
+      } catch (err) {
+        console.error('[HomePage Fetch] Exception fetching media:', err);
       }
     };
 
