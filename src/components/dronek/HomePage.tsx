@@ -343,7 +343,7 @@ const getGridStyle = (count: number) => {
     gridTemplateColumns: 'repeat(3, 1fr)',
     gridTemplateRows: `repeat(${rows}, 1fr)`,
     height: 'auto',
-    minHeight: `${rows * 340}px`
+    minHeight: `${rows * 290}px`
   }
 }
 
@@ -1468,7 +1468,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   onClick={() => setSelectedHomeProject(project)}
                 >
                 <div className="flex flex-col h-full p-1 pt-2 pb-0">
-                  <div className="relative h-72 overflow-hidden rounded-2xl">
+                  <div className="relative h-60 overflow-hidden rounded-2xl">
                     <Image
                       src={project.image}
                       alt={project.title}

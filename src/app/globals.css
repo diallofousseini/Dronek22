@@ -689,7 +689,7 @@ button:hover {
 .activity-card-image {
   position: relative;
   overflow: hidden;
-  height: 280px;
+  height: 240px;
 }
 .activity-card-image img {
   width: 100%;
@@ -787,7 +787,7 @@ button:hover {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  min-height: 300px;
+  min-height: 260px;
   border-radius: 1.25rem; /* ~20px */
 }
 .expertise-card img {

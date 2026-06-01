@@ -301,7 +301,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                     className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer"
                     onClick={() => setSelectedProjectSlug(project.slug)}
                   >
-                    <div className="relative h-[300px] sm:h-[340px] overflow-hidden">
+                    <div className="relative h-[250px] sm:h-[280px] overflow-hidden">
                       <Image 
                         src={project.image} 
                         alt={project.title} 
@@ -317,7 +317,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                       </div>
                     </div>
 
-                    <div className="p-6 lg:p-7 flex flex-col items-center text-center h-[calc(100%-300px)] sm:h-[calc(100%-340px)]">
+                    <div className="p-6 lg:p-7 flex flex-col items-center text-center h-[calc(100%-250px)] sm:h-[calc(100%-280px)]">
                       <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-tight tracking-tight mb-5">
                         {project.title.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </h3>
