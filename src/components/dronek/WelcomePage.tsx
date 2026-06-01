@@ -36,7 +36,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
         <div className="absolute inset-0" style={{ background: 'radial-gradient(circle, transparent 20%, #0a2e1d 150%)' }} />
       </div>
 
-      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-5xl w-full h-full justify-between py-20">
+      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-5xl w-full h-full justify-between py-12 sm:py-20">
         
         {/* Top Spacer */}
         <div className="flex-1" />
@@ -46,10 +46,10 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="flex flex-col items-center mb-12"
+          className="flex flex-col items-center mb-8 sm:mb-12 w-full"
         >
           {/* We use next/image to display the logo. If logoV.png is the white one, use it. Otherwise use logo.png */}
-          <div className="relative w-72 md:w-96 h-24 md:h-32 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+          <div className="relative w-full max-w-[260px] sm:max-w-[320px] md:max-w-[380px] h-20 sm:h-24 md:h-32 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
              <Image 
               src="/images/AAAAAA-removebg-preview.png" 
               alt="Dronek" 
@@ -57,7 +57,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
               className="object-contain"
             />
           </div>
-          <h2 className="text-white/90 text-[15px] md:text-[18px] font-semibold tracking-wide mt-2">
+          <h2 className="text-white/90 text-[13px] sm:text-[16px] md:text-[18px] font-semibold tracking-wide mt-2 text-center px-2">
             Foresterie - Agriculture - Technologie
           </h2>
         </motion.div>
@@ -67,9 +67,9 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-          className="space-y-6 flex flex-col items-center flex-1"
+          className="space-y-6 flex flex-col items-center flex-1 w-full"
         >
-          <div className="relative h-12 md:h-16 flex items-center justify-center w-full">
+          <div className="relative h-12 md:h-16 flex items-center justify-center w-full mx-auto">
             <AnimatePresence mode="wait">
               <motion.h1
                 key={titleIndex}
@@ -96,14 +96,14 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
             </AnimatePresence>
           </div>
           
-          <p className="text-white/95 text-sm md:text-base lg:text-lg max-w-3xl font-medium leading-relaxed mt-4 drop-shadow-sm">
+          <p className="text-white/95 text-xs sm:text-base lg:text-lg max-w-3xl font-medium leading-relaxed mt-4 drop-shadow-sm text-center px-2">
             Solutions innovantes par drone pour l'agriculture, l'inventaire forestier et la surveillance environnementale. Technologie au service de la durabilité.
           </p>
 
-          <div className="pt-8">
+          <div className="pt-6 sm:pt-8">
             <button
               onClick={onEnter}
-              className="group bg-white text-[#154f30] font-bold text-[15px] uppercase tracking-[0.1em] px-12 py-4 rounded-sm shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all hover:scale-105 hover:shadow-[0_15px_50px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3"
+              className="group bg-white text-[#154f30] font-bold text-[14px] sm:text-[15px] uppercase tracking-[0.1em] px-10 sm:px-12 py-3.5 sm:py-4 rounded-sm shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all hover:scale-105 hover:shadow-[0_15px_50px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3"
             >
               DÉCOUVRIR <span className="group-hover:translate-x-1 transition-transform font-light">→</span>
             </button>
