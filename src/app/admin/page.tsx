@@ -323,36 +323,36 @@ export default function AdminDashboard() {
           />
         </div>
 
-        <div className="max-w-[1440px] mx-auto px-8 py-4 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           
-          <div className="flex items-center gap-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
             <div className="relative h-12 flex items-center">
-              <Image src="/Typographie/logoV.png" alt="DRONEK Logo" width={200} height={50} className="h-[60px] w-auto object-contain" priority />
+              <Image src="/Typographie/logoV.png" alt="DRONEK Logo" width={200} height={50} className="h-[50px] sm:h-[60px] w-auto object-contain" priority />
             </div>
             <div className="h-10 w-[1px] bg-gray-200 mx-2 hidden sm:block" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight uppercase">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight tracking-tight uppercase">
                 {t.admin.dashboard} <span className="text-[#149655]">DRONEK</span>
               </h1>
-              <p className="text-sm text-gray-500 font-medium">{t.admin.subtitle}</p>
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">{t.admin.subtitle}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full md:w-auto justify-start md:justify-end">
             {activeTab === 'mediatheque' ? (
               <Link 
                 href="/admin/services/new?type=mediatheque"
-                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
+                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-xs sm:text-sm"
               >
-                <ImageIcon className="w-5 h-5" />
+                <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 {lang === 'fr' ? 'Ajouter Média' : 'Add Media'}
               </Link>
             ) : activeTab === 'contacts' ? (
               <Link 
                 href="/admin/services/new?type=contact"
-                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
+                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-xs sm:text-sm"
               >
-                <Edit2 className="w-4 h-4" />
+                <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 {lang === 'fr' ? 'Modifier coordonnées' : 'Edit Coordinates'}
               </Link>
             ) : (
@@ -363,9 +363,9 @@ export default function AdminDashboard() {
                   activeTab === 'equipe' ? 'membre' : 
                   activeTab === 'production_sites' ? 'production_site' : 'service'
                 }`}
-                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-sm"
+                className="flex items-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#149655]/20 uppercase text-xs sm:text-sm"
               >
-                <Plus className="w-5 h-5 stroke-[3px]" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3px]" />
                 {t.admin.add} {
                   activeTab === 'all' ? (lang === 'fr' ? 'Service' : 'Service') : 
                   activeTab === 'projets' ? t.admin.tabs.projects.slice(0, -1) : 
@@ -379,9 +379,9 @@ export default function AdminDashboard() {
 
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-white border border-gray-200 hover:border-red-100 hover:bg-red-50 text-gray-700 hover:text-red-600 px-6 py-3 rounded-xl font-medium transition-all group text-sm"
+              className="flex items-center gap-2 bg-white border border-gray-200 hover:border-red-100 hover:bg-red-50 text-gray-700 hover:text-red-600 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all group text-xs sm:text-sm"
             >
-              <LogOut className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:rotate-180 transition-transform duration-500" />
               {t.admin.logout}
             </button>
           </div>
@@ -439,7 +439,8 @@ export default function AdminDashboard() {
           </div>
 
           <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-            <table className="w-full text-left border-collapse">
+            {/* Desktop Table View */}
+            <table className="w-full text-left border-collapse hidden md:table">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">{t.admin.table.item}</th>
@@ -550,6 +551,111 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile Card List View */}
+            <div className="block md:hidden divide-y divide-gray-100 bg-white">
+              {loading ? (
+                <div className="py-20 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-10 h-10 text-[#149655] animate-spin" />
+                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{t.admin.table.loading}</p>
+                  </div>
+                </div>
+              ) : errorState ? (
+                <div className="py-16 text-center px-4">
+                  <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                      <AlertTriangle className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800 text-lg uppercase tracking-tight">
+                        {lang === 'fr' ? 'Erreur de Connexion' : 'Connection Error'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {lang === 'fr' 
+                          ? 'La base de données Supabase est temporairement inactive.'
+                          : 'The Supabase database is temporarily offline.'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setRefreshCount(prev => prev + 1)}
+                      className="bg-[#149655] hover:bg-[#0b3b24] text-white px-5 py-2.5 rounded-xl font-bold transition-all active:scale-95 text-xs uppercase tracking-wider w-full"
+                    >
+                      {lang === 'fr' ? 'Réessayer' : 'Retry'}
+                    </button>
+                  </div>
+                </div>
+              ) : items.length > 0 ? (
+                items.map((item) => (
+                  <div key={item.id} className="p-4 flex flex-col gap-4 hover:bg-gray-50/50 transition-colors">
+                    {/* Item Information Header */}
+                    <div className="flex gap-4">
+                      {item.url && item.url !== "" && (
+                        <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100">
+                          <img src={item.url} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 text-base uppercase tracking-tight truncate">
+                          {item.title}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className="text-[9px] font-black uppercase bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                            {item.category}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-medium">
+                            {item.date}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status & Actions Section */}
+                    <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-50">
+                      {/* Status Toggle on Left */}
+                      <div>
+                        <StatusToggle item={item} onToggle={handleToggleStatus} lang={lang} />
+                      </div>
+
+                      {/* Action buttons on Right */}
+                      <div className="flex items-center gap-1.5">
+                        {item.table === 'contacts' ? (
+                          <button 
+                            onClick={() => {
+                              setSelectedContact(item);
+                              setShowContactModal(true);
+                            }} 
+                            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#149655] hover:bg-[#149655]/10 rounded-lg transition-all" 
+                            title={lang === 'fr' ? 'Visualiser le message' : 'View message'}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleEdit(item.id, item.table)} 
+                            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#149655] hover:bg-[#149655]/10 rounded-lg transition-all" 
+                            title={t.admin.actions.edit}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => handleDelete(item.id, item.title, item.table)} 
+                          className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" 
+                          title={t.admin.actions.delete}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-16 text-center text-gray-500 font-bold uppercase tracking-widest text-xs">
+                  {t.admin.table.noData}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
