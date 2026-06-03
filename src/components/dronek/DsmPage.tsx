@@ -242,70 +242,166 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
         </motion.div>
       </div>
 
-      {/* Introduction block (Format "Founder Word" from TeamPage) */}
+      {/* Introduction block (Balanced 3/6/3 layout with IoT and QR widgets) */}
       <section className="pb-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial="hidden" 
             whileInView="visible" 
             viewport={{ once: true }} 
             variants={stagger}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
           >
-            {/* Left column (4/12): Image / Mockup composition */}
-            <motion.div variants={fadeInUp} className="lg:col-span-4 relative">
-              <div className="aspect-[4/5] rounded-[2.5rem] lg:rounded-tl-[8rem] overflow-hidden shadow-2xl relative z-10 bg-gradient-to-br from-dronek-green/20 via-dronek-green/5 to-white border border-gray-100 flex items-center justify-center p-8 group">
-                {/* Background decorative pulse */}
-                <div className="absolute inset-0 bg-[#149655]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="relative w-full h-full flex flex-col justify-between items-center py-4">
-                  {/* Station Gauche.png or Droite_1.png */}
-                  <div className="relative w-[180px] h-[250px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_10px_20px_rgba(20,150,85,0.15)]">
-                    <Image 
-                      src="/images/Droite_1-removebg-preview.png" 
-                      alt="DSM Mobile App" 
-                      fill 
-                      className="object-contain" 
-                      priority 
-                    />
-                  </div>
-                  {/* Miniature dashboard overlapping */}
-                  <div className="relative w-[240px] h-[130px] -mt-6 transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.12)]">
-                    <Image 
-                      src="/images/Droite_2-removebg-preview.png" 
-                      alt="DSM Web Application" 
-                      fill 
-                      className="object-contain" 
-                    />
-                  </div>
-                </div>
+            {/* Left Image: Gauche.png (3 columns) */}
+            <motion.div variants={fadeInUp} className="lg:col-span-3 flex justify-center w-full">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[4/5] transition-transform duration-500 hover:scale-[1.03]">
+                <Image
+                  src="/images/Gauche.png"
+                  alt="Dronek Smart Monitoring Station"
+                  fill
+                  className="object-contain animate-float"
+                  priority
+                />
               </div>
             </motion.div>
 
-            {/* Right column (8/12): Text content */}
-            <motion.div variants={fadeInUp} className="lg:col-span-8 space-y-6">
-              <div className="inline-flex items-center gap-2 text-dronek-green font-bold tracking-widest uppercase text-xs">
-                <div className="h-px w-6 bg-dronek-green" />
-                <span>{tPage.tagline}</span>
+            {/* Middle: Title, Description, and Engineered Widgets (6 columns) */}
+            <motion.div variants={fadeInUp} className="lg:col-span-6 space-y-6 text-left relative z-10 pr-0 lg:pr-12">
+              <div className="space-y-3 text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dronek-green/10 text-dronek-green text-xs font-bold uppercase tracking-wider mx-auto lg:mx-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#149655] animate-pulse" />
+                  {tPage.tagline}
+                </div>
+                <h1 className="text-4xl lg:text-5xl font-extrabold text-dronek-dark leading-tight">
+                  DSM
+                </h1>
+                <p className="text-gray-600 text-base sm:text-lg font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+                  {lang === 'fr' 
+                    ? "Pilotez la santé de vos parcelles et optimisez l'irrigation en temps réel grâce aux technologies de précision Dronek."
+                    : "Manage plot health and optimize irrigation in real-time with Dronek precision technology."}
+                </p>
               </div>
-              
-              <h1 className="text-3xl lg:text-4xl font-extrabold text-dronek-dark leading-tight italic">
-                "{tPage.quote}"
-              </h1>
 
-              <div className="space-y-4 text-gray-600 text-base lg:text-lg leading-relaxed font-sans font-medium">
-                <p>{tPage.introParagraph1}</p>
-                <p>{tPage.introParagraph2}</p>
+              {/* Engineered Widgets: Weather & QR Code Side-by-Side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Widget 1: Weather Stats (IoT Live) */}
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 space-y-3 hover:border-dronek-green/20 transition-all duration-300 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{lang === 'fr' ? 'Capteur IoT Live' : 'IoT Sensor Live'}</span>
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">{lang === 'fr' ? 'Précipitations' : 'Rainfall'}</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">12.4 mm</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">{lang === 'fr' ? 'Température' : 'Temperature'}</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">28.5 °C</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">{lang === 'fr' ? 'Humidité' : 'Humidity'}</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">76 %</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">{lang === 'fr' ? 'Vent' : 'Wind'}</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">14 km/h</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Widget 2: QR Code Scan to Access Page */}
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center gap-4 hover:border-dronek-green/20 transition-all duration-300 shadow-sm relative overflow-hidden group">
+                  {/* Scan line animation */}
+                  <div className="absolute left-0 right-0 h-0.5 bg-dronek-green/60 shadow-[0_0_8px_#149655] z-10 animate-scan pointer-events-none" />
+                  
+                  {/* QR Code SVG */}
+                  <div className="w-16 h-16 bg-white border border-gray-200 p-1 flex items-center justify-center rounded-xl shrink-0 relative">
+                    <svg viewBox="0 0 100 100" className="w-full h-full text-dronek-dark">
+                      {/* Outer borders */}
+                      <path d="M 0 0 h 30 v 10 h -20 v 20 h -10 Z" fill="currentColor" />
+                      <path d="M 100 0 h -30 v 10 h 20 v 20 h 10 Z" fill="currentColor" />
+                      <path d="M 0 100 h 30 v -10 h -20 v -20 h -10 Z" fill="currentColor" />
+                      <path d="M 100 100 h -30 v -10 h 20 v -20 h 10 Z" fill="currentColor" />
+                      {/* Quiet zones / Position patterns */}
+                      <rect x="15" y="15" width="20" height="20" fill="currentColor" />
+                      <rect x="18" y="18" width="14" height="14" fill="white" />
+                      <rect x="21" y="21" width="8" height="8" fill="currentColor" />
+                      
+                      <rect x="65" y="15" width="20" height="20" fill="currentColor" />
+                      <rect x="68" y="18" width="14" height="14" fill="white" />
+                      <rect x="71" y="21" width="8" height="8" fill="currentColor" />
+                      
+                      <rect x="15" y="65" width="20" height="20" fill="currentColor" />
+                      <rect x="18" y="68" width="14" height="14" fill="white" />
+                      <rect x="21" y="71" width="8" height="8" fill="currentColor" />
+                      
+                      {/* Random QR bits */}
+                      <rect x="45" y="20" width="5" height="5" fill="currentColor" />
+                      <rect x="50" y="30" width="5" height="5" fill="currentColor" />
+                      <rect x="40" y="45" width="10" height="5" fill="currentColor" />
+                      <rect x="65" y="45" width="5" height="10" fill="currentColor" />
+                      <rect x="20" y="45" width="5" height="5" fill="currentColor" />
+                      <rect x="30" y="55" width="5" height="10" fill="currentColor" />
+                      
+                      <rect x="45" y="65" width="10" height="5" fill="currentColor" />
+                      <rect x="55" y="75" width="5" height="10" fill="currentColor" />
+                      <rect x="65" y="65" width="10" height="10" fill="currentColor" />
+                      <rect x="80" y="50" width="5" height="5" fill="currentColor" />
+                      <rect x="50" y="50" width="10" height="5" fill="currentColor" />
+                      <rect x="75" y="80" width="10" height="5" fill="currentColor" />
+                    </svg>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase block">{lang === 'fr' ? 'Accès Mobile' : 'Mobile Access'}</span>
+                    <h4 className="text-xs font-bold text-dronek-dark">{lang === 'fr' ? 'Scanner pour mobile' : 'Scan for mobile'}</h4>
+                    <p className="text-[9px] text-gray-500 font-medium leading-tight">{lang === 'fr' ? "Accédez directement à l'application officielle depuis votre mobile." : "Directly access the official app from your mobile device."}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Download PRD button */}
-              <div className="pt-2">
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-4">
                 <Button 
-                  className="bg-dronek-green hover:bg-green-700 text-white font-bold rounded-[6px] px-6 py-5 text-sm transition-all duration-300 flex items-center gap-2"
+                  className="bg-[#149655] hover:bg-[#0f7d43] text-white font-bold rounded-[6px] px-8 py-4.5 text-sm transition-all duration-300 shadow-lg shadow-dronek-green/20 border-0 hover:scale-105 active:scale-[0.98]"
+                  onClick={() => window.open('https://dsm.dronek.com', '_blank')}
+                >
+                  {lang === 'fr' ? "Lancer DSM" : "Launch DSM"}
+                </Button>
+                <Button 
+                  className="bg-transparent hover:bg-gray-100 text-dronek-dark border border-gray-200 font-bold rounded-[6px] px-6 py-4.5 text-sm transition-all duration-300 flex items-center gap-2 shadow-sm hover:scale-105 active:scale-[0.98]"
                   onClick={() => window.open('/documents/DSM_Cahier_des_Charges.pdf', '_blank')}
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-4 h-4 text-dronek-green" />
                   <span>{tPage.pdfBtn}</span>
                 </Button>
+              </div>
+            </motion.div>
+
+            {/* Right: Dronek Green Card (3 columns - same size as left, with large overflowing images) */}
+            <motion.div variants={fadeInUp} className="lg:col-span-3 flex justify-center w-full relative z-20">
+              <div className="bg-[#149655] rounded-[40px] p-6 flex flex-col items-center justify-center w-full max-w-[280px] sm:max-w-[320px] shadow-xl min-h-[500px] lg:min-h-[600px] relative overflow-visible group transition-all duration-500 hover:shadow-dronek-green/30">
+                {/* Droite_1 (Phone - Floating and Overlapping) */}
+                <div className="relative w-[200px] h-[280px] lg:w-[260px] lg:h-[360px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-10">
+                  <Image
+                    src="/images/Droite_1-removebg-preview.png"
+                    alt="DSM Mobile App"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                {/* Droite_2 (Laptop - Overflowing Left into Middle Column) */}
+                <div className="relative w-[300px] h-[190px] lg:w-[440px] lg:h-[280px] lg:-ml-24 -mt-10 transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-0">
+                  <Image
+                    src="/images/Droite_2-removebg-preview.png"
+                    alt="DSM Web Dashboard"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -510,6 +606,23 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
           </div>
         </div>
       </section>
+
+      <style jsx>{`
+        @keyframes scan {
+          0%, 100% { top: 0%; opacity: 0.3; }
+          50% { top: 100%; opacity: 1; }
+        }
+        .animate-scan {
+          animation: scan 3s ease-in-out infinite;
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
