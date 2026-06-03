@@ -1351,21 +1351,21 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Left Image: Gauche.png (2 columns) */}
-            <div className="lg:col-span-2 flex justify-center">
-              <div className="relative w-full max-w-[260px] aspect-[4/5]">
+            {/* Left Image: Gauche.png (3 columns) */}
+            <div className="lg:col-span-3 flex justify-center w-full">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[4/5] transition-transform duration-500 hover:scale-[1.03]">
                 <Image
                   src="/images/Gauche.png"
                   alt="Dronek Smart Monitoring Station"
                   fill
-                  className="object-contain"
+                  className="object-contain animate-float"
                   priority
                 />
               </div>
             </div>
 
-            {/* Middle: Title, Description, Checkmarks and CTA (4 columns) */}
-            <div className="lg:col-span-4 space-y-6 text-left">
+            {/* Middle: Title, Description, Checkmarks and CTA (6 columns) */}
+            <div className="lg:col-span-6 space-y-6 text-left relative z-10 pr-0 lg:pr-12">
               <div className="space-y-3 text-center lg:text-left">
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">
                   DSM
@@ -1414,11 +1414,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            {/* Right: Dronek Green Card (Droite_1-removebg-preview & Droite_2-removebg-preview) (6 columns for 3x larger images) */}
-            <div className="lg:col-span-6 flex justify-center w-full">
-              <div className="bg-[#149655] rounded-[40px] p-6 lg:p-12 flex flex-col items-center justify-center space-y-12 w-full lg:max-w-none shadow-xl min-h-[650px] lg:min-h-[850px] transition-all duration-500 hover:shadow-dronek-green/10">
-                {/* Droite_1 (Phone - 3x Enlarged: max-w-[720px]) */}
-                <div className="relative w-full max-w-[320px] h-[440px] lg:max-w-[720px] lg:h-[990px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)]">
+            {/* Right: Dronek Green Card (3 columns - same size as left, with large overflowing images) */}
+            <div className="lg:col-span-3 flex justify-center w-full relative z-20">
+              <div className="bg-[#149655] rounded-[40px] p-6 flex flex-col items-center justify-center w-full max-w-[280px] sm:max-w-[320px] shadow-xl min-h-[500px] lg:min-h-[600px] relative overflow-visible group transition-all duration-500 hover:shadow-dronek-green/30">
+                {/* Droite_1 (Phone - Floating and Overlapping) */}
+                <div className="relative w-[200px] h-[280px] lg:w-[260px] lg:h-[360px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-10">
                   <Image
                     src="/images/Droite_1-removebg-preview.png"
                     alt="DSM Mobile App"
@@ -1426,8 +1426,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     className="object-contain"
                   />
                 </div>
-                {/* Droite_2 (Laptop - 3x Enlarged: max-w-[1200px]) */}
-                <div className="relative w-full max-w-[420px] h-[260px] lg:max-w-[1200px] lg:h-[750px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)]">
+                {/* Droite_2 (Laptop - Overflowing Left into Middle Column) */}
+                <div className="relative w-[300px] h-[190px] lg:w-[440px] lg:h-[280px] lg:-ml-24 -mt-10 transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-0">
                   <Image
                     src="/images/Droite_2-removebg-preview.png"
                     alt="DSM Web Dashboard"
@@ -1655,6 +1655,15 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
         .animate-scan {
           animation: scan 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
         }
       `}</style>
       {/* Project Detail Modal for Home Page - Synchronized with ProjectsPage */}
