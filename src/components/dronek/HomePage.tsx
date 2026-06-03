@@ -391,6 +391,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const [dynamicProjects, setDynamicProjects] = useState<any[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
   const [selectedHomeProject, setSelectedHomeProject] = useState<any>(null);
+  const [showOneWeatherModal, setShowOneWeatherModal] = useState(false);
 
   const handleNav = useCallback((page: PageView) => {
     onNavigate(page);
@@ -1406,7 +1407,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
               <div className="pt-2">
                 <Button
-                  onClick={() => handleNav('contact')}
+                  onClick={() => setShowOneWeatherModal(true)}
                   className="bg-[#2eb354] hover:bg-[#259b46] text-white font-bold rounded-[6px] px-8 py-3.5 text-base transition-colors duration-300 shadow-md border-0"
                 >
                   {lang === 'fr' ? "Apprendre encore plus" : "Learn more"}
@@ -1749,6 +1750,125 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   <Button 
                     onClick={() => setSelectedHomeProject(null)}
                     className="w-full rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-6 h-auto shadow-lg shadow-dronek-green/20"
+                  >
+                    {lang === 'fr' ? 'Fermer' : 'Close'}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* OneWeather Ultra Detail Modal */}
+      <AnimatePresence>
+        {showOneWeatherModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            {/* Backdrop Blur & Overlay */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowOneWeatherModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            
+            {/* Popup Container */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.95 }}
+              className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
+            >
+              {/* Close Button Mobile */}
+              <button 
+                onClick={() => setShowOneWeatherModal(false)}
+                className="absolute top-4 right-4 z-50 md:hidden bg-white/80 backdrop-blur-md rounded-full p-2 shadow-lg"
+              >
+                <X className="w-6 h-6 text-dronek-text" />
+              </button>
+ 
+              {/* Image Side */}
+              <div className="md:w-1/2 relative h-64 md:h-auto bg-[#fafafa] flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-gray-100">
+                <div className="relative w-full h-full max-w-[280px] min-h-[220px]">
+                  <Image src="/images/Gauche.png" alt="OneWeather Ultra" fill className="object-contain" />
+                </div>
+              </div>
+ 
+              {/* Content Side */}
+              <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold text-dronek-green uppercase tracking-[0.2em]">{lang === 'fr' ? 'Technologie Agricole' : 'Agricultural Tech'}</span>
+                    <button onClick={() => setShowOneWeatherModal(false)} className="hidden md:block hover:scale-110 transition-transform">
+                      <X className="w-6 h-6 text-gray-300 hover:text-dronek-text" />
+                    </button>
+                  </div>
+                  
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-black mb-2 leading-tight">
+                    OneWeather Ultra®
+                  </h2>
+                  <p className="text-dronek-green text-sm font-semibold mb-6">
+                    {lang === 'fr' 
+                      ? "Station agro-météorologique connectée pour l'irrigation de précision."
+                      : "Connected agro-weather station for precision irrigation."}
+                  </p>
+   
+                  <div className="space-y-6 text-left">
+                    <p className="text-gray-600 leading-relaxed text-sm">
+                      {lang === 'fr'
+                        ? "La station météo connectée OneWeather Ultra® fournit aux exploitants agricoles des données agro-climatiques ultra-locales en temps réel. Grâce à ses capteurs haute précision, planifiez intelligemment votre irrigation, protégez vos cultures des aléas météorologiques et augmentez vos rendements de manière durable."
+                        : "The OneWeather Ultra® connected weather station provides farmers with real-time ultra-local agro-climatic data. Thanks to its high-precision sensors, smartly plan your irrigation, protect your crops from weather hazards, and increase your yields sustainably."}
+                    </p>
+    
+                    {/* Objectives / Features list */}
+                    <div>
+                      <h4 className="text-xs font-bold text-dronek-text uppercase tracking-widest mb-3">
+                        {lang === 'fr' ? 'Fonctionnalités clés' : 'Key Features'}
+                      </h4>
+                      <ul className="space-y-2">
+                        {[
+                          lang === 'fr'
+                            ? "Pluviométrie & Humidité : Mesure en temps réel du volume des pluies et de l'humidité de l'air."
+                            : "Precipitation & Humidity: Real-time measurement of rainfall volume and air humidity.",
+                          lang === 'fr'
+                            ? "Capteur de Vent & Température : Suivi de la vitesse/direction du vent et détection des risques de gel."
+                            : "Wind & Temperature Sensor: Tracking wind speed/direction and detecting frost risks.",
+                          lang === 'fr'
+                            ? "Aide à la Décision : Outil intégré de calcul des besoins en eau et planification de l'irrigation."
+                            : "Decision Support: Integrated water requirements calculator and irrigation planning.",
+                          lang === 'fr'
+                            ? "100% Autonome : Alimentation par panneau solaire intégré, sans câblage requis."
+                            : "100% Autonomous: Powered by integrated solar panel, no wiring required.",
+                          lang === 'fr'
+                            ? "Alertes Immédiates : Notifications SMS et email en cas de conditions extrêmes détectées."
+                            : "Immediate Alerts: SMS and email notifications when extreme conditions are detected."
+                        ].map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2.5 text-xs text-gray-500">
+                            <div className="w-1.5 h-1.5 rounded-full bg-dronek-green mt-1.5 shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+ 
+                {/* Actions */}
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <Button 
+                    onClick={() => {
+                      setShowOneWeatherModal(false);
+                      handleNav('contact');
+                    }}
+                    className="flex-1 rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-4 h-auto shadow-lg shadow-dronek-green/20"
+                  >
+                    {lang === 'fr' ? 'Contacter un conseiller' : 'Contact an advisor'}
+                  </Button>
+                  <Button 
+                    onClick={() => setShowOneWeatherModal(false)}
+                    variant="outline"
+                    className="rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50 py-4 h-auto"
                   >
                     {lang === 'fr' ? 'Fermer' : 'Close'}
                   </Button>
