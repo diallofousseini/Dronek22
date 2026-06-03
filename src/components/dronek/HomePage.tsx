@@ -1353,7 +1353,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             
             {/* Left Image: Gauche.png (3 columns) */}
             <div className="lg:col-span-3 flex justify-center w-full">
-              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[4/5] transition-transform duration-500 hover:scale-[1.03]">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] h-[450px] lg:h-[550px] flex items-center justify-center transition-transform duration-500 hover:scale-[1.03]">
                 <Image
                   src="/images/Gauche.png"
                   alt="Dronek Smart Monitoring Station"
@@ -1414,11 +1414,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            {/* Right: Dronek Green Card (3 columns - same size as left, with large overflowing images) */}
+            {/* Right: Mockup Composition (3 columns - same size as left, transparent background) */}
             <div className="lg:col-span-3 flex justify-center w-full relative z-20">
-              <div className="bg-[#149655] rounded-[40px] p-6 flex flex-col items-center justify-center w-full max-w-[280px] sm:max-w-[320px] shadow-xl min-h-[500px] lg:min-h-[600px] relative overflow-visible group transition-all duration-500 hover:shadow-dronek-green/30">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] h-[450px] lg:h-[550px] flex flex-col items-center justify-center overflow-visible group">
                 {/* Droite_1 (Phone - Floating and Overlapping) */}
-                <div className="relative w-[200px] h-[280px] lg:w-[260px] lg:h-[360px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-10">
+                <div className="relative w-[180px] h-[250px] lg:w-[240px] lg:h-[330px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-10">
                   <Image
                     src="/images/Droite_1-removebg-preview.png"
                     alt="DSM Mobile App"
@@ -1427,7 +1427,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   />
                 </div>
                 {/* Droite_2 (Laptop - Overflowing Left into Middle Column) */}
-                <div className="relative w-[300px] h-[190px] lg:w-[440px] lg:h-[280px] lg:-ml-24 -mt-10 transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-0">
+                <div className="relative w-[280px] h-[175px] lg:w-[380px] lg:h-[240px] lg:-ml-24 -mt-10 transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-0">
                   <Image
                     src="/images/Droite_2-removebg-preview.png"
                     alt="DSM Web Dashboard"
