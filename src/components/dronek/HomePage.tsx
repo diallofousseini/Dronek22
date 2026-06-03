@@ -1345,6 +1345,104 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       </Section>
 
       {/* ═══════════════════════════════════
+          ONEWEATHER ULTRA SECTION
+          ═══════════════════════════════════ */}
+      <Section className="bg-white py-12 lg:py-16">
+        <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {/* Left Image: Gauche.png */}
+            <div className="lg:col-span-4 flex justify-center">
+              <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-[4/5]">
+                <Image
+                  src="/images/Gauche.png"
+                  alt="OneWeather Station"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Middle: Title, Description, Checkmarks and CTA */}
+            <div className="lg:col-span-5 space-y-6 text-left">
+              <div className="space-y-3">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">
+                  OneWeather Ultra®
+                </h2>
+                <p className="text-dronek-green text-lg font-bold leading-relaxed">
+                  {lang === 'fr' 
+                    ? "Surveillez attentivement les conditions météorologiques de votre exploitation et planifiez votre irrigation en conséquence."
+                    : "Closely monitor weather conditions on your farm and plan your irrigation accordingly."}
+                </p>
+              </div>
+
+              <ul className="space-y-4 text-dronek-text font-medium text-base">
+                <li className="flex items-start gap-3">
+                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
+                  <span>
+                    {lang === 'fr'
+                      ? "Mesurez avec précision les paramètres susceptibles d'avoir un impact sur vos cultures."
+                      : "Accurately measure parameters likely to impact your crops."}
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
+                  <span>
+                    {lang === 'fr'
+                      ? "Surveillez en temps réel les précipitations, la température, l'humidité de l'air ainsi que la vitesse et la direction du vent sur votre exploitation."
+                      : "Monitor real-time precipitation, temperature, air humidity, as well as wind speed and direction on your farm."}
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
+                  <span>
+                    {lang === 'fr'
+                      ? "Recevez vos analyses et alertes sur mobile et sur le Web."
+                      : "Receive your analysis and alerts on mobile and Web."}
+                  </span>
+                </li>
+              </ul>
+
+              <div className="pt-2">
+                <Button
+                  onClick={() => handleNav('contact')}
+                  className="bg-[#2eb354] hover:bg-[#259b46] text-white font-bold rounded-[6px] px-8 py-3.5 text-base transition-colors duration-300 shadow-md border-0"
+                >
+                  {lang === 'fr' ? "Apprendre encore plus" : "Learn more"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Right: Soft Apricot Card (Droite_1 & Droite_2) */}
+            <div className="lg:col-span-3 flex justify-center w-full">
+              <div className="bg-[#fbf1e6] rounded-[32px] p-6 lg:p-8 flex flex-col items-center justify-center space-y-6 w-full max-w-[360px] lg:max-w-none shadow-sm min-h-[460px]">
+                {/* Droite_1 (Phone) */}
+                <div className="relative w-full max-w-[150px] h-[210px] transition-transform duration-500 hover:scale-[1.03]">
+                  <Image
+                    src="/images/Droite_1.png"
+                    alt="OneWeather Mobile App"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                {/* Droite_2 (Laptop) */}
+                <div className="relative w-full max-w-[260px] h-[160px] transition-transform duration-500 hover:scale-[1.03]">
+                  <Image
+                    src="/images/Droite_2.png"
+                    alt="OneWeather Web Dashboard"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </Section>
+
+      {/* ═══════════════════════════════════
           TESTIMONIALS — Carousel
           ═══════════════════════════════════ */}
       {/* ═══════════════════════════════════
