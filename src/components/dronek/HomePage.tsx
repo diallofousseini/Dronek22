@@ -1346,7 +1346,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       </Section>
 
       {/* ═══════════════════════════════════
-          ONEWEATHER ULTRA SECTION
+          DSM (DRONEK SMART MONITORING) SECTION
           ═══════════════════════════════════ */}
       <Section className="bg-white py-12 lg:py-16">
         <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
@@ -1357,7 +1357,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-[4/5]">
                 <Image
                   src="/images/Gauche.png"
-                  alt="OneWeather Station"
+                  alt="Dronek Smart Monitoring Station"
                   fill
                   className="object-contain"
                   priority
@@ -1367,14 +1367,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
             {/* Middle: Title, Description, Checkmarks and CTA */}
             <div className="lg:col-span-5 space-y-6 text-left">
-              <div className="space-y-3">
+              <div className="space-y-3 text-center">
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">
-                  OneWeather Ultra®
+                  DSM
                 </h2>
                 <p className="text-dronek-green text-lg font-bold leading-relaxed">
                   {lang === 'fr' 
-                    ? "Surveillez attentivement les conditions météorologiques de votre exploitation et planifiez votre irrigation en conséquence."
-                    : "Closely monitor weather conditions on your farm and plan your irrigation accordingly."}
+                    ? "Surveillez la météo de vos parcelles sur Dronek Smart Monitoring et ajustez votre planning d'irrigation en direct."
+                    : "Monitor the weather on your fields with Dronek Smart Monitoring and adjust your irrigation schedule live."}
                 </p>
               </div>
 
@@ -1383,55 +1383,55 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
                   <span>
                     {lang === 'fr'
-                      ? "Mesurez avec précision les paramètres susceptibles d'avoir un impact sur vos cultures."
-                      : "Accurately measure parameters likely to impact your crops."}
+                      ? "Mesurez avec précision les facteurs climatiques susceptibles de stresser vos cultures."
+                      : "Accurately measure climate factors likely to stress your crops."}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
                   <span>
                     {lang === 'fr'
-                      ? "Surveillez en temps réel les précipitations, la température, l'humidité de l'air ainsi que la vitesse et la direction du vent sur votre exploitation."
-                      : "Monitor real-time precipitation, temperature, air humidity, as well as wind speed and direction on your farm."}
+                      ? "Visualisez en direct les précipitations, températures, humidité, ainsi que le vent grâce aux capteurs Dronek."
+                      : "View live precipitation, temperature, humidity, and wind thanks to Dronek sensors."}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
                   <span>
                     {lang === 'fr'
-                      ? "Recevez vos analyses et alertes sur mobile et sur le Web."
-                      : "Receive your analysis and alerts on mobile and Web."}
+                      ? "Accédez à vos rapports agronomiques et alertes critiques sur l’interface Dronek Smart Monitoring."
+                      : "Access your agronomic reports and critical alerts on the Dronek Smart Monitoring interface."}
                   </span>
                 </li>
               </ul>
 
-              <div className="pt-2">
+              <div className="pt-2 text-center lg:text-left">
                 <Button
                   onClick={() => setShowOneWeatherModal(true)}
                   className="bg-[#2eb354] hover:bg-[#259b46] text-white font-bold rounded-[6px] px-8 py-3.5 text-base transition-colors duration-300 shadow-md border-0"
                 >
-                  {lang === 'fr' ? "Apprendre encore plus" : "Learn more"}
+                  {lang === 'fr' ? "En savoir plus" : "Learn more"}
                 </Button>
               </div>
             </div>
 
-            {/* Right: Soft Apricot Card (Droite_1 & Droite_2) */}
+            {/* Right: Soft Sage Green Card (Droite_1-removebg-preview & Droite_2-removebg-preview) */}
             <div className="lg:col-span-3 flex justify-center w-full">
-              <div className="bg-[#fbf1e6] rounded-[32px] p-6 lg:p-8 flex flex-col items-center justify-center space-y-6 w-full max-w-[360px] lg:max-w-none shadow-sm min-h-[460px]">
+              <div className="bg-[#d5dfda] rounded-[32px] p-6 lg:p-8 flex flex-col items-center justify-center space-y-8 w-full max-w-[360px] lg:max-w-none shadow-sm min-h-[460px]">
                 {/* Droite_1 (Phone) */}
-                <div className="relative w-full max-w-[150px] h-[210px] transition-transform duration-500 hover:scale-[1.03]">
+                <div className="relative w-full max-w-[160px] h-[220px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
                   <Image
-                    src="/images/Droite_1.png"
-                    alt="OneWeather Mobile App"
+                    src="/images/Droite_1-removebg-preview.png"
+                    alt="DSM Mobile App"
                     fill
                     className="object-contain"
                   />
                 </div>
                 {/* Droite_2 (Laptop) */}
-                <div className="relative w-full max-w-[260px] h-[160px] transition-transform duration-500 hover:scale-[1.03]">
+                <div className="relative w-full max-w-[280px] h-[170px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
                   <Image
-                    src="/images/Droite_2.png"
-                    alt="OneWeather Web Dashboard"
+                    src="/images/Droite_2-removebg-preview.png"
+                    alt="DSM Web Dashboard"
                     fill
                     className="object-contain"
                   />
@@ -1791,7 +1791,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               {/* Image Side */}
               <div className="md:w-1/2 relative h-64 md:h-auto bg-[#fafafa] flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-gray-100">
                 <div className="relative w-full h-full max-w-[280px] min-h-[220px]">
-                  <Image src="/images/Gauche.png" alt="OneWeather Ultra" fill className="object-contain" />
+                  <Image src="/images/Gauche.png" alt="DSM" fill className="object-contain" />
                 </div>
               </div>
  
@@ -1806,19 +1806,19 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   </div>
                   
                   <h2 className="text-2xl md:text-3xl font-extrabold text-black mb-2 leading-tight">
-                    OneWeather Ultra®
+                    DSM
                   </h2>
                   <p className="text-dronek-green text-sm font-semibold mb-6">
                     {lang === 'fr' 
-                      ? "Station agro-météorologique connectée pour l'irrigation de précision."
-                      : "Connected agro-weather station for precision irrigation."}
+                      ? "Station connectée Dronek Smart Monitoring pour la précision agricole."
+                      : "Dronek Smart Monitoring connected station for agricultural precision."}
                   </p>
    
                   <div className="space-y-6 text-left">
                     <p className="text-gray-600 leading-relaxed text-sm">
                       {lang === 'fr'
-                        ? "La station météo connectée OneWeather Ultra® fournit aux exploitants agricoles des données agro-climatiques ultra-locales en temps réel. Grâce à ses capteurs haute précision, planifiez intelligemment votre irrigation, protégez vos cultures des aléas météorologiques et augmentez vos rendements de manière durable."
-                        : "The OneWeather Ultra® connected weather station provides farmers with real-time ultra-local agro-climatic data. Thanks to its high-precision sensors, smartly plan your irrigation, protect your crops from weather hazards, and increase your yields sustainably."}
+                        ? "L'interface connectée Dronek Smart Monitoring (DSM) fournit aux exploitants agricoles des données agro-climatiques ultra-locales en temps réel. Grâce à ses capteurs de précision, planifiez intelligemment votre irrigation, protégez vos cultures des aléas météorologiques et augmentez vos rendements de manière durable."
+                        : "The Dronek Smart Monitoring (DSM) connected interface provides farmers with real-time ultra-local agro-climatic data. Thanks to its precision sensors, smartly plan your irrigation, protect your crops from weather hazards, and increase your yields sustainably."}
                     </p>
     
                     {/* Objectives / Features list */}
@@ -1829,20 +1829,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                       <ul className="space-y-2">
                         {[
                           lang === 'fr'
-                            ? "Pluviométrie & Humidité : Mesure en temps réel du volume des pluies et de l'humidité de l'air."
-                            : "Precipitation & Humidity: Real-time measurement of rainfall volume and air humidity.",
+                            ? "Facteurs climatiques : Mesure précise des précipitations, températures, humidité et vent."
+                            : "Climatic factors: Precise measurement of precipitation, temperatures, humidity, and wind.",
                           lang === 'fr'
-                            ? "Capteur de Vent & Température : Suivi de la vitesse/direction du vent et détection des risques de gel."
-                            : "Wind & Temperature Sensor: Tracking wind speed/direction and detecting frost risks.",
+                            ? "Planification en direct : Ajustement immédiat de l'irrigation grâce aux capteurs Dronek."
+                            : "Live planning: Immediate adjustment of irrigation thanks to Dronek sensors.",
                           lang === 'fr'
-                            ? "Aide à la Décision : Outil intégré de calcul des besoins en eau et planification de l'irrigation."
-                            : "Decision Support: Integrated water requirements calculator and irrigation planning.",
+                            ? "Alertes de stress hydrique : Notifications critiques sur l'interface Dronek Smart Monitoring."
+                            : "Water stress alerts: Critical notifications on the Dronek Smart Monitoring interface.",
                           lang === 'fr'
-                            ? "100% Autonome : Alimentation par panneau solaire intégré, sans câblage requis."
-                            : "100% Autonomous: Powered by integrated solar panel, no wiring required.",
-                          lang === 'fr'
-                            ? "Alertes Immédiates : Notifications SMS et email en cas de conditions extrêmes détectées."
-                            : "Immediate Alerts: SMS and email notifications when extreme conditions are detected."
+                            ? "100% Autonome : Alimenté par panneau solaire intégré, prêt à poser."
+                            : "100% Autonomous: Powered by integrated solar panel, ready to install."
                         ].map((item: string, i: number) => (
                           <li key={i} className="flex items-start gap-2.5 text-xs text-gray-500">
                             <div className="w-1.5 h-1.5 rounded-full bg-dronek-green mt-1.5 shrink-0" />
