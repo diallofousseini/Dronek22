@@ -15,6 +15,7 @@ import CookieConsent from '@/components/dronek/CookieConsent';
 import ImpactPage from '@/components/dronek/ImpactPage';
 import AllServicesPage from '@/components/dronek/AllServicesPage';
 import WelcomePage from '@/components/dronek/WelcomePage';
+import DsmPage from '@/components/dronek/DsmPage';
 
 const pageTransition = {
   initial: { opacity: 0 },
@@ -84,6 +85,8 @@ function AppContent({ initialPage }: AppContentProps) {
         return <ProductionSitesPage onNavigate={handleNavigate} />;
       case 'contact':
         return <ContactPage onNavigate={handleNavigate} />;
+      case 'dsm':
+        return <DsmPage onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

@@ -391,7 +391,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const [dynamicProjects, setDynamicProjects] = useState<any[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
   const [selectedHomeProject, setSelectedHomeProject] = useState<any>(null);
-  const [showOneWeatherModal, setShowOneWeatherModal] = useState(false);
 
   const handleNav = useCallback((page: PageView) => {
     onNavigate(page);
@@ -1352,9 +1351,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Left Image: Gauche.png */}
-            <div className="lg:col-span-4 flex justify-center">
-              <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-[4/5]">
+            {/* Left Image: Gauche.png (2 columns) */}
+            <div className="lg:col-span-2 flex justify-center">
+              <div className="relative w-full max-w-[260px] aspect-[4/5]">
                 <Image
                   src="/images/Gauche.png"
                   alt="Dronek Smart Monitoring Station"
@@ -1365,9 +1364,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            {/* Middle: Title, Description, Checkmarks and CTA */}
-            <div className="lg:col-span-5 space-y-6 text-left">
-              <div className="space-y-3 text-center">
+            {/* Middle: Title, Description, Checkmarks and CTA (4 columns) */}
+            <div className="lg:col-span-4 space-y-6 text-left">
+              <div className="space-y-3 text-center lg:text-left">
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">
                   DSM
                 </h2>
@@ -1407,19 +1406,19 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
               <div className="pt-2 text-center lg:text-left">
                 <Button
-                  onClick={() => setShowOneWeatherModal(true)}
-                  className="bg-[#2eb354] hover:bg-[#259b46] text-white font-bold rounded-[6px] px-8 py-3.5 text-base transition-colors duration-300 shadow-md border-0"
+                  onClick={() => handleNav('dsm')}
+                  className="bg-[#149655] hover:bg-[#0f7d43] text-white font-bold rounded-[6px] px-8 py-3.5 text-base transition-colors duration-300 shadow-md border-0"
                 >
                   {lang === 'fr' ? "En savoir plus" : "Learn more"}
                 </Button>
               </div>
             </div>
 
-            {/* Right: Soft Sage Green Card (Droite_1-removebg-preview & Droite_2-removebg-preview) */}
-            <div className="lg:col-span-3 flex justify-center w-full">
-              <div className="bg-[#d5dfda] rounded-[32px] p-6 lg:p-8 flex flex-col items-center justify-center space-y-8 w-full max-w-[360px] lg:max-w-none shadow-sm min-h-[460px]">
-                {/* Droite_1 (Phone) */}
-                <div className="relative w-full max-w-[160px] h-[220px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
+            {/* Right: Dronek Green Card (Droite_1-removebg-preview & Droite_2-removebg-preview) (6 columns for 3x larger images) */}
+            <div className="lg:col-span-6 flex justify-center w-full">
+              <div className="bg-[#149655] rounded-[40px] p-6 lg:p-12 flex flex-col items-center justify-center space-y-12 w-full lg:max-w-none shadow-xl min-h-[650px] lg:min-h-[850px] transition-all duration-500 hover:shadow-dronek-green/10">
+                {/* Droite_1 (Phone - 3x Enlarged: max-w-[720px]) */}
+                <div className="relative w-full max-w-[320px] h-[440px] lg:max-w-[720px] lg:h-[990px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)]">
                   <Image
                     src="/images/Droite_1-removebg-preview.png"
                     alt="DSM Mobile App"
@@ -1427,8 +1426,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     className="object-contain"
                   />
                 </div>
-                {/* Droite_2 (Laptop) */}
-                <div className="relative w-full max-w-[280px] h-[170px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
+                {/* Droite_2 (Laptop - 3x Enlarged: max-w-[1200px]) */}
+                <div className="relative w-full max-w-[420px] h-[260px] lg:max-w-[1200px] lg:h-[750px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)]">
                   <Image
                     src="/images/Droite_2-removebg-preview.png"
                     alt="DSM Web Dashboard"
@@ -1760,121 +1759,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         )}
       </AnimatePresence>
 
-      {/* OneWeather Ultra Detail Modal */}
-      <AnimatePresence>
-        {showOneWeatherModal && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            {/* Backdrop Blur & Overlay */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowOneWeatherModal(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            
-            {/* Popup Container */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.95 }}
-              className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
-            >
-              {/* Close Button Mobile */}
-              <button 
-                onClick={() => setShowOneWeatherModal(false)}
-                className="absolute top-4 right-4 z-50 md:hidden bg-white/80 backdrop-blur-md rounded-full p-2 shadow-lg"
-              >
-                <X className="w-6 h-6 text-dronek-text" />
-              </button>
- 
-              {/* Image Side */}
-              <div className="md:w-1/2 relative h-64 md:h-auto bg-[#fafafa] flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-gray-100">
-                <div className="relative w-full h-full max-w-[280px] min-h-[220px]">
-                  <Image src="/images/Gauche.png" alt="DSM" fill className="object-contain" />
-                </div>
-              </div>
- 
-              {/* Content Side */}
-              <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold text-dronek-green uppercase tracking-[0.2em]">{lang === 'fr' ? 'Technologie Agricole' : 'Agricultural Tech'}</span>
-                    <button onClick={() => setShowOneWeatherModal(false)} className="hidden md:block hover:scale-110 transition-transform">
-                      <X className="w-6 h-6 text-gray-300 hover:text-dronek-text" />
-                    </button>
-                  </div>
-                  
-                  <h2 className="text-2xl md:text-3xl font-extrabold text-black mb-2 leading-tight">
-                    DSM
-                  </h2>
-                  <p className="text-dronek-green text-sm font-semibold mb-6">
-                    {lang === 'fr' 
-                      ? "Station connectée Dronek Smart Monitoring pour la précision agricole."
-                      : "Dronek Smart Monitoring connected station for agricultural precision."}
-                  </p>
-   
-                  <div className="space-y-6 text-left">
-                    <p className="text-gray-600 leading-relaxed text-sm">
-                      {lang === 'fr'
-                        ? "L'interface connectée Dronek Smart Monitoring (DSM) fournit aux exploitants agricoles des données agro-climatiques ultra-locales en temps réel. Grâce à ses capteurs de précision, planifiez intelligemment votre irrigation, protégez vos cultures des aléas météorologiques et augmentez vos rendements de manière durable."
-                        : "The Dronek Smart Monitoring (DSM) connected interface provides farmers with real-time ultra-local agro-climatic data. Thanks to its precision sensors, smartly plan your irrigation, protect your crops from weather hazards, and increase your yields sustainably."}
-                    </p>
-    
-                    {/* Objectives / Features list */}
-                    <div>
-                      <h4 className="text-xs font-bold text-dronek-text uppercase tracking-widest mb-3">
-                        {lang === 'fr' ? 'Fonctionnalités clés' : 'Key Features'}
-                      </h4>
-                      <ul className="space-y-2">
-                        {[
-                          lang === 'fr'
-                            ? "Facteurs climatiques : Mesure précise des précipitations, températures, humidité et vent."
-                            : "Climatic factors: Precise measurement of precipitation, temperatures, humidity, and wind.",
-                          lang === 'fr'
-                            ? "Planification en direct : Ajustement immédiat de l'irrigation grâce aux capteurs Dronek."
-                            : "Live planning: Immediate adjustment of irrigation thanks to Dronek sensors.",
-                          lang === 'fr'
-                            ? "Alertes de stress hydrique : Notifications critiques sur l'interface Dronek Smart Monitoring."
-                            : "Water stress alerts: Critical notifications on the Dronek Smart Monitoring interface.",
-                          lang === 'fr'
-                            ? "100% Autonome : Alimenté par panneau solaire intégré, prêt à poser."
-                            : "100% Autonomous: Powered by integrated solar panel, ready to install."
-                        ].map((item: string, i: number) => (
-                          <li key={i} className="flex items-start gap-2.5 text-xs text-gray-500">
-                            <div className="w-1.5 h-1.5 rounded-full bg-dronek-green mt-1.5 shrink-0" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
- 
-                {/* Actions */}
-                <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                  <Button 
-                    onClick={() => {
-                      setShowOneWeatherModal(false);
-                      handleNav('contact');
-                    }}
-                    className="flex-1 rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-4 h-auto shadow-lg shadow-dronek-green/20"
-                  >
-                    {lang === 'fr' ? 'Contacter un conseiller' : 'Contact an advisor'}
-                  </Button>
-                  <Button 
-                    onClick={() => setShowOneWeatherModal(false)}
-                    variant="outline"
-                    className="rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50 py-4 h-auto"
-                  >
-                    {lang === 'fr' ? 'Fermer' : 'Close'}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
       <svg style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
         <filter id="rough-edge">
           <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />

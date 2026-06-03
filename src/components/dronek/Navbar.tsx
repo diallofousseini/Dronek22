@@ -17,7 +17,8 @@ export type PageView =
   | 'production'
   | 'services'
   | 'contact'
-  | 'admin';
+  | 'admin'
+  | 'dsm';
 
 interface NavbarProps {
   currentPage: PageView;
