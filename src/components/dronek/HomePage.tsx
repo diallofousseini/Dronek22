@@ -1351,74 +1351,145 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Left Image: Gauche.png (2 columns) */}
-            <div className="lg:col-span-2 flex justify-center">
-              <div className="relative w-full max-w-[260px] aspect-[4/5]">
+            {/* Left Image: Gauche.png (3 columns) */}
+            <div className="lg:col-span-3 flex justify-center w-full">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[4/5] transition-transform duration-500 hover:scale-[1.03]">
                 <Image
                   src="/images/Gauche.png"
                   alt="Dronek Smart Monitoring Station"
                   fill
-                  className="object-contain"
+                  className="object-contain animate-float"
                   priority
                 />
               </div>
             </div>
 
-            {/* Middle: Title, Description, Checkmarks and CTA (4 columns) */}
-            <div className="lg:col-span-4 space-y-6 text-left">
+            {/* Middle: Title, Description, and Engineered Widgets (6 columns) */}
+            <div className="lg:col-span-6 space-y-6 text-left relative z-10 pr-0 lg:pr-12">
               <div className="space-y-3 text-center lg:text-left">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dronek-green/10 text-dronek-green text-xs font-bold uppercase tracking-wider mx-auto lg:mx-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#149655] animate-pulse" />
+                  Dronek Smart Monitoring
+                </div>
+                <h2 className="text-4xl sm:text-5xl font-extrabold text-black tracking-tight leading-none">
                   DSM
                 </h2>
-                <p className="text-dronek-green text-lg font-bold leading-relaxed">
+                <p className="text-gray-600 text-base sm:text-lg font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
                   {lang === 'fr' 
-                    ? "Surveillez la météo de vos parcelles sur Dronek Smart Monitoring et ajustez votre planning d'irrigation en direct."
-                    : "Monitor the weather on your fields with Dronek Smart Monitoring and adjust your irrigation schedule live."}
+                    ? "Pilotez la santé de vos parcelles et optimisez l'irrigation en temps réel grâce aux technologies de précision Dronek."
+                    : "Manage plot health and optimize irrigation in real-time with Dronek precision technology."}
                 </p>
               </div>
 
-              <ul className="space-y-4 text-dronek-text font-medium text-base">
-                <li className="flex items-start gap-3">
-                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
-                  <span>
-                    {lang === 'fr'
-                      ? "Mesurez avec précision les facteurs climatiques susceptibles de stresser vos cultures."
-                      : "Accurately measure climate factors likely to stress your crops."}
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
-                  <span>
-                    {lang === 'fr'
-                      ? "Visualisez en direct les précipitations, températures, humidité, ainsi que le vent grâce aux capteurs Dronek."
-                      : "View live precipitation, temperature, humidity, and wind thanks to Dronek sensors."}
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
-                  <span>
-                    {lang === 'fr'
-                      ? "Accédez à vos rapports agronomiques et alertes critiques sur l’interface Dronek Smart Monitoring."
-                      : "Access your agronomic reports and critical alerts on the Dronek Smart Monitoring interface."}
-                  </span>
-                </li>
-              </ul>
+              {/* Engineered Widgets: Weather & QR Code Side-by-Side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Widget 1: Weather Stats (IoT Live) */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="bg-gray-50 border border-gray-100 rounded-2xl p-5 space-y-3 hover:border-dronek-green/20 transition-all duration-300 shadow-sm"
+                >
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Capteur IoT Live</span>
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">Précipitations</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">12.4 mm</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">Température</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">28.5 °C</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">Humidité</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">76 %</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase block">Vent</span>
+                      <span className="text-sm font-extrabold text-dronek-dark">14 km/h</span>
+                    </div>
+                  </div>
+                </motion.div>
 
+                {/* Widget 2: QR Code Scan to Access Page */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center gap-4 hover:border-dronek-green/20 transition-all duration-300 shadow-sm relative overflow-hidden group"
+                >
+                  {/* Scan line animation */}
+                  <div className="absolute left-0 right-0 h-0.5 bg-dronek-green/60 shadow-[0_0_8px_#149655] z-10 animate-scan pointer-events-none" />
+                  
+                  {/* QR Code SVG */}
+                  <div className="w-16 h-16 bg-white border border-gray-200 p-1 flex items-center justify-center rounded-xl shrink-0 relative">
+                    <svg viewBox="0 0 100 100" className="w-full h-full text-dronek-dark">
+                      {/* Outer borders */}
+                      <path d="M 0 0 h 30 v 10 h -20 v 20 h -10 Z" fill="currentColor" />
+                      <path d="M 100 0 h -30 v 10 h 20 v 20 h 10 Z" fill="currentColor" />
+                      <path d="M 0 100 h 30 v -10 h -20 v -20 h -10 Z" fill="currentColor" />
+                      <path d="M 100 100 h -30 v -10 h 20 v -20 h 10 Z" fill="currentColor" />
+                      {/* Quiet zones / Position patterns */}
+                      <rect x="15" y="15" width="20" height="20" fill="currentColor" />
+                      <rect x="18" y="18" width="14" height="14" fill="white" />
+                      <rect x="21" y="21" width="8" height="8" fill="currentColor" />
+                      
+                      <rect x="65" y="15" width="20" height="20" fill="currentColor" />
+                      <rect x="68" y="18" width="14" height="14" fill="white" />
+                      <rect x="71" y="21" width="8" height="8" fill="currentColor" />
+                      
+                      <rect x="15" y="65" width="20" height="20" fill="currentColor" />
+                      <rect x="18" y="68" width="14" height="14" fill="white" />
+                      <rect x="21" y="71" width="8" height="8" fill="currentColor" />
+                      
+                      {/* Random QR bits */}
+                      <rect x="45" y="20" width="5" height="5" fill="currentColor" />
+                      <rect x="50" y="30" width="5" height="5" fill="currentColor" />
+                      <rect x="40" y="45" width="10" height="5" fill="currentColor" />
+                      <rect x="65" y="45" width="5" height="10" fill="currentColor" />
+                      <rect x="20" y="45" width="5" height="5" fill="currentColor" />
+                      <rect x="30" y="55" width="5" height="10" fill="currentColor" />
+                      
+                      <rect x="45" y="65" width="10" height="5" fill="currentColor" />
+                      <rect x="55" y="75" width="5" height="10" fill="currentColor" />
+                      <rect x="65" y="65" width="10" height="10" fill="currentColor" />
+                      <rect x="80" y="50" width="5" height="5" fill="currentColor" />
+                      <rect x="50" y="50" width="10" height="5" fill="currentColor" />
+                      <rect x="75" y="80" width="10" height="5" fill="currentColor" />
+                    </svg>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase block">Accès Mobile</span>
+                    <h4 className="text-xs font-bold text-dronek-dark">Scanner pour mobile</h4>
+                    <p className="text-[9px] text-gray-500 font-medium leading-tight">Accédez directement à l'application officielle depuis votre mobile.</p>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* CTA Button with brand green & new label */}
               <div className="pt-2 text-center lg:text-left">
                 <Button
                   onClick={() => handleNav('dsm')}
-                  className="bg-[#149655] hover:bg-[#0f7d43] text-white font-bold rounded-[6px] px-8 py-3.5 text-base transition-colors duration-300 shadow-md border-0"
+                  className="bg-[#149655] hover:bg-[#0f7d43] text-white font-bold rounded-[6px] px-10 py-4 text-base transition-all duration-300 shadow-lg shadow-dronek-green/20 border-0 hover:scale-105 active:scale-[0.98]"
                 >
-                  {lang === 'fr' ? "En savoir plus" : "Learn more"}
+                  {lang === 'fr' ? "Lancer DSM" : "Launch DSM"}
                 </Button>
               </div>
             </div>
 
-            {/* Right: Dronek Green Card (Droite_1-removebg-preview & Droite_2-removebg-preview) (6 columns for 3x larger images) */}
-            <div className="lg:col-span-6 flex justify-center w-full">
-              <div className="bg-[#149655] rounded-[40px] p-6 lg:p-12 flex flex-col items-center justify-center space-y-12 w-full lg:max-w-none shadow-xl min-h-[650px] lg:min-h-[850px] transition-all duration-500 hover:shadow-dronek-green/10">
-                {/* Droite_1 (Phone - 3x Enlarged: max-w-[720px]) */}
-                <div className="relative w-full max-w-[320px] h-[440px] lg:max-w-[720px] lg:h-[990px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)]">
+            {/* Right: Dronek Green Card (3 columns - same size as left, with large overflowing images) */}
+            <div className="lg:col-span-3 flex justify-center w-full relative z-20">
+              <div className="bg-[#149655] rounded-[40px] p-6 flex flex-col items-center justify-center w-full max-w-[280px] sm:max-w-[320px] shadow-xl min-h-[500px] lg:min-h-[600px] relative overflow-visible group transition-all duration-500 hover:shadow-dronek-green/30">
+                {/* Droite_1 (Phone - Floating and Overlapping) */}
+                <div className="relative w-[200px] h-[280px] lg:w-[260px] lg:h-[360px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-10">
                   <Image
                     src="/images/Droite_1-removebg-preview.png"
                     alt="DSM Mobile App"
@@ -1426,8 +1497,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     className="object-contain"
                   />
                 </div>
-                {/* Droite_2 (Laptop - 3x Enlarged: max-w-[1200px]) */}
-                <div className="relative w-full max-w-[420px] h-[260px] lg:max-w-[1200px] lg:h-[750px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)]">
+                {/* Droite_2 (Laptop - Overflowing Left into Middle Column) */}
+                <div className="relative w-[300px] h-[190px] lg:w-[440px] lg:h-[280px] lg:-ml-24 -mt-10 transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-0">
                   <Image
                     src="/images/Droite_2-removebg-preview.png"
                     alt="DSM Web Dashboard"
@@ -1646,6 +1717,15 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         @keyframes scroll-left {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
+        }
+
+        @keyframes scan {
+          0%, 100% { top: 0%; opacity: 0.3; }
+          50% { top: 100%; opacity: 1; }
+        }
+
+        .animate-scan {
+          animation: scan 3s ease-in-out infinite;
         }
       `}</style>
       {/* Project Detail Modal for Home Page - Synchronized with ProjectsPage */}
