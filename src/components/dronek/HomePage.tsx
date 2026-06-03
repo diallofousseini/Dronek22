@@ -1351,9 +1351,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Left Image: Gauche.png (3 columns) */}
-            <div className="lg:col-span-3 flex justify-center w-full">
-              <div className="relative w-full max-w-[280px] sm:max-w-[320px] h-[450px] lg:h-[550px] flex items-center justify-center transition-transform duration-500 hover:scale-[1.03]">
+            {/* Left Image: Gauche.png (4 columns) */}
+            <div className="lg:col-span-4 flex justify-center">
+              <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-[4/5] transition-transform duration-500 hover:scale-[1.03]">
                 <Image
                   src="/images/Gauche.png"
                   alt="Dronek Smart Monitoring Station"
@@ -1364,8 +1364,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            {/* Middle: Title, Description, Checkmarks and CTA (6 columns) */}
-            <div className="lg:col-span-6 space-y-6 text-left relative z-10 pr-0 lg:pr-12">
+            {/* Middle: Title, Description, Checkmarks and CTA (5 columns) */}
+            <div className="lg:col-span-5 space-y-6 text-left">
               <div className="space-y-3 text-center lg:text-left">
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">
                   DSM
@@ -1414,23 +1414,23 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            {/* Right: Mockup Composition (3 columns - same size as left, transparent background) */}
-            <div className="lg:col-span-3 flex justify-center w-full relative z-20">
-              <div className="relative w-full max-w-[280px] sm:max-w-[320px] h-[450px] lg:h-[550px] flex items-center justify-center overflow-visible group">
-                {/* Droite_2 (Laptop - Back, centered vertically) */}
-                <div className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[240px] h-[150px] lg:w-[340px] lg:h-[215px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-0">
-                  <Image
-                    src="/images/Droite_2-removebg-preview.png"
-                    alt="DSM Web Dashboard"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                {/* Droite_1 (Phone - Front, centered vertically, enlarged 2x) */}
-                <div className="absolute left-[65%] top-1/2 -translate-y-1/2 w-[260px] h-[360px] lg:w-[480px] lg:h-[660px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-10">
+            {/* Right: Soft Peach Card (Droite_1-removebg-preview & Droite_2-removebg-preview) (3 columns) */}
+            <div className="lg:col-span-3 flex justify-center w-full">
+              <div className="bg-[#fbf1e6] rounded-[32px] p-6 lg:p-8 flex flex-col items-center justify-center space-y-8 w-full max-w-[360px] lg:max-w-none shadow-sm min-h-[460px] transition-all duration-500 hover:shadow-md">
+                {/* Droite_1 (Phone) */}
+                <div className="relative w-full max-w-[160px] h-[220px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
                   <Image
                     src="/images/Droite_1-removebg-preview.png"
                     alt="DSM Mobile App"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                {/* Droite_2 (Laptop) */}
+                <div className="relative w-full max-w-[280px] h-[170px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
+                  <Image
+                    src="/images/Droite_2-removebg-preview.png"
+                    alt="DSM Web Dashboard"
                     fill
                     className="object-contain"
                   />
