@@ -1416,7 +1416,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
             {/* Right: Soft Peach Card (Droite_1-removebg-preview & Droite_2-removebg-preview) (3 columns) */}
             <div className="lg:col-span-3 flex justify-center w-full">
-              <div className="bg-[#dbe7e1] rounded-[32px] p-5 lg:p-6 flex flex-col items-center justify-center space-y-8 w-full max-w-[360px] lg:max-w-none shadow-sm min-h-[460px] transition-all duration-500 hover:shadow-md">
+              <div className="bg-[#dbe7e1] rounded-[32px] p-4 lg:p-4 flex flex-col items-center justify-center space-y-8 w-full max-w-[360px] lg:max-w-none shadow-sm min-h-[460px] transition-all duration-500 hover:shadow-md">
                 {/* Droite_1 (Phone) */}
                 <div className="relative w-full max-w-[160px] h-[220px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
                   <Image
@@ -1427,7 +1427,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   />
                 </div>
                 {/* Droite_2 (Laptop) */}
-                <div className="relative w-full max-w-[310px] h-[180px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
+                <div className="relative w-full max-w-[330px] h-[190px] transition-transform duration-500 hover:scale-[1.03] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
                   <Image
                     src="/images/Droite_2-removebg-preview.png"
                     alt="DSM Web Dashboard"

@@ -128,7 +128,10 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
         { title: "Transparence RSE", desc: "Suivi photographique horodaté et géolocalisé pour auditer les projets auprès des bailleurs de fonds." },
         { title: "Prise de Décision Rapide", desc: "Identification immédiate des zones à fort taux de mortalité pour planifier des campagnes de regarnissage." },
         { title: "Optimisation de l'Irrigation", desc: "Couplage avec des capteurs météo locaux pour ajuster en direct le planning d'irrigation." }
-      ]
+      ],
+      sowitTitle: "Prenez le contrôle avec l'application Sowit",
+      sowitDesc: "Surveillez votre exploitation, planifiez votre irrigation et suivez la croissance de vos cultures où que vous soyez. L'application Sowit met l'agriculture basée sur les données à votre portée.",
+      sowitBtn: "GET IT ON Google Play"
     },
     en: {
       backBtn: "Back to Home",
@@ -216,7 +219,10 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
         { title: "CSR Transparency", desc: "Timestamped and geolocated photo evidence to audit project progress for corporate investors." },
         { title: "Fast Decisions", desc: "Immediate identification of high-mortality zones to plan replanting campaigns." },
         { title: "Irrigation Optimization", desc: "Integration with local weather sensors to adjust watering schedules live." }
-      ]
+      ],
+      sowitTitle: "Take control with the Sowit app",
+      sowitDesc: "Monitor your farm, plan your irrigation, and track crop growth wherever you are. The Sowit app puts data-driven agriculture at your fingertips.",
+      sowitBtn: "GET IT ON Google Play"
     }
   };
 
@@ -600,6 +606,76 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                     </p>
                   </div>
                 ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* App Control Section with QR Code (Sowit mockup inspired) */}
+      <section className="bg-gray-50/70 py-16 lg:py-20 border-t border-gray-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Left Column: Text and Google Play Button */}
+            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-dronek-dark leading-[1.1] tracking-tight">
+                {lang === 'fr' ? (
+                  <>
+                    Prenez le contrôle avec <br />
+                    l'<span className="text-[#149655]">application DSM</span>
+                  </>
+                ) : (
+                  <>
+                    Take control with <br />
+                    the <span className="text-[#149655]">DSM App</span>
+                  </>
+                )}
+              </h2>
+              <p className="text-gray-600 font-medium text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                {lang === 'fr' 
+                  ? "Surveillez votre exploitation, planifiez votre irrigation et suivez la croissance de vos cultures où que vous soyez. L'application DSM met l'agriculture basée sur les données à votre portée."
+                  : "Monitor your farm, plan your irrigation, and track crop growth wherever you are. The DSM app puts data-driven agriculture at your fingertips."}
+              </p>
+              
+              {/* Google Play Badge Button */}
+              <div className="pt-4 flex justify-center lg:justify-start">
+                <a 
+                  href="https://play.google.com/store" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center gap-3 bg-black text-white px-5 py-3 rounded-xl hover:bg-black/90 transition-all duration-300 shadow-md hover:scale-105 active:scale-[0.98] group"
+                >
+                  <svg className="w-6 h-6 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 20.29V3.71C3 3.12 3.48 2.72 4.05 2.8L16.47 12.54C16.89 12.87 16.89 13.13 16.47 13.46L4.05 23.2C3.48 23.28 3 22.88 3 22.29V20.29Z" fill="#00E5FF"/>
+                    <path d="M16.47 12.54L4.05 2.8C3.89 2.78 3.73 2.82 3.59 2.9L12.57 11.88L16.47 12.54Z" fill="#00E676"/>
+                    <path d="M16.47 13.46L12.57 12.12L3.59 21.1C3.73 21.18 3.89 21.22 4.05 21.2L16.47 13.46Z" fill="#FF3D00"/>
+                    <path d="M20.22 10.37L17.3 12.54L17.3 13.46L20.22 15.63C20.89 16.03 21.25 15.66 21.03 14.88L18.67 13L21.03 11.12C21.25 10.34 20.89 9.97 20.22 10.37Z" fill="#FFC400"/>
+                  </svg>
+                  <div className="text-left leading-none">
+                    <span className="text-[10px] uppercase font-bold block tracking-wider" style={{ color: '#d1d5db' }}>
+                      {lang === 'fr' ? 'DISPONIBLE SUR' : 'GET IT ON'}
+                    </span>
+                    <span className="text-lg font-black block mt-0.5 tracking-wide" style={{ color: '#ffffff' }}>
+                      Google Play
+                    </span>
+                  </div>
+                </a>
+              </div>
+            </div>
+            
+            {/* Right Column: QR Code Image */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square bg-white p-4 sm:p-6 rounded-[2rem] border border-gray-100 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-105 group flex items-center justify-center">
+                <div className="relative w-[240px] h-[240px]">
+                  <Image 
+                    src="/images/dsm-qr-code.png"
+                    alt="DSM App QR Code"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
             </div>
 
