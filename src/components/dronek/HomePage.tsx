@@ -1416,21 +1416,21 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
             {/* Right: Mockup Composition (3 columns - same size as left, transparent background) */}
             <div className="lg:col-span-3 flex justify-center w-full relative z-20">
-              <div className="relative w-full max-w-[280px] sm:max-w-[320px] h-[450px] lg:h-[550px] flex flex-col items-center justify-center overflow-visible group">
-                {/* Droite_1 (Phone - Floating and Overlapping) */}
-                <div className="relative w-[180px] h-[250px] lg:w-[240px] lg:h-[330px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-10">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] h-[450px] lg:h-[550px] flex items-center justify-center overflow-visible group">
+                {/* Droite_2 (Laptop - Back, centered vertically) */}
+                <div className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[240px] h-[150px] lg:w-[340px] lg:h-[215px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-0">
                   <Image
-                    src="/images/Droite_1-removebg-preview.png"
-                    alt="DSM Mobile App"
+                    src="/images/Droite_2-removebg-preview.png"
+                    alt="DSM Web Dashboard"
                     fill
                     className="object-contain"
                   />
                 </div>
-                {/* Droite_2 (Laptop - Overflowing Left into Middle Column) */}
-                <div className="relative w-[280px] h-[175px] lg:w-[380px] lg:h-[240px] lg:-ml-24 -mt-10 transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-0">
+                {/* Droite_1 (Phone - Front, centered vertically, enlarged 2x) */}
+                <div className="absolute left-[65%] top-1/2 -translate-y-1/2 w-[260px] h-[360px] lg:w-[480px] lg:h-[660px] transition-transform duration-500 group-hover:scale-[1.05] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)] z-10">
                   <Image
-                    src="/images/Droite_2-removebg-preview.png"
-                    alt="DSM Web Dashboard"
+                    src="/images/Droite_1-removebg-preview.png"
+                    alt="DSM Mobile App"
                     fill
                     className="object-contain"
                   />
