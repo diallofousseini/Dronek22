@@ -94,7 +94,7 @@ const StatusToggle = ({ item, onToggle, lang }: { item: DashboardItem, onToggle:
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { t, lang } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const [activeTab, setActiveTab] = useState('all');
   const [items, setItems] = useState<DashboardItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,6 +158,12 @@ export default function AdminDashboard() {
       let lastErrorMessage = '';
 
       try {
+        const { data: configRes } = await supabase.from('contacts').select('*').eq('sujet', 'MainServices').maybeSingle();
+        let mainIds: string[] = [];
+        if (configRes && configRes.message) {
+          try { mainIds = JSON.parse(configRes.message); } catch (e) {}
+        }
+
         for (const table of tablesToFetch) {
           let query = supabase
             .from(table)
@@ -181,17 +187,26 @@ export default function AdminDashboard() {
           }
 
           if (data) {
-            combined = [...combined, ...data.map(item => ({
-              ...item,
-              id: item.id,
-              title: item.prenom || item.nom ? `${item.prenom || ''} ${item.nom || ''}`.trim() : (item.sujet || item.titre || item.name || item.title || (lang === 'fr' ? 'Sans titre' : 'Untitled')),
-              category: item.sujet === 'Mediatheque' ? 'Média' : (item.categorie || item.category || table),
-              status: item.statut || item.status || (lang === 'fr' ? 'Publié' : 'Published'),
-              date: formatDate(item.created_at),
-              table: table,
-              url: item.url || item.image_url || item.photo_url || item.image || item.photo,
-              rawDate: new Date(item.created_at)
-            }))];
+            combined = [...combined, ...data.map(item => {
+              let categoryVal = item.sujet === 'Mediatheque' ? 'Média' : (item.categorie || item.category || table);
+              if (table === 'services') {
+                const isDomain = item.service_type === 'domain' || mainIds.includes(item.id);
+                categoryVal = isDomain 
+                  ? (lang === 'fr' ? "Domaine d'expertise" : "Domain of expertise")
+                  : (lang === 'fr' ? "Service" : "Service");
+              }
+              return {
+                ...item,
+                id: item.id,
+                title: item.prenom || item.nom ? `${item.prenom || ''} ${item.nom || ''}`.trim() : (item.sujet || item.titre || item.name || item.title || (lang === 'fr' ? 'Sans titre' : 'Untitled')),
+                category: categoryVal,
+                status: item.statut || item.status || (lang === 'fr' ? 'Publié' : 'Published'),
+                date: formatDate(item.created_at),
+                table: table,
+                url: item.url || item.image_url || item.photo_url || item.image || item.photo,
+                rawDate: new Date(item.created_at)
+              };
+            })];
           }
         }
 
@@ -376,6 +391,14 @@ export default function AdminDashboard() {
                 }
               </Link>
             )}
+
+            <button
+              onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+              className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold transition-all text-xs uppercase text-gray-700 shadow-sm"
+            >
+              <Globe className="w-4 h-4 text-[#149655]" />
+              <span>{lang}</span>
+            </button>
 
             <button 
               onClick={handleLogout}

@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Mail, Shield, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, Shield, ArrowLeft, Loader2, Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/components/dronek/LanguageProvider';
 
 export default function ForgotPassword() {
-  const { t, lang } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -40,7 +40,7 @@ export default function ForgotPassword() {
       setSuccess(true);
       setEmail('');
     } catch (err: any) {
-      setError("Email invalide ou compte inexistant dans notre base de données.");
+      setError(lang === 'fr' ? "Email invalide ou compte inexistant dans notre base de données." : "Invalid email or account does not exist in our database.");
     } finally {
       setLoading(false);
     }
@@ -48,6 +48,17 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-[#f7fbf8] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Language Toggle Button at top right */}
+      <div className="absolute top-6 right-6 z-50">
+        <button
+          onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+          className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 px-4 py-2.5 rounded-xl font-bold transition-all text-xs uppercase text-gray-700 shadow-sm"
+        >
+          <Globe className="w-4 h-4 text-[#149655]" />
+          <span>{lang}</span>
+        </button>
+      </div>
+
       {/* Brand Background Image - Optimized */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.08]">
         <div className="relative w-[600px] h-[600px] lg:w-[800px] lg:h-[800px]">
@@ -82,17 +93,17 @@ export default function ForgotPassword() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-black mb-3 uppercase tracking-tight">
-            Mot de passe oublié
+            {lang === 'fr' ? 'Mot de passe oublié' : 'Forgot Password'}
           </h1>
           <p className="text-gray-500 text-sm px-4 font-medium">
-            Entrez votre email pour recevoir un lien de réinitialisation sécurisé
+            {lang === 'fr' ? 'Entrez votre email pour recevoir un lien de réinitialisation sécurisé' : 'Enter your email to receive a secure reset link'}
           </p>
         </div>
 
         {/* Messages */}
         {success && (
           <div className="mb-6 p-4 bg-[#eef8f3] text-[#149655] rounded-xl text-sm border border-[#149655]/20 text-center font-bold">
-            Un lien de réinitialisation a été envoyé à votre adresse email.
+            {lang === 'fr' ? 'Un lien de réinitialisation a été envoyé à votre adresse email.' : 'A reset link has been sent to your email address.'}
           </div>
         )}
         
@@ -126,7 +137,7 @@ export default function ForgotPassword() {
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              "Envoyer le lien"
+              lang === 'fr' ? "Envoyer le lien" : "Send Link"
             )}
           </button>
         </form>
@@ -138,7 +149,7 @@ export default function ForgotPassword() {
             className="group inline-flex items-center justify-center gap-2 text-gray-400 hover:text-[#149655] font-bold text-[11px] uppercase tracking-widest transition-all"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            Retour à la connexion
+            {lang === 'fr' ? 'Retour à la connexion' : 'Back to Login'}
           </Link>
         </div>
       </div>

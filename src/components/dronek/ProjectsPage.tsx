@@ -84,17 +84,35 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
             imageUrl = '/images/hero-main.jpg';
           }
+
+          let year = '2023';
+          let objectives: string[] = [];
+          let impacts: string[] = [];
+          let detail = p.description_complete || '';
+
+          if (p.description_complete && p.description_complete.startsWith('{') && p.description_complete.endsWith('}')) {
+            try {
+              const parsed = JSON.parse(p.description_complete);
+              detail = parsed.detail || '';
+              year = parsed.year || '2023';
+              objectives = parsed.objectives || [];
+              impacts = parsed.impacts || [];
+            } catch (e) {
+              console.error("Error parsing description_complete JSON:", e);
+            }
+          }
+
           return {
             slug: p.id,
             title: p.titre,
-            summary: p.description_courte || p.description_complete || '',
+            summary: p.description_courte || detail || '',
             image: imageUrl,
             categoryLabel: p.categorie || 'Projet',
             location: p.localisation || (lang === 'fr' ? 'Sénégal' : 'Senegal'),
-            year: p.year || '2023',
-            objectives: p.objectives || [],
-            impacts: p.impacts || [],
-            detail: p.description_complete,
+            year: year,
+            objectives: objectives,
+            impacts: impacts,
+            detail: detail,
             isFeatured: p.is_featured || false
           };
         });
@@ -134,7 +152,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
     loadData();
   }, [lang]);
 
-  const allProjectsRaw = [...dynamicProjects, ...hardcodedProjects];
+  const allProjectsRaw = dynamicProjects.length > 0 ? dynamicProjects : hardcodedProjects;
   const allProjects = selectedCategory === 'Tous' 
     ? allProjectsRaw 
     : allProjectsRaw.filter((p: any) => p.categoryLabel === selectedCategory || p.category === selectedCategory);
@@ -386,7 +404,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedProjectSlug(null)}
-              className="absolute inset-0 transition-all"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
             />
             
             {/* Popup Container */}
@@ -495,7 +513,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAboutModal(false)}
-              className="absolute inset-0 transition-all"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}

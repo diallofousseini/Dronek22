@@ -71,3 +71,6 @@ server.log
 tsc-output.log
 build_output.txt
 "upload/~$HIER DES CHARGES POUR LA CRÉATION DU SITE WEB DE DRONEK.docx"
+
+# Scratch files
+scratch_*.js

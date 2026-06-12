@@ -8,14 +8,14 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 
 interface FooterProps {
-  onNavigate: (page: 'home' | 'services' | 'projects' | 'blog' | 'team' | 'production' | 'contact' | 'admin') => void;
+  onNavigate: (page: 'home' | 'services' | 'projects' | 'blog' | 'production' | 'contact' | 'admin') => void;
   onOpenNewsMenu?: () => void;
 }
 
 export default function Footer({ onNavigate, onOpenNewsMenu }: FooterProps) {
   const { t, lang } = useLanguage();
 
-  const handleNav = (page: 'home' | 'services' | 'projects' | 'blog' | 'team' | 'production' | 'contact' | 'admin') => {
+  const handleNav = (page: 'home' | 'services' | 'projects' | 'blog' | 'production' | 'contact' | 'admin') => {
     if (page === 'admin') {
       window.location.assign('/admin/login');
       return;

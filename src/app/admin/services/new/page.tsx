@@ -83,6 +83,7 @@ function CMSRouter() {
 // ==========================================
 
 function CMSHeader({ title, onSave, saving, isScrolled, scrollProgress, children }: any) {
+  const { lang, setLang } = useLanguage();
   return (
     <header className={cn(
       "sticky top-0 z-[100] transition-all duration-300 bg-white/80 backdrop-blur-xl h-20 flex items-center justify-between px-10 shadow-sm",
@@ -101,7 +102,7 @@ function CMSHeader({ title, onSave, saving, isScrolled, scrollProgress, children
           <div className="w-12 h-12 rounded-full border border-gray-100 flex items-center justify-center group-hover:border-gray-200 transition-colors shadow-sm">
             <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
           </div>
-          Retour
+          {lang === 'fr' ? 'Retour' : 'Back'}
         </Link>
         
         <div className="flex-1 flex justify-center">
@@ -111,13 +112,20 @@ function CMSHeader({ title, onSave, saving, isScrolled, scrollProgress, children
 
       <div className="flex items-center gap-10">
         {children}
+        <button
+          onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+          className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 px-4 py-2 rounded-xl font-bold transition-all text-xs uppercase text-gray-700 shadow-sm"
+        >
+          <Globe className="w-4 h-4 text-[#149655]" />
+          <span>{lang}</span>
+        </button>
         <button 
           onClick={onSave} 
           disabled={saving} 
           className="bg-[#149655] hover:bg-[#0b3b24] text-white px-10 py-4 rounded-full font-bold text-sm uppercase tracking-[0.2em] flex items-center gap-3 transition-all duration-300 active:scale-95 disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Sauvegarder
+          {lang === 'fr' ? 'Sauvegarder' : 'Save'}
         </button>
       </div>
     </header>
@@ -459,6 +467,45 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [formMode, setFormMode] = useState<'featured' | 'regular'>('regular');
+  const [allExpertiseDomains, setAllExpertiseDomains] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (type === 'service' && allExpertiseDomains.length > 0) {
+      const isValidDomain = allExpertiseDomains.some(d => d.id === data.serviceType);
+      if (!isValidDomain) {
+        const matchedDomain = allExpertiseDomains.find(d => 
+          (d.titre || '').toLowerCase().trim() === (data.serviceType || '').toLowerCase().trim()
+        );
+        const nextId = matchedDomain ? matchedDomain.id : allExpertiseDomains[0].id;
+        setData((prev: any) => {
+          if (prev.serviceType === nextId) return prev;
+          return { ...prev, serviceType: nextId };
+        });
+      }
+    }
+  }, [allExpertiseDomains, type, data.serviceType]);
+
+  useEffect(() => {
+    if (type === 'service') {
+      const fetchDomains = async () => {
+        const { data: list } = await supabase
+          .from('services')
+          .select('*')
+          .in('statut', ['publie', 'Publié', 'Published']);
+        if (list) {
+          const { data: config } = await supabase.from('contacts').select('*').eq('sujet', 'MainServices').single();
+          let mainIds: string[] = [];
+          if (config && config.message) {
+            try { mainIds = JSON.parse(config.message); } catch (e) {}
+          }
+          const domains = list.filter(item => mainIds.includes(item.id) || item.service_type === 'domain');
+          setAllExpertiseDomains(domains);
+        }
+      };
+      fetchDomains();
+    }
+  }, [type]);
 
   useEffect(() => {
     if (showSuccessModal) {
@@ -497,10 +544,34 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
         .single()
         .then(({ data: item }) => {
           if (item) {
+            let year = '';
+            let objectives: string[] = [];
+            let impacts: string[] = [];
+            let gallery: string[] = [];
+            let description = item.description_courte || item.description || '';
+            let descriptionShort = item.description_courte || '';
+
+            if (type === 'projet' && item.description_complete && item.description_complete.startsWith('{') && item.description_complete.endsWith('}')) {
+              try {
+                const parsed = JSON.parse(item.description_complete);
+                description = parsed.detail || '';
+                year = parsed.year || '';
+                objectives = parsed.objectives || [];
+                impacts = parsed.impacts || [];
+                gallery = parsed.gallery || [];
+              } catch (e) {
+                console.error("Error parsing description_complete:", e);
+                description = item.description_complete;
+              }
+            } else if (type === 'projet') {
+              description = item.description_complete || item.description_courte || '';
+            }
+
             setData({
               ...item,
               title: item.titre || item.title,
-              description: item.description_courte || item.description,
+              description: description,
+              descriptionShort: descriptionShort,
               image: item.image_url || item.image,
               status: item.statut || item.status,
               phone: item.telephone || item.phone,
@@ -508,15 +579,21 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
               name: item.nom ? `${item.prenom || ''} ${item.nom}` : item.name,
               role: item.poste || item.role,
               bio: item.biographie || item.bio,
-              detailTitle: item.detail_title || item.detailTitle,
-              detailShortDesc: item.detail_short_desc || item.detailShortDesc,
-              detailLongDesc: item.detail_long_desc || item.detailLongDesc,
+              detailTitle: item.detail_title || item.detailTitle || '',
+              detailShortDesc: item.detail_short_desc || item.detailShortDesc || '',
+              detailLongDesc: item.detail_long_desc || item.detailLongDesc || '',
               serviceType: item.service_type || item.serviceType || 'forestry',
               isMainService: false,
+              pdfUrl: item.button_text || item.pdf_url || item.pdfUrl || '',
               // production_site specific field mapping
               desc: item.description || item.desc || '',
               lat: item.latitude?.toString() || item.lat || '',
               lng: item.longitude?.toString() || item.lng || '',
+              // project specific fields
+              year: year,
+              objectives: objectives,
+              impacts: impacts,
+              gallery: gallery
             });
 
             if (type === 'service') {
@@ -526,6 +603,7 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                     const mainIds = JSON.parse(config.message);
                     if (Array.isArray(mainIds) && mainIds.includes(item.id)) {
                       setData(prev => ({ ...prev, isMainService: true }));
+                      setFormMode('featured');
                     }
                   } catch (e) {}
                 }
@@ -602,7 +680,11 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
     } else if (isProdSite) {
       hasRequiredFields = !!(data.name && data.location && data.image);
     } else if (type === 'service') {
-      hasRequiredFields = !!(data.title && data.description && data.image);
+      if (formMode === 'featured') {
+        hasRequiredFields = !!(data.title && data.description && data.image);
+      } else {
+        hasRequiredFields = !!(data.title && data.description);
+      }
     } else if (type === 'projet') {
       hasRequiredFields = !!(data.title && data.description && data.image && data.location && data.year);
     } else if (type === 'actualite') {
@@ -625,11 +707,19 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
       if (id) payload.id = id;
 
       if (type === 'projet') {
+        const serializedDescription = JSON.stringify({
+          detail: data.description || '',
+          year: data.year || '',
+          objectives: data.objectives || [],
+          impacts: data.impacts || []
+        });
+
         payload = { 
           ...payload, 
           titre: data.title, 
           categorie: data.category, 
-          description_courte: data.description, 
+          description_courte: data.descriptionShort || data.description || '', 
+          description_complete: serializedDescription,
           image_url: data.image, 
           localisation: data.location, 
           is_featured: !!data.isFeatured,
@@ -651,11 +741,15 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
       } else if (type === 'service') {
         payload = { 
           ...payload, 
-          titre: data.title || data.detailTitle, 
+          titre: data.title, 
           description_courte: data.description, 
-          image_url: data.image, 
-          service_type: data.serviceType,
-          description_complete: data.detailLongDesc,
+          image_url: data.image || null, 
+          service_type: formMode === 'regular' ? data.serviceType : 'domain',
+          description_complete: '',
+          detail_title: null,
+          detail_short_desc: null,
+          detail_long_desc: null,
+          button_text: formMode === 'regular' ? data.pdfUrl : null, // repurposing button_text for PDF URL
           statut: data.status || 'publie'
         };
       } else if (type === 'actualite') {
@@ -747,6 +841,42 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
       <CMSHeader title={labels[type]} onSave={handleSave} saving={saving} isScrolled={isScrolled} scrollProgress={scrollProgress} />
       <main className="max-w-[1000px] mx-auto py-8 px-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
         <div className="space-y-12">
+          {type === 'service' && (
+            <div className="flex justify-center mb-4">
+              <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-2 border border-gray-200 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormMode('featured');
+                    setData(prev => ({ ...prev, isMainService: true }));
+                  }}
+                  className={cn(
+                    "px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200",
+                    formMode === 'featured'
+                      ? "bg-white text-[#149655] shadow-md border border-gray-100"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  Domaine d'expertise
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormMode('regular');
+                    setData(prev => ({ ...prev, isMainService: false }));
+                  }}
+                  className={cn(
+                    "px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200",
+                    formMode === 'regular'
+                      ? "bg-white text-[#149655] shadow-md border border-gray-100"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  Service
+                </button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-12">
              {type === 'projet' && (
                <div className="flex items-center justify-between py-3 w-full max-w-md mx-auto mb-4">
@@ -852,17 +982,17 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
              )}
 
              {type === 'contact' && (
-               <motion.div 
-                 initial={{ opacity: 0, y: 20 }}
-                 whileInView={{ opacity: 1, y: 0 }}
-                 viewport={{ once: true }}
-                 className="space-y-6"
-               >
-                 <HorizontalField labelSize="16px" label="Email" value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="contact@dronek.ci" />
-                 <HorizontalField labelSize="16px" label="Numéros de téléphone" type="textarea" value={data.phone} onChange={(v: string) => setData({ ...data, phone: v })} placeholder="ex: +225 07 07 73 22 64 (un par ligne)" />
-                 <HorizontalField labelSize="16px" label="Adresse complète" type="textarea" value={data.location} onChange={(v: string) => setData({ ...data, location: v })} placeholder="Abidjan Cocody 216 Logements..." />
-               </motion.div>
-             )}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="space-y-6"
+                >
+                  <HorizontalField labelSize="16px" label="Email" value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="contact@dronek.ci" />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Numéros de téléphone" : "Phone numbers"} type="textarea" value={data.phone} onChange={(v: string) => setData({ ...data, phone: v })} placeholder={lang === 'fr' ? "ex: +225 07 07 73 22 64 (un par ligne)" : "e.g. +225 07 07 73 22 64 (one per line)"} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Adresse complète" : "Full address"} type="textarea" value={data.location} onChange={(v: string) => setData({ ...data, location: v })} placeholder="Abidjan Cocody 216 Logements..." />
+                </motion.div>
+              )}
 
              {type === 'projet' && (
                 <motion.div 
@@ -872,114 +1002,85 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                   transition={{ duration: 0.9, ease: "easeOut" }}
                   className="space-y-8"
                 >
-                  <HorizontalField labelSize="16px" label="Secteur" value={data.category} onChange={(v: string) => setData({ ...data, category: v })} />
-                  <HorizontalField labelSize="16px" label="Localisation" value={data.location} onChange={(v: string) => setData({ ...data, location: v })} placeholder="ex: Parc National de Taï" />
-                  <HorizontalField labelSize="16px" label="Année" value={data.year} onChange={(v: string) => setData({ ...data, year: v })} placeholder="ex: 2023" />
-                  <HorizontalField labelSize="16px" label="Objectifs" type="textarea" value={Array.isArray(data.objectives) ? data.objectives.join('\n') : data.objectives || ''} onChange={(v: string) => setData({ ...data, objectives: v.split('\n').filter(Boolean) })} placeholder="Lister les objectifs (un par ligne)..." />
-                  <HorizontalField labelSize="16px" label="Résultats & Impacts" type="textarea" value={Array.isArray(data.impacts) ? data.impacts.join('\n') : data.impacts || ''} onChange={(v: string) => setData({ ...data, impacts: v.split('\n').filter(Boolean) })} placeholder="Lister les résultats (un par ligne)..." />
-                  <HorizontalField labelSize="16px" label="Description complète" type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder="Description générale du projet..." />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Secteur" : "Sector"} value={data.category} onChange={(v: string) => setData({ ...data, category: v })} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Localisation" : "Location"} value={data.location} onChange={(v: string) => setData({ ...data, location: v })} placeholder={lang === 'fr' ? "ex: Parc National de Taï" : "e.g. Tai National Park"} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Année" : "Year"} value={data.year} onChange={(v: string) => setData({ ...data, year: v })} placeholder={lang === 'fr' ? "ex: 2023" : "e.g. 2023"} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Objectifs" : "Objectives"} type="textarea" value={Array.isArray(data.objectives) ? data.objectives.join('\n') : data.objectives || ''} onChange={(v: string) => setData({ ...data, objectives: v.split('\n').filter(Boolean) })} placeholder={lang === 'fr' ? "Lister les objectifs (un par ligne)..." : "List objectives (one per line)..."} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Résultats & Impacts" : "Results & Impacts"} type="textarea" value={Array.isArray(data.impacts) ? data.impacts.join('\n') : data.impacts || ''} onChange={(v: string) => setData({ ...data, impacts: v.split('\n').filter(Boolean) })} placeholder={lang === 'fr' ? "Lister les résultats (un par ligne)..." : "List results (one per line)..."} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Description courte" : "Short description"} type="textarea" value={data.descriptionShort || ''} onChange={(v: string) => setData({ ...data, descriptionShort: v })} placeholder={lang === 'fr' ? "Résumé court du projet (utilisé pour les cartes)..." : "Short summary of the project (used for cards)..."} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Description complète" : "Full description"} type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Description générale du projet..." : "General description of the project..."} />
                 </motion.div>
               )}
 
-             {type === 'service' && (
-               <div className="space-y-12">
-                 {/* Card Section */}
-                 <motion.div 
-                   initial={{ opacity: 0, y: 50 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true, margin: "-50px" }}
-                   transition={{ duration: 0.8, ease: "easeOut" }}
-                   className="space-y-6 border border-gray-100 p-8 rounded-[2rem] bg-[#fcfdfc] shadow-sm"
-                 >
-                    <div className="flex items-center justify-center gap-3 pb-2">
-                      <ImageIcon className="w-5 h-5 text-[#149655]" />
-                      <h3 className="font-bold text-[#111] uppercase tracking-wider text-sm">CARTE & CONFIGURATION</h3>
-                    </div>
-                    <HorizontalField 
-                      labelSize="14px" 
-                      label="Catégorie de Service" 
-                      type="select" 
-                      value={data.serviceType} 
-                      onChange={(v: string) => setData({ ...data, serviceType: v })} 
-                      options={[
-                        { value: 'forestry', label: 'Foresterie' },
-                        { value: 'drone', label: 'Drone et Cartographie' },
-                        { value: 'agroforestry', label: 'Agroforesterie' },
-                        { value: 'surveillance', label: 'Surveillance' },
-                        { value: 'agriculture', label: 'Agriculture' }
-                      ]} 
-                    />
+             {type === 'service' && formMode === 'featured' && (
+                <div className="space-y-12">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="space-y-6 border border-gray-100 p-8 rounded-[2rem] bg-[#fcfdfc] shadow-sm"
+                  >
+                     <div className="flex items-center justify-center gap-3 pb-2">
+                       <Zap className="w-5 h-5 text-[#149655]" />
+                       <h3 className="font-bold text-[#111] uppercase tracking-wider text-sm">{lang === 'fr' ? "DOMAINE D'EXPERTISE" : "DOMAIN OF EXPERTISE"}</h3>
+                     </div>
+                     
+                     <HorizontalField labelSize="14px" label={lang === 'fr' ? "Titre" : "Title"} value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder={lang === 'fr' ? "Titre du domaine d'expertise..." : "Title of the domain of expertise..."} />
+                     <HorizontalField labelSize="14px" label={lang === 'fr' ? "Description" : "Description"} type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Description du domaine d'expertise..." : "Description of the domain of expertise..."} />
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start pt-4">
+                       <label className="md:col-span-3 font-bold text-[#111827] uppercase tracking-[0.05em] pt-4" style={{ fontSize: '14px' }}>{lang === 'fr' ? "Image" : "Image"}</label>
+                       <div className="md:col-span-9 max-w-md">
+                         <SimpleUpload value={data.image} onChange={(v) => setData({ ...data, image: v })} path={`uploads/${type}`} />
+                       </div>
+                     </div>
+                  </motion.div>
+                </div>
+              )}
 
-                    <div className="flex items-center justify-between bg-[#149655]/5 p-4 rounded-2xl border border-[#149655]/10">
-                      <div className="flex items-center gap-3">
-                        <Zap className="w-5 h-5 text-[#149655]" />
-                        <div>
-                          <p className="text-[12px] font-black text-[#111] uppercase tracking-wider">Service Principal</p>
-                          <p className="text-[10px] text-gray-500 font-medium italic">Afficher sur la page d'accueil</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setData({ ...data, isMainService: !data.isMainService })}
-                        className={"w-14 h-8 rounded-full transition-all duration-300 relative " + (data.isMainService ? "bg-[#149655]" : "bg-gray-200")}
-                      >
-                        <div className={"absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-sm " + (data.isMainService ? "left-7" : "left-1")} />
-                      </button>
-                    </div>
-                   <HorizontalField labelSize="14px" label="Titre de la Carte" value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder="Titre principal..." />
-                   <HorizontalField labelSize="14px" label={lang === 'fr' ? 'Description du Service' : 'Service Description'} type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Apparaît dans la colonne de droite de la carte..." : 'Appears in the right column of the card...'} />
-                   <HorizontalField labelSize="14px" label={lang === 'fr' ? 'Texte du Bouton' : 'Button Text'} value={data.buttonText || (lang === 'fr' ? 'En savoir plus' : 'Learn more')} onChange={(v: string) => setData({ ...data, buttonText: v })} placeholder={lang === 'fr' ? 'ex: En savoir plus' : 'e.g. Learn more'} />
-                 </motion.div>
+             {type === 'service' && formMode === 'regular' && (
+                <div className="space-y-12">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="space-y-6 border border-gray-100 p-8 rounded-[2rem] bg-[#fcfdfc] shadow-sm"
+                  >
+                     <div className="flex items-center justify-center gap-3 pb-2">
+                       <FileText className="w-5 h-5 text-[#149655]" />
+                       <h3 className="font-bold text-[#111] uppercase tracking-wider text-sm">{lang === 'fr' ? "SERVICE" : "SERVICE"}</h3>
+                     </div>
+                     
+                     <HorizontalField 
+                       labelSize="14px" 
+                       label={lang === 'fr' ? "Domaine d'expertise parent" : "Parent domain of expertise"} 
+                       type="select" 
+                       value={data.serviceType} 
+                       onChange={(v: string) => setData({ ...data, serviceType: v })} 
+                       options={allExpertiseDomains.map(d => ({ value: d.id, label: d.titre || d.title }))} 
+                     />
 
-                 {/* Detail Page Section */}
-                 <motion.div 
-                   initial={{ opacity: 0, y: 50 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true, margin: "-50px" }}
-                   transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                   className="space-y-6 border border-gray-100 p-8 rounded-[2rem] bg-[#fcfdfc] shadow-sm"
-                 >
-                    <div className="flex items-center justify-center gap-3 pb-2">
-                      <FileText className="w-5 h-5 text-[#149655]" />
-                      <h3 className="font-bold text-[#111] uppercase tracking-wider text-sm">En savoir plus </h3>
-                    </div>
-                    
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      className="bg-gray-50 p-6 rounded-2xl space-y-6 border border-gray-100"
-                    >
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Colonne de Gauche (Sur Image de fond)</p>
-                      <HorizontalField labelSize="12px" label="Titre Détail" value={data.detailTitle} onChange={(v: string) => setData({ ...data, detailTitle: v })} placeholder="Titre superposé sur l'image..." />
-                      <HorizontalField labelSize="12px" label="Description Gauche" type="textarea" value={data.detailShortDesc} onChange={(v: string) => setData({ ...data, detailShortDesc: v })} placeholder="Petite description sous le titre..." />
-                    </motion.div>
+                     <HorizontalField labelSize="14px" label={lang === 'fr' ? "Titre" : "Title"} value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder={lang === 'fr' ? "Titre du service..." : "Title of the service..."} />
+                     <HorizontalField labelSize="14px" label={lang === 'fr' ? "Description" : "Description"} type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Description du service..." : "Description of the service..."} />
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start pt-4">
+                       <label className="md:col-span-3 font-bold text-[#111827] uppercase tracking-[0.05em] pt-4" style={{ fontSize: '14px' }}>{lang === 'fr' ? "Image" : "Image"}</label>
+                       <div className="md:col-span-9 max-w-md">
+                         <SimpleUpload value={data.image} onChange={(v) => setData({ ...data, image: v })} path={`uploads/${type}`} />
+                       </div>
+                     </div>
 
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      className="bg-gray-50 p-6 rounded-2xl space-y-6 border border-gray-100"
-                    >
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Colonne de Droite / Points clés (Un par ligne)</p>
-                      <HorizontalField 
-                        labelSize="12px" 
-                        label="Description Longue / Puces" 
-                        type="textarea" 
-                        value={data.detailLongDesc} 
-                        onChange={(v: string) => setData({ ...data, detailLongDesc: v })} 
-                        placeholder="Entrez vos points clés (un par ligne), par exemple :&#10;FORMATION. Formations aux métiers forestiers...&#10;PÉPINIÈRES. Production de plantes maraîchères...&#10;INVENTAIRE. Inventaire forestier..." 
-                      />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pt-4">
-                        <label className="md:col-span-3 font-bold text-[#111827] uppercase tracking-[0.05em]" style={{ fontSize: '12px' }}>Fichier à télécharger</label>
-                        <div className="md:col-span-9">
-                          <PdfUpload value={data.pdfUrl} onChange={(v: string) => setData({ ...data, pdfUrl: v })} path={`pdfs/services`} />
-                        </div>
-                      </div>
-                    </motion.div>
-                 </motion.div>
-               </div>
-             )}
+                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pt-4">
+                       <label className="md:col-span-3 font-bold text-[#111827] uppercase tracking-[0.05em]" style={{ fontSize: '14px' }}>{lang === 'fr' ? "Fiche technique (PDF)" : "Technical sheet (PDF)"}</label>
+                       <div className="md:col-span-9">
+                         <PdfUpload value={data.pdfUrl} onChange={(v: string) => setData({ ...data, pdfUrl: v })} path={`pdfs/services`} />
+                       </div>
+                     </div>
+                  </motion.div>
+                </div>
+              )}
 
              {type === 'actualite' && (
                <motion.div 
@@ -991,13 +1092,13 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                    {/* Left Column: Info */}
                    <div className="space-y-8">
-                     <VerticalField labelSize="13px" label="Titre de l'actualité" value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder="Titre principal..." />
-                     <VerticalField labelSize="13px" label="Contenu / Description" type="textarea" value={data.content || data.description} onChange={(v: string) => setData({ ...data, content: v, description: v })} placeholder="Détails de l'actualité..." />
+                     <VerticalField labelSize="13px" label={lang === 'fr' ? "Titre de l'actualité" : "News Title"} value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder={lang === 'fr' ? "Titre principal..." : "Main title..."} />
+                     <VerticalField labelSize="13px" label={lang === 'fr' ? "Contenu / Description" : "Content / Description"} type="textarea" value={data.content || data.description} onChange={(v: string) => setData({ ...data, content: v, description: v })} placeholder={lang === 'fr' ? "Détails de l'actualité..." : "News details..."} />
                    </div>
 
                    {/* Right Column: Image */}
                    <div className="flex flex-col items-center justify-center space-y-6">
-                     <label className="text-[14px] font-black text-[#111] uppercase tracking-[0.2em] block text-center">Image de l'article</label>
+                     <label className="text-[14px] font-black text-[#111] uppercase tracking-[0.2em] block text-center">{lang === 'fr' ? "Image de l'article" : "Article Image"}</label>
                      <div className="w-full max-w-sm">
                        <SimpleUpload value={data.image} onChange={(v) => setData({ ...data, image: v })} path={`uploads/${type}`} />
                      </div>
@@ -1007,10 +1108,10 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
              )}
              {type === 'membre' && (
                <div className="space-y-6">
-                 <HorizontalField label="Poste / Responsabilité" value={data.role} onChange={(v: string) => setData({ ...data, role: v })} placeholder="ex: Responsable Agricole" />
-                 <HorizontalField label="Lien Facebook" value={data.facebook} onChange={(v: string) => setData({ ...data, facebook: v })} placeholder="https://facebook.com/..." />
-                 <HorizontalField label="Lien LinkedIn" value={data.linkedin} onChange={(v: string) => setData({ ...data, linkedin: v })} placeholder="https://linkedin.com/in/..." />
-                  <HorizontalField label="Lien Email" value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="exemple@dronek.net" />
+                 <HorizontalField label={lang === 'fr' ? "Poste / Responsabilité" : "Position / Responsibility"} value={data.role} onChange={(v: string) => setData({ ...data, role: v })} placeholder={lang === 'fr' ? "ex: Responsable Agricole" : "e.g. Agricultural Manager"} />
+                 <HorizontalField label={lang === 'fr' ? "Lien Facebook" : "Facebook Link"} value={data.facebook} onChange={(v: string) => setData({ ...data, facebook: v })} placeholder="https://facebook.com/..." />
+                 <HorizontalField label={lang === 'fr' ? "Lien LinkedIn" : "LinkedIn Link"} value={data.linkedin} onChange={(v: string) => setData({ ...data, linkedin: v })} placeholder="https://linkedin.com/in/..." />
+                  <HorizontalField label={lang === 'fr' ? "Lien Email" : "Email Link"} value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="exemple@dronek.net" />
                 </div>
              )}
 
@@ -1163,8 +1264,7 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                 </div>
               )}
 
-              {/* Centered Image Upload Section - Hidden for Contacts, Production Sites, News and Mediatheque */}
-              {type !== 'contact' && type !== 'production_site' && type !== 'actualite' && type !== 'mediatheque' && (
+              {type !== 'contact' && type !== 'production_site' && type !== 'actualite' && type !== 'mediatheque' && type !== 'service' && (
                <div className="pt-4 space-y-8 flex flex-col items-center">
                  <label className="text-[12px] font-bold text-[#111827] uppercase tracking-[0.05em] block text-center">Image de Couverture</label>
                  <div className="w-full max-w-md mx-auto">

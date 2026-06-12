@@ -24,7 +24,7 @@ interface ProductionSitesPageProps {
 
 export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageProps) {
   const { lang, t } = useLanguage();
-  const [sites, setSites] = React.useState<any[]>([...t.production.sites]);
+  const [sites, setSites] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [focusedSiteId, setFocusedSiteId] = React.useState<string | null>(null);
 
@@ -49,14 +49,9 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
           };
         });
         
-        // Deduplicate: filter out dynamic sites that have the same name as a static site
-        const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        const staticNames = new Set(t.production.sites.map((s: any) => normalize(s.name)));
-        const filteredDynamic = dynamicSites.filter(site => !staticNames.has(normalize(site.name)));
-        
-        setSites([...t.production.sites, ...filteredDynamic]);
+        setSites(dynamicSites);
       } else {
-        setSites([...t.production.sites]);
+        setSites([]);
       }
       setLoading(false);
     };
@@ -77,6 +72,10 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
     if (loc.includes('yamoussoukro')) return { lat: 6.8216, lng: -5.2764 };
     if (loc.includes('bonoua')) return { lat: 5.2719, lng: -3.5950 };
     if (loc.includes('san-pédro') || loc.includes('san pedro')) return { lat: 4.7500, lng: -6.6400 };
+    if (loc.includes('tiassalé') || loc.includes('tiassale')) return { lat: 5.8983, lng: -4.8239 };
+    if (loc.includes('agboville')) return { lat: 5.9271, lng: -4.2188 };
+    if (loc.includes('lakota')) return { lat: 5.8475, lng: -5.6820 };
+    if (loc.includes('soubré') || loc.includes('soubre')) return { lat: 5.7875, lng: -6.5878 };
     if (loc.includes('daloa')) return { lat: 6.8900, lng: -6.4500 };
     if (loc.includes('bouaké') || loc.includes('bouake')) return { lat: 7.6900, lng: -5.0300 };
     if (loc.includes('korhogo')) return { lat: 9.4580, lng: -5.6290 };
@@ -98,20 +97,10 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
         ...site,
         id: site.id || `main-site-${idx}`,
         center: getSiteCoords(site)
-      })),
-      ...nurseryZones.map(zone => ({
-        id: `nursery-zone-${zone.id}`,
-        name: zone.nursery,
-        location: `${zone.city}, Côte d'Ivoire`,
-        center: zone.center,
-        desc: lang === 'fr' ? `Site de production spécialisé - Zone ${zone.city}` : `Specialized production site - ${zone.city} Zone`
       }))
     ];
 
-    return allSites.filter(s => {
-      const searchStr = (s.location + " " + s.name).toLowerCase();
-      return searchStr.includes('bonoua') || searchStr.includes('yamoussoukro') || searchStr.includes('san pedro') || searchStr.includes('san-pédro');
-    });
+    return allSites;
   }, [sites, lang]);
 
   return (
@@ -120,14 +109,14 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
       <AnimatedSection className="relative h-auto min-h-[250px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
         <div className="absolute inset-0">
           <Image 
-            src="/images/nursery.jpg" 
+            src="/IMAGE SITE WEB/Bannière site de production.jpg" 
             alt="Production Sites" 
             fill 
             className="object-cover" 
             priority 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-dronek-dark to-dronek-green opacity-85" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-12">
@@ -186,24 +175,18 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
             );
 
             const content = (
-              <div className="max-w-xl w-full p-8 lg:p-12 relative overflow-hidden group">
-                <div className="relative z-10 space-y-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-montserrat-extrabold text-[#0f4c2e] leading-tight uppercase tracking-tight">
-                        {site.name}
-                      </h2>
-                    </div>
+              <div className="max-w-xl w-full p-8 lg:p-12 relative overflow-hidden group flex flex-col items-center text-center">
+                <div className="relative z-10 space-y-8 flex flex-col items-center">
+                  <div className="space-y-4 flex flex-col items-center">
+                    <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-montserrat-extrabold text-[#0f4c2e] leading-tight uppercase tracking-tight">
+                      {site.name}
+                    </h2>
                     
                     <p className="flex items-center gap-2 text-[#71807e] text-sm font-bold uppercase tracking-widest">
                       <MapPin className="w-4 h-4 text-dronek-green" />
                       {site.location}
                     </p>
                   </div>
-
-                  <p className="text-[#1d3b34] text-base lg:text-lg leading-relaxed font-medium opacity-90">
-                    {site.desc || site.description}
-                  </p>
 
                   <div className="mt-10 flex justify-center">
                     <button 
@@ -214,7 +197,7 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
                       }}
                       className="group/btn flex items-center gap-3 px-8 py-3.5 bg-green-900 hover:bg-green-800 text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-lg shadow-black/5 active:scale-95"
                     >
-                      Voir sur la carte
+                      {lang === 'fr' ? 'Voir sur la carte' : 'View on map'}
                       <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
                   </div>
@@ -253,9 +236,6 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
             className="space-y-12"
           >
             <div className="text-center space-y-4">
-              <h2 className="text-3xl lg:text-4xl font-montserrat-extrabold text-[#0f4c2e] uppercase tracking-tight">
-                {lang === 'fr' ? 'Notre Réseau en Côte d\'Ivoire' : 'Our Network in Ivory Coast'}
-              </h2>
               <p className="text-[#71807e] max-w-2xl mx-auto text-lg font-medium">
                 {lang === 'fr' 
                   ? 'Explorez nos sites de production et centres technologiques répartis stratégiquement sur l\'ensemble du territoire national.' 

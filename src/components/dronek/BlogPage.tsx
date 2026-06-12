@@ -348,7 +348,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedNewsId(null)}
-              className="absolute inset-0 transition-all"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
             />
             
             <motion.div 

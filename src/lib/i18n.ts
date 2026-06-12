@@ -104,15 +104,15 @@ export const translations = {
       success: "Votre demande a bien été envoyée.",
       error: "Échec de l'envoi. Veuillez réessayer.",
       bannerDesc: {
-        title: "Des solutions technologiques innovantes pour optimiser les opérations agricoles",
-        content: "Nous utilisons la technologie dans la pratique de l'agroforesterie en ayant recours aux drones pour la collecte d'informations relatives à la mise en place de systèmes agroforestiers de pointe."
+        title: "Nos Services",
+        content: "Dans chacune de ces activités, DRONEK propose un panel de services afin de fournir des prestations efficaces et performantes."
       }
     },
     projects: {
       title: "Nos Projets Phares",
       subtitle: "Découvrez nos réalisations à travers la Côte d'Ivoire",
-      heroTitle: "Optimiser chaque goutte, faire fructifier chaque récolte",
-      heroDesc: "Chez DRONEK, nous transformons les données en décisions. Grâce à des capteurs intelligents et des informations en temps réel, nous donnons aux agriculteurs les moyens d'optimiser l'irrigation, de préserver les ressources et d'accroître leurs rendements.",
+      heroTitle: "Nos Projets & Réalisations",
+      heroDesc: "Au cours de notre existence DRONEK a participé à d’innombrables projets sur toutes l’étendues du territoire et avec des acteurs venant de toute part. Alors plongez dans notre histoire à travers nos réalisations.",
       learnMore: "En savoir plus",
       yearLabel: "Année",
       locationLabel: "Localisation",
@@ -362,7 +362,7 @@ export const translations = {
         quote: "Mettre la technologie au service de la nature et des communautés.",
         desc1: "Depuis la création de DRONEK en 2017, notre vision n'a pas changé. En tant qu'ingénieur forestier diplômé de l'INP-HB, j'ai toujours été convaincu que les solutions durables naissent à l'intersection de la science, de la technologie et du savoir-faire local.",
         desc2: "Aujourd'hui, avec une équipe de professionnels dévoués et plus de 150 projets réalisés, nous continuons à innover pour une Afrique plus verte et plus prospère. Chaque projet que nous menons est une brique supplémentaire dans la construction d'un avenir durable.",
-        name: "Kouamé Aka",
+        name: "Kouacou Yao Elvis Franklin",
         signature: "Fondateur et Directeur Général",
       },
       members: [
@@ -372,7 +372,7 @@ export const translations = {
           image: "team2.jpg",
         },
         {
-          name: "Kouamé Aka",
+          name: "Kouacou Yao Elvis Franklin",
           role: "Fondateur et Directeur Général",
           image: "founder.jpg",
         },
@@ -386,7 +386,7 @@ export const translations = {
     production: {
       title: "Sites de Production",
       heroBadge: "DRONEK",
-      subtitle: "Découvrez nos centres opérationnels et hubs géospatiaux à la pointe de la technologie.",
+      subtitle: "Actuellement, avec nos moyens, DRONEK a une capacité de production annuelle de plus de 2 000 000 plants. Nous mobilisons nos hubs géospatiaux et centres opérationnels pour assurer la production, le suivi et la qualité de nos plants conformément aux meilleures pratiques durables.",
       sites: [
         {
           name: "Site de Bonoua",
@@ -713,15 +713,15 @@ export const translations = {
       success: "Your request has been sent successfully.",
       error: "Sending failed. Please try again.",
       bannerDesc: {
-        title: "Innovative technological solutions to optimize agricultural operations",
-        content: "We use technology in the practice of agroforestry by using drones to collect information related to the implementation of state-of-the-art agroforestry systems."
+        title: "Our Services",
+        content: "In each of these activities, DRONEK offers a range of services to provide efficient and high-performance solutions."
       }
     },
     projects: {
       title: "Our Flagship Projects",
       subtitle: "Discover our achievements across Côte d'Ivoire",
-      heroTitle: "Optimizing every drop, making every harvest fruitful",
-      heroDesc: "At DRONEK, we transform data into decisions. Through smart sensors and real-time insights, we empower farmers to optimize irrigation, preserve resources, and increase their yields, fostering sustainable agriculture in the face of climate challenges.",
+      heroTitle: "Our Projects & Achievements",
+      heroDesc: "Throughout our existence, DRONEK has participated in countless projects across the entire territory and with partners from all backgrounds. Dive into our history through our achievements.",
       learnMore: "Learn more",
       yearLabel: "Year",
       locationLabel: "Location",
@@ -963,7 +963,7 @@ export const translations = {
         quote: "Putting technology at the service of nature and communities.",
         desc1: "Since the creation of DRONEK in 2017, our vision has not changed. As a forest engineer graduated from INP-HB, I have always believed that sustainable solutions arise at the intersection of science, technology and local know-how.",
         desc2: "Today, with a team of dedicated professionals and over 150 completed projects, we continue to innovate for a greener and more prosperous Africa. Every project we carry out is another building block in constructing a sustainable future.",
-        name: "Kouamé Aka",
+        name: "Kouacou Yao Elvis Franklin",
         signature: "Founder and CEO",
       },
       members: [
@@ -973,7 +973,7 @@ export const translations = {
           image: "team2.jpg",
         },
         {
-          name: "Kouamé Aka",
+          name: "Kouacou Yao Elvis Franklin",
           role: "Founder and CEO",
           image: "founder.jpg",
         },
@@ -987,7 +987,7 @@ export const translations = {
     production: {
       title: "Production Sites",
       heroBadge: "DRONEK",
-      subtitle: "Discover our operational centers and geospatial hubs at the cutting edge of technology.",
+      subtitle: "Currently, with our resources, DRONEK has an annual production capacity of over 2,000,000 plants. We leverage our geospatial hubs and operational centers to manage production, monitoring and quality control using sustainable best practices.",
       sites: [
         {
           name: "Bonoua Site",

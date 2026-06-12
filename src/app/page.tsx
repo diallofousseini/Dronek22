@@ -8,7 +8,6 @@ import Footer from '@/components/dronek/Footer';
 import HomePage from '@/components/dronek/HomePage';
 import ProjectsPage from '@/components/dronek/ProjectsPage';
 import ActualitePage from '@/components/dronek/ActualitePage';
-import TeamPage from '@/components/dronek/TeamPage';
 import ProductionSitesPage from '@/components/dronek/ProductionSitesPage';
 import ContactPage from '@/components/dronek/ContactPage';
 import CookieConsent from '@/components/dronek/CookieConsent';
@@ -79,8 +78,6 @@ function AppContent({ initialPage }: AppContentProps) {
         return <ActualitePage onNavigate={handleNavigate} />;
       case 'blog-impact':
         return <ImpactPage />;
-      case 'team':
-        return <TeamPage />;
       case 'production':
         return <ProductionSitesPage onNavigate={handleNavigate} />;
       case 'contact':

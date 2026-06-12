@@ -5,8 +5,11 @@ import { motion } from 'framer-motion';
 import { Briefcase, Network, Users, Cloud, ArrowRight, ChevronRight, Server, TreePine, Navigation, Wheat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useLanguage } from './LanguageProvider';
 
 export default function SolutionsPerformantes() {
+  const { lang } = useLanguage();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -46,9 +49,19 @@ export default function SolutionsPerformantes() {
           <motion.div variants={leftVariants} className="w-full lg:w-[30%] flex flex-col items-start space-y-4">
 
             <h2 className="text-4xl md:text-5xl font-black leading-[1.1] tracking-tight">
-              <span className="block text-green-900">Profitez du</span>
-              <span className="block text-black">meilleur de la</span>
-              <span className="block text-green-900">technologie</span>
+              {lang === 'fr' ? (
+                <>
+                  <span className="block text-green-900">Profitez du</span>
+                  <span className="block text-black">meilleur de la</span>
+                  <span className="block text-green-900">technologie</span>
+                </>
+              ) : (
+                <>
+                  <span className="block text-green-900">Enjoy the</span>
+                  <span className="block text-black">best of</span>
+                  <span className="block text-green-900">technology</span>
+                </>
+              )}
             </h2>
           </motion.div>
 
@@ -72,15 +85,11 @@ export default function SolutionsPerformantes() {
               </div>
 
               <div className="relative z-10">
-                <div className="text-white/90 text-xs md:text-sm leading-relaxed mb-6 max-w-4xl space-y-2">
-                  <p className="text-base md:text-lg font-bold text-white mb-1">
-                    Des solutions technologiques innovantes pour optimiser les opérations agricoles
-                  </p>
-                  <p>
-                    DRONEK vous accompagne dans vos projets d'innovation technologique liés à l'agriculture. Notre technologie permet d'alléger considérablement le travail de terrain par l'élimination de l'échantillonnage et la prise de données manuelles qui peuvent représenter un travail de longue haleine.
-                  </p>
-                  <p>
-                    Nous utilisons la technologie dans la pratique de l'agroforesterie en ayant recours aux drones pour la collecte d'informations relatives à la mise en place de systèmes agroforestiers de pointe.
+                <div className="text-white/90 text-xs md:text-sm leading-relaxed mb-6 max-w-4xl">
+                  <p className="text-base md:text-lg font-bold text-white">
+                    {lang === 'fr' 
+                      ? "Dans chacune de ces activités, DRONEK propose un panel de services afin de fournir des prestations efficaces et performantes."
+                      : "In each of these activities, DRONEK offers a range of services to provide efficient and high-performance solutions."}
                   </p>
                 </div>
 
@@ -107,7 +116,9 @@ export default function SolutionsPerformantes() {
                         className="w-20 h-20 object-contain transition-transform group-hover:scale-110" 
                       />
                     </div>
-                    <h3 className="text-white text-base font-bold group-hover:text-green-400 transition-colors uppercase">FORESTERIE</h3>
+                    <h3 className="text-white text-base font-bold group-hover:text-green-400 transition-colors uppercase">
+                      {lang === 'fr' ? 'FORESTERIE' : 'FORESTRY'}
+                    </h3>
                   </motion.button>
 
                   <motion.div 
@@ -130,7 +141,9 @@ export default function SolutionsPerformantes() {
                         className="w-[120px] h-[120px] object-contain -mb-2" 
                       />
                     </div>
-                    <h3 className="text-green-900 text-lg font-bold uppercase mt-2">Drone et Cartographie</h3>
+                    <h3 className="text-green-900 text-lg font-bold uppercase mt-2">
+                      {lang === 'fr' ? 'Drone et Cartographie' : 'Drone & Mapping'}
+                    </h3>
                     <div className="mt-2 w-8 h-8 rounded-full bg-green-900 flex items-center justify-center text-white hover:bg-green-800 transition-colors">
                       <ChevronRight className="w-4 h-4" />
                     </div>
@@ -156,7 +169,9 @@ export default function SolutionsPerformantes() {
                         className="w-20 h-20 object-contain transition-transform group-hover:scale-110" 
                       />
                     </div>
-                    <h3 className="text-white text-base font-bold group-hover:text-green-400 transition-colors uppercase">AGRICULTURE</h3>
+                    <h3 className="text-white text-base font-bold group-hover:text-green-400 transition-colors uppercase">
+                      {lang === 'fr' ? 'AGRICULTURE' : 'AGRICULTURE'}
+                    </h3>
                   </motion.button>
 
                 </div>

@@ -203,14 +203,14 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
       <AnimatedSection className="relative h-auto min-h-[400px] flex items-start overflow-hidden rounded-xl mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
         <div className="absolute inset-0">
           <Image 
-            src="/images/hero-forest.jpg" 
+            src="/IMAGE SITE WEB/Page d'acceuil image 4.jpg" 
             alt="Actualités" 
             fill 
             className="object-cover" 
             priority 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-dronek-dark to-dronek-green opacity-85" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 lg:pt-48 pb-12">
@@ -415,13 +415,12 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
       <AnimatePresence>
         {selectedPost && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            {/* Backdrop Blur & Overlay */}
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               onClick={() => setSelectedPost(null)} 
-              className="absolute inset-0" 
+              className="absolute inset-0 bg-black/60 backdrop-blur-md" 
             />
             
             {/* Popup Container */}

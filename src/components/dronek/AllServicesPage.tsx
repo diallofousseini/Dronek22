@@ -29,6 +29,29 @@ const serviceImages: Record<string, string> = {
   agriculture: '/images/hero-agriculture.jpg',
 };
 
+const getServiceDomainVal = (s: any) => {
+  const type = (s.service_type || s.serviceType || s.id || '').toLowerCase();
+  const title = (s.title || s.titre || '').toLowerCase();
+  if (type.includes('agriculture') || title.includes('agriculture') || title.includes('culture') || title.includes('élevage') || title.includes('elevage')) {
+    return 1; // Agriculture
+  }
+  if (type.includes('drone') || type.includes('tech') || title.includes('drone') || title.includes('cartographie') || title.includes('sig') || title.includes('lidar') || title.includes('technologie')) {
+    return 2; // Technologie
+  }
+  return 0; // Foresterie
+};
+
+const getServiceDomainLabel = (s: any, lang: string) => {
+  const val = getServiceDomainVal(s);
+  if (val === 1) {
+    return lang === 'fr' ? 'Agriculture Durable' : 'Sustainable Agriculture';
+  }
+  if (val === 2) {
+    return lang === 'fr' ? 'Drone & Technologie' : 'Drone & Technology';
+  }
+  return lang === 'fr' ? 'Foresterie' : 'Forestry';
+};
+
 interface AllServicesPageProps {
   onNavigate: (page: PageView) => void;
 }
@@ -91,7 +114,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
   ];
 
   const [selectedService, setSelectedService] = React.useState<any | null>(null);
-  const [services, setServices] = React.useState<any[]>(defaultServices);
+  const [services, setServices] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   useEffect(() => {
@@ -100,6 +123,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
       const { data, error } = await supabase
         .from('services')
         .select('*')
+        .or('service_type.neq.domain,service_type.is.null')
         .in('statut', ['publie', 'Publié', 'Published'])
         .order('created_at', { ascending: false });
       
@@ -124,15 +148,10 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
           };
         });
         
-        // Merge: Dynamic ones first, then defaults (excluding duplicates by id)
-        const combined = [...mapped];
-        defaultServices.forEach(ds => {
-          if (!combined.some(c => c.id === ds.id)) {
-            combined.push(ds);
-          }
-        });
-        
-        setServices(combined);
+        const sorted = mapped.sort((a, b) => getServiceDomainVal(a) - getServiceDomainVal(b));
+        setServices(sorted);
+      } else {
+        setServices([]);
       }
       setLoading(false);
     };
@@ -146,22 +165,37 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
   };
 
   useEffect(() => {
-    // Logic to scroll to a specific service if requested (from Home page)
+    const scrollToDomain = sessionStorage.getItem('scroll_to_domain');
     const scrollToId = sessionStorage.getItem('scroll_to_service');
-    if (scrollToId) {
-      // Small delay to ensure the cards are rendered and the stack effect is ready
+
+    if (scrollToDomain || scrollToId) {
       const timer = setTimeout(() => {
-        const element = document.getElementById(scrollToId);
+        let element: HTMLElement | null = null;
+        
+        if (scrollToDomain) {
+          const targetVal = scrollToDomain === 'agriculture' ? 1 : scrollToDomain === 'technology' ? 2 : 0;
+          const targetService = services.find(s => getServiceDomainVal(s) === targetVal);
+          if (targetService) {
+            element = document.getElementById(targetService.id);
+          }
+        }
+        
+        if (!element && scrollToId) {
+          element = document.getElementById(scrollToId);
+        }
+
         if (element) {
-          const yOffset = -100; // Account for header height
+          const yOffset = -120; // Account for header height
           const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
           window.scrollTo({ top: y, behavior: 'smooth' });
         }
+
+        sessionStorage.removeItem('scroll_to_domain');
         sessionStorage.removeItem('scroll_to_service');
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [services]);
 
   useEffect(() => {
     const initScrollEffect = () => {
@@ -206,7 +240,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
       <AnimatedSection className="relative h-auto min-h-[250px] flex items-start overflow-hidden rounded-[2.5rem] lg:rounded-tl-[10rem] lg:rounded-br-[10rem] mx-4 sm:mx-6 lg:mx-8 mt-2 lg:mt-3 shadow-2xl">
         <div className="absolute inset-0">
           <Image 
-            src="/images/hero-agriculture.jpg" 
+            src="/IMAGE SITE WEB/bannière nos services.jpg" 
             alt="Dronek Services" 
             fill 
             className="object-cover" 
@@ -257,26 +291,6 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
         </div>
       </AnimatedSection>
 
-      {/* 🌟 INTRODUCTION SECTION */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-8 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="space-y-4"
-        >
-          <h2 className="text-3xl lg:text-4xl font-black tracking-tight" style={{ WebkitTextStroke: '0.5px currentColor' }}>
-            <span className="text-black">Nous vous proposons plusieurs </span>
-            <span className="text-[#149655]">services</span>
-          </h2>
-          <div className="w-16 h-1 bg-dronek-green mx-auto mb-6" />
-          <p className="text-base lg:text-xl text-[#71807e] leading-relaxed font-medium max-w-3xl mx-auto">
-            Dronek se distingue par une solide expertise technique et une maîtrise des innovations technologiques, 
-            lui permettant de fournir des services efficaces et performants dans les secteurs de la foresterie et de l'agriculture.
-          </p>
-        </motion.div>
-      </div>
       
       {/* Services List — Sticky Stack */}
       <div 
@@ -344,26 +358,25 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                     </div>
 
                     {/* Right side: Content */}
-                    <div className="p-8 lg:p-14 pb-12 lg:pb-16 flex flex-col justify-center h-full relative overflow-hidden bg-white/90 backdrop-blur-sm z-0">
-                      <div className="relative z-10">
+                    <div className="p-8 lg:p-14 pb-12 lg:pb-16 flex flex-col justify-center items-center text-center h-full relative overflow-hidden bg-white/90 backdrop-blur-sm z-0">
+                      <div className="relative z-10 flex flex-col items-center">
 
-
-                        <h2 className="text-3xl lg:text-4xl font-normal text-[#149655]/80 leading-[1.05] mb-6 uppercase tracking-tight">
+                        <h2 className="text-3xl lg:text-4xl font-normal text-[#149655]/80 leading-[1.05] mb-6 uppercase tracking-tight text-center">
                           {service.title}
                         </h2>
 
                         {service.description && (
-                          <p className="text-gray-600 font-medium text-lg lg:text-xl leading-relaxed mb-6 line-clamp-3">
+                          <p className="text-gray-600 font-medium text-lg lg:text-xl leading-relaxed mb-6 line-clamp-3 text-center">
                             {service.description}
                           </p>
                         )}
 
                         {/* Items List - Restored for exact match */}
                         {service.items && service.items.length > 0 && (
-                          <div className="flex flex-col gap-3 mb-10 w-full">
+                          <div className="flex flex-col gap-3 mb-10 w-full items-center">
                             {service.items.slice(0, 4).map((item: any, iIdx: number) => (
-                              <div key={iIdx} className="flex items-start gap-3 group/item">
-                                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-dronek-green shrink-0" />
+                              <div key={iIdx} className="flex items-center gap-3 group/item justify-center text-center">
+                                <div className="w-1.5 h-1.5 rounded-full bg-dronek-green shrink-0" />
                                 <span className="text-[14px] lg:text-[15px] text-gray-700 font-semibold leading-snug group-hover/item:text-dronek-green transition-colors">
                                   {item.title}
                                 </span>
@@ -374,7 +387,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
 
                         <button 
                           onClick={() => setSelectedService(service)}
-                          className="inline-flex items-center gap-3 bg-dronek-green hover:bg-dronek-dark text-white px-8 py-5 rounded-full font-bold transition-all shadow-lg shadow-dronek-green/30 group/btn"
+                          className="inline-flex items-center gap-3 bg-dronek-green hover:bg-dronek-dark text-white px-8 py-5 rounded-full font-bold transition-all shadow-lg shadow-dronek-green/30 group/btn mx-auto"
                         >
                           <span className="uppercase tracking-widest text-sm">{t.services.learnMore}</span>
                           <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
@@ -400,7 +413,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedService(null)}
-              className="absolute inset-0"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
             />
             
             <motion.div 

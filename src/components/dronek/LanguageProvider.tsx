@@ -12,10 +12,21 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Language>('fr');
+  const [lang, setLangState] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dronek_language');
+      if (saved === 'fr' || saved === 'en') {
+        return saved;
+      }
+    }
+    return 'fr';
+  });
 
   const setLang = useCallback((newLang: Language) => {
     setLangState(newLang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dronek_language', newLang);
+    }
   }, []);
 
   const t = translations[lang] as unknown as Translations;

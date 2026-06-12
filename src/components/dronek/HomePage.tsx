@@ -7,8 +7,19 @@ import {
   TreePine, Navigation, Sprout, Wheat, Quote, ArrowRight, ArrowDown,
   ShieldCheck, Cpu, Leaf, Star, ChevronDown, ChevronLeft, ChevronRight,
   Award, Users, Briefcase, Layers, Heart, MessageCircle, Share2, X, Link as LinkIcon, ExternalLink,
-  Rocket, MapPin
+  Rocket, MapPin, Linkedin, Mail, Facebook
 } from 'lucide-react';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  bio?: string;
+  email?: string;
+  facebook?: string;
+  linkedin?: string;
+}
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -154,9 +165,12 @@ function Section({ children, className = '', id }: { children: React.ReactNode; 
 /* ─────── Hero Slideshow ─────── */
 /* ─────── Hero Slideshow ─────── */
 const defaultHeroImages = [
-  '/images/hero-forest.jpg',
-  '/images/hero-drone.jpg',
-  '/images/hero-contact.jpg',
+  "/IMAGE SITE WEB/Page d'acceuil image 1.jpg",
+  "/IMAGE SITE WEB/Page d'acceuil image 2.jpg",
+  "/IMAGE SITE WEB/Page d'acceuil image 3.jpg",
+  "/IMAGE SITE WEB/Page d'acceuil image 4.jpg",
+  "/IMAGE SITE WEB/Page d'acceuil image 5.jpg",
+  "/IMAGE SITE WEB/Page d'acceuil image 6.jpg",
 ];
 
 /* ─────── Floating Particles ─────── */
@@ -288,30 +302,40 @@ const featuredProjectsFallback = [
 
 const getFallbackServices = (lang: string) => [
   {
-    id: 'agriculture',
-    titre: lang === 'fr' ? 'Agriculture' : 'Agriculture',
-    description: lang === 'fr' ? "Soutenir les acteurs de la chaîne de valeur agricole grâce à l'agriculture de précision." : "Supporting agricultural value chain players through precision agriculture.",
-    image: '/images/hero-agriculture.jpg'
-  },
-  {
-    id: 'drone',
-    titre: lang === 'fr' ? 'Drone et Cartographie' : 'Drone and Mapping',
-    description: lang === 'fr' ? "Analyse de précision et cartographie aérienne haute résolution." : "Precision analysis and high-resolution aerial mapping.",
-    image: '/images/drone-work.jpg'
-  },
-  {
-    id: 'agroforestry',
-    titre: lang === 'fr' ? 'Agroforesterie' : 'Agroforestry',
-    description: lang === 'fr' ? "Intégration durable d'arbres dans vos systèmes agricoles." : "Sustainable integration of trees into your farming systems.",
-    image: '/images/hero-agroforestry.jpg'
-  },
-  {
     id: 'forestry',
     titre: lang === 'fr' ? 'Foresterie' : 'Forestry',
     description: lang === 'fr' ? "Développer la performance des secteurs de la foresterie et du reboisement durable." : "Developing the performance of forestry and sustainable reforestation sectors.",
-    image: '/images/hero-forest.jpg'
+    image: '/IMAGE SITE WEB/Services Aménagement forestier.png',
+    service_type: 'domain'
+  },
+  {
+    id: 'agriculture',
+    titre: lang === 'fr' ? 'Agriculture Durable' : 'Sustainable Agriculture',
+    description: lang === 'fr' ? "Soutenir les acteurs de la chaîne de valeur agricole grâce à l'agriculture de précision." : "Supporting agricultural value chain players through precision agriculture.",
+    image: '/IMAGE SITE WEB/Services agriculture 2.JPG',
+    service_type: 'domain'
+  },
+  {
+    id: 'technology',
+    titre: lang === 'fr' ? 'Drone & Technologie' : 'Drone & Technology',
+    description: lang === 'fr' ? "Analyse de précision et cartographie aérienne haute résolution." : "Precision analysis and high-resolution aerial mapping.",
+    image: '/IMAGE SITE WEB/Services SIG.jpg',
+    service_type: 'domain'
   }
 ];
+
+const getServiceDomain = (service: any) => {
+  const type = (service.service_type || service.serviceType || service.id || '').toLowerCase();
+  const title = (service.title || service.titre || '').toLowerCase();
+  
+  if (type.includes('agriculture') || title.includes('agriculture') || title.includes('culture') || title.includes('élevage') || title.includes('elevage')) {
+    return 'agriculture';
+  }
+  if (type.includes('drone') || type.includes('tech') || title.includes('drone') || title.includes('cartographie') || title.includes('sig') || title.includes('lidar') || title.includes('technologie')) {
+    return 'technology';
+  }
+  return 'forestry';
+};
 
 const getGridStyle = (count: number) => {
   if (count <= 2) return {
@@ -415,6 +439,19 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   const [dynamicHeroImages, setDynamicHeroImages] = useState<string[]>(defaultHeroImages);
   const [dynamicServices, setDynamicServices] = useState<any[]>([]);
+  const [dynamicMembers, setDynamicMembers] = useState<TeamMember[]>([]);
+
+  const members = React.useMemo(() => {
+    const staticMembers = t.team?.members || [];
+    const dynamicNames = new Set(dynamicMembers.map(m => m.name.toLowerCase().trim()));
+    const filteredStatic = staticMembers
+      .filter((m: any) => !dynamicNames.has(m.name.toLowerCase().trim()))
+      .map((m: any, i: number) => ({
+        ...m,
+        id: `static-${i}`
+      }));
+    return [...dynamicMembers, ...filteredStatic] as TeamMember[];
+  }, [dynamicMembers, t.team?.members]);
 
   const timeAgo = (date: any) => {
     if (!date) return '';
@@ -515,45 +552,38 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         console.error('[HomePage Fetch] Exception fetching featured projects:', err);
       }
 
-      // 4. Fetch Services
+      // 4. Fetch/Set Domains of Expertise
       try {
-        const { data: servicesData, error: servicesError } = await supabase
+        const { data: domainsData, error: domainsError } = await supabase
           .from('services')
           .select('*')
-          .in('statut', ['publie', 'Publié', 'Published'])
-          .order('created_at', { ascending: false });
+          .eq('service_type', 'domain')
+          .in('statut', ['publie', 'Publié', 'Published']);
         
-        if (servicesError) {
-          console.error('[HomePage Fetch] Error fetching services:', servicesError);
+        if (domainsError) {
+          console.error('[HomePage Fetch] Error fetching domains:', domainsError);
           setDynamicServices(getFallbackServices(lang));
-        } else if (servicesData) {
-          // Fetch MainServices config from contacts table
-          const { data: config } = await supabase.from('contacts').select('*').eq('sujet', 'MainServices').single();
-          let mainIds: string[] = [];
-          if (config && config.message) {
-            try { mainIds = JSON.parse(config.message); } catch (e) {}
-          }
-
-          const mapped = servicesData.map(s => {
-            let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
-            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) imageUrl = '/images/hero-forest.jpg';
+        } else if (domainsData && domainsData.length > 0) {
+          setDynamicServices(domainsData.map(d => {
+            let key = 'forestry';
+            const title = (d.titre || '').toLowerCase();
+            if (title.includes('agriculture')) key = 'agriculture';
+            else if (title.includes('drone') || title.includes('tech') || title.includes('sig')) key = 'technology';
+            
             return {
-              ...s,
-              id: s.id,
-              titre: (lang === 'en' && s.titre_en) ? s.titre_en : (s.titre || s.title),
-              description: (lang === 'en' && s.description_en) ? s.description_en : (s.description_courte || s.description),
-              image: imageUrl,
-              is_main_service: mainIds.includes(s.id)
+              id: d.id,
+              key: key,
+              titre: (lang === 'en' && d.titre_en) ? d.titre_en : d.titre,
+              description: (lang === 'en' && d.description_courte_en) ? d.description_courte_en : (d.description_courte || d.description),
+              image: d.image_url || d.image || '',
+              service_type: 'domain'
             };
-          });
-          
-          const mainServices = mapped.filter((s: any) => s.is_main_service === true);
-          setDynamicServices(mainServices.length > 0 ? mainServices : getFallbackServices(lang));
+          }));
         } else {
           setDynamicServices(getFallbackServices(lang));
         }
       } catch (err) {
-        console.error('[HomePage Fetch] Exception fetching services:', err);
+        console.error('[HomePage Fetch] Exception fetching domains:', err);
         setDynamicServices(getFallbackServices(lang));
       }
 
@@ -566,12 +596,46 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           .in('statut', ['publie', 'Publié', 'Published']);
         
         if (mediaError) {
-          console.error('[HomePage Fetch] Error fetching media:', mediaError);
+          setDynamicHeroImages(defaultHeroImages);
         } else if (mediaData && mediaData.length > 0) {
-          setDynamicHeroImages(mediaData.map(m => m.url));
+          setDynamicHeroImages(mediaData.map(m => (m as any).url));
+        } else {
+          setDynamicHeroImages(defaultHeroImages);
         }
       } catch (err) {
-        console.error('[HomePage Fetch] Exception fetching media:', err);
+        setDynamicHeroImages(defaultHeroImages);
+      }
+
+      // 6. Fetch Team
+      try {
+        const { data: teamData, error: teamError } = await supabase
+          .from('equipe')
+          .select('*')
+          .in('statut', ['publie', 'Publié', 'Published', 'actif'])
+          .order('created_at', { ascending: false });
+        
+        if (teamData) {
+          setDynamicMembers(teamData.map(m => {
+            let imageUrl = m.photo_url || 'founder.jpg';
+            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http') && !imageUrl.includes('.')) {
+               imageUrl = 'founder.jpg';
+            } else if (imageUrl && imageUrl.startsWith('/images/')) {
+               imageUrl = imageUrl.replace('/images/', '');
+            }
+            return {
+              id: m.id,
+              name: `${m.prenom} ${m.nom}`,
+              role: m.poste,
+              image: imageUrl,
+              bio: m.biographie,
+              email: m.email,
+              linkedin: m.linkedin,
+              facebook: m.facebook
+            };
+          }));
+        }
+      } catch (err) {
+        console.error('[HomePage Fetch] Exception fetching team:', err);
       }
     };
 
@@ -611,8 +675,30 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     : ['Sustainable Forestry', '3D Mapping', 'Agroforestry', 'Innovative Solutions', 'Forest Inventory', 'GIS & Remote Sensing'];
 
   const heroSlogans = lang === 'fr'
-    ? ['Gestion Durable des Forêts', 'Analyses Végétales', 'Surveillance Agricole', 'Agriculture de Précision', 'Inventaire Forestier', 'Technologies pour la Nature']
-    : ['Sustainable Forest Management', 'Vegetation Analysis', 'Agricultural Monitoring', 'Precision Agriculture', 'Forest Inventory', 'Technology for Nature'];
+    ? [
+        'Production de plants',
+        'Aménagement forestier',
+        'Inventaire forestier',
+        'Reboisement',
+        'Agriculture durable & agroforesterie',
+        'Audits des projets et travaux forestiers',
+        'Étude d’impact environnementale et sociale (EIES)',
+        'Formation aux métiers de la foresterie & de l’agriculture',
+        'Technologies & analyse SIG géospatiales',
+        'Construction de serre'
+      ]
+    : [
+        'Seedling production',
+        'Forest management',
+        'Forest inventory',
+        'Reforestation',
+        'Sustainable agriculture & agroforestry',
+        'Forestry audits',
+        'Environmental & Social Impact Studies',
+        'Forestry & Agriculture training',
+        'GIS & Geospatial Analysis',
+        'Greenhouse construction'
+      ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -708,7 +794,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         </motion.div>
 
         {/* Professional subtle overlay for text legibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/40 z-[1] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60 z-[2] pointer-events-none" />
         <FloatingParticles />
 
         {/* Content */}
@@ -739,25 +826,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   </motion.span>
                 </AnimatePresence>
               </div>
-              <div className="w-full flex items-center justify-center gap-2 sm:gap-5">
-                <button
-                  onClick={prevHeroSlogan}
-                  className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/10 border border-white/25 flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300"
-                  aria-label="Previous headline"
-                >
-                  <ChevronLeft className="w-4 h-4 sm:w-5 h-5" />
-                </button>
-                <span className="leading-[1.08] font-bold" style={{ fontSize: 'clamp(1.5rem, 6vw, 4.5rem)' }}>
-                  {lang === 'fr' ? "& DE LA TECHNOLOGIE PAR DRONE" : '& DRONE TECHNOLOGY'}
-                </span>
-                <button
-                  onClick={nextHeroSlogan}
-                  className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/10 border border-white/25 flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300"
-                  aria-label="Next headline"
-                >
-                  <ChevronRight className="w-4 h-4 sm:w-5 h-5" />
-                </button>
-              </div>
             </motion.h1>
 
             {/* Rotating Text Effect */}
@@ -766,7 +834,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               className="min-h-[3rem] sm:min-h-[3.5rem] flex flex-wrap items-center justify-center overflow-visible px-4"
             >
               <span className="text-sm sm:text-lg lg:text-2xl font-medium mr-1.5 text-white whitespace-nowrap">
-                {lang === 'fr' ? 'Notre expertise :' : 'Our expertise:'}
+                {lang === 'fr' ? 'Nos Activités :' : 'Our Activities:'}
               </span>
               <div className="relative inline-flex items-center">
                 <AnimatePresence mode="wait">
@@ -825,7 +893,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 { end: 8, suffix: '+', label: t.hero.stat1 },
                 { end: 150, suffix: '+', label: t.hero.stat2 },
                 { end: 50, suffix: '+', label: t.hero.stat3 },
-                { end: 4, suffix: '', label: t.hero.stat4 },
+                { end: 3, suffix: '', label: t.hero.stat4 },
               ].map((stat, idx) => (
                 <div 
                   key={idx} 
@@ -923,22 +991,30 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   <ScrollBold className="leading-relaxed text-base lg:text-lg">
                     {lang === 'fr' ? (
                       <>
-                        DRONEK SARL est un cabinet de conseil spécialisé en agriculture, foresterie et agroforesterie. Avec DRONEK, vous bénéficiez d'une <span className="text-dronek-green font-bold">expertise</span> inégalée dans le domaine du reboisement et de la restauration des écosystèmes.
+                        <span className="text-dronek-green font-bold text-xl block mb-2">DRONEK</span> est une entreprise ivoirienne utilisant la technologie au service de la foresterie et de l’agriculture durable.
+                        <br /><br />
+                        Fondée en 2017, DRONEK accompagne les acteurs publics, privés et les organisations de développement dans la conception et la mise en œuvre de solutions intégrées pour la restauration des paysages, la gestion durable des forêts et l'amélioration des systèmes agricoles.
+                        <br /><br />
+                        Grâce à la combinaison de l'expertise terrain et des technologies de pointe telles que les drones, les systèmes d'information géographique (SIG), la télédétection et l'analyse de données spatiales, nous apportons des solutions fiables et innovantes pour répondre aux défis environnementaux actuels.
                       </>
                     ) : (
                       <>
-                        DRONEK SARL is a consulting firm specialized in agriculture, forestry, and agroforestry. With DRONEK, you benefit from unparalleled <span className="text-dronek-green font-bold">expertise</span> in reforestation and ecosystem restoration.
+                        <span className="text-dronek-green font-bold text-xl block mb-2">DRONEK</span> is an Ivorian company using technology for forestry and sustainable agriculture.
+                        <br /><br />
+                        Founded in 2017, DRONEK accompanies public, private actors and development organizations in the design and implementation of integrated solutions for landscape restoration, sustainable forest management and improvement of agricultural systems.
+                        <br /><br />
+                        Through the combination of field expertise and state-of-the-art technologies such as drones, geographical information systems (GIS), remote sensing and spatial data analysis, we bring reliable and innovative solutions to meet current environmental challenges.
                       </>
                     )}
                   </ScrollBold>
                   <ScrollBold className="leading-relaxed text-base lg:text-lg">
                     {lang === 'fr' ? (
                       <>
-                        Nous sommes fiers de collaborer avec des entreprises soucieuses de leur empreinte environnementale, car nous croyons que la <span className="text-dronek-green font-bold">réussite</span> commerciale peut aller de pair avec la préservation de notre planète.
+                        Notre force réside dans notre capacité à intervenir sur l'ensemble de la chaîne de valeur, depuis la production de plants forestiers et fruitiers jusqu'au reboisement, à l'inventaire forestier, à la cartographie, au suivi environnemental et à l'évaluation des impacts.
                       </>
                     ) : (
                       <>
-                        We are proud to collaborate with companies concerned about their environmental footprint, as we believe business <span className="text-dronek-green font-bold">success</span> can go hand-in-hand with preserving our planet.
+                        Our strength lies in our ability to intervene across the entire value chain, from the production of forest and fruit seedlings to reforestation, forest inventory, mapping, environmental monitoring and impact assessment.
                       </>
                     )}
                   </ScrollBold>
@@ -946,10 +1022,20 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     {lang === 'fr' ? (
                       <>
                         En sélectionnant DRONEK comme partenaire, vous rejoignez une communauté d'entreprises engagées dans la durabilité. Faites le choix de la <span className="text-dronek-green font-bold">qualité</span>, de l'écoresponsabilité et de l'engagement environnemental.
+                        <br /><br />
+                        <span className="text-dronek-green font-bold block mt-4 border-l-4 border-dronek-green pl-4">Notre engagement</span>
+                        <span className="italic block mt-2">
+                          Chez DRONEK, nous croyons qu'un développement durable est possible lorsque l'expertise humaine, la technologie et le respect de l'environnement travaillent ensemble pour construire un avenir plus vert et plus prospère.
+                        </span>
                       </>
                     ) : (
                       <>
                         By selecting DRONEK as a partner, you join a community of companies committed to sustainability. Choose <span className="text-dronek-green font-bold">quality</span>, eco-responsibility, and environmental commitment.
+                        <br /><br />
+                        <span className="text-dronek-green font-bold block mt-4 border-l-4 border-dronek-green pl-4">Our commitment</span>
+                        <span className="italic block mt-2">
+                          At DRONEK, we believe that sustainable development is possible when human expertise, technology and respect for the environment work together to build a greener and more prosperous future.
+                        </span>
                       </>
                     )}
                   </ScrollBold>
@@ -966,8 +1052,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   className="object-cover transition-transform duration-[3000ms] group-hover:scale-110"
                 />
                 {/* Dark Glass Overlay (Vitre noire transparente) */}
-                <div className="absolute inset-0 transition-all duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-dronek-green/30 pointer-events-none" />
+                <div className="absolute inset-0 bg-black/40 transition-all duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60 pointer-events-none" />
 
                 <div className="flex flex-col gap-4">
                   {[
@@ -1055,7 +1141,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               >
                 <div className="relative w-full h-full">
                   <Image 
-                    src="/images/about-forest.jpg" 
+                    src="/IMAGE SITE WEB/Qui sommes nous.png" 
                     alt="DRONEK Vision" 
                     fill 
                     className="object-cover transition-transform duration-1000 group-hover:scale-105" 
@@ -1068,7 +1154,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             {/* Mobile Image (not sticky) */}
             <motion.div className="block lg:hidden h-[400px] relative mt-12">
                <Image 
-                  src="/images/about-forest.jpg" 
+                  src="/IMAGE SITE WEB/Qui sommes nous.png" 
                   alt="DRONEK Vision" 
                   fill 
                   className="object-cover" 
@@ -1169,7 +1255,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </div>
         </div>
 
-        {/* Service cards grid - Dynamic & Full-bleed layout */}
+        {/* Service cards grid - Restored */}
         <div 
           className="expertise-grid mt-12 gap-2 px-2 lg:gap-4 lg:px-4" 
           style={getGridStyle(dynamicServices.length)}
@@ -1184,6 +1270,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               className="expertise-card card group"
               style={getCardStyle(index, dynamicServices.length)}
               onClick={() => {
+                const domain = getServiceDomain(s);
+                sessionStorage.setItem('scroll_to_domain', domain);
                 sessionStorage.setItem('scroll_to_service', s.id);
                 handleNav('services');
               }}
@@ -1217,6 +1305,112 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           ))}
         </div>
       </motion.section>
+
+      {/* ═══════════════════════════════════
+          MOT DU FONDATEUR ET ÉQUIPE
+          ═══════════════════════════════════ */}
+      {/* Founder Word */}
+      <section className="relative pt-20 pb-20 bg-white overflow-visible">
+        {/* Background Watermark Leaf */}
+        <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center opacity-[0.06]">
+          <div className="relative w-[350px] h-[350px] sm:w-[500px] sm:h-[500px] lg:w-[650px] lg:h-[650px]">
+            <Image 
+              src="/images/partners/ChatGPT_Image_24_avr._2026__15_44_37-removebg-preview.png" 
+              alt="" 
+              fill 
+              className="object-contain" 
+            />
+          </div>
+        </div>
+
+        <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-[40px] text-center md:text-left">
+            
+            {/* Left Column: Image wrapper with relative positioning, smaller max-width, higher z-index, and overlap margin on desktop */}
+            <motion.div 
+              variants={teamFadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="relative w-full max-w-[340px] flex-shrink-0 z-20 mr-0 md:-mr-[40px] lg:-mr-[60px] hover:scale-[1.03] transition-all duration-500 ease-out"
+            >
+              {/* Young Sprout and Fruits (Main Image) */}
+              <Image 
+                src="/ELVIS.png" 
+                alt="Kouacou Yao Elvis Franklin" 
+                width={340}
+                height={340}
+                className="w-full rounded-l-[40px] rounded-r-none shadow-[0_20px_40px_rgba(0,0,0,0.2)] object-cover aspect-square"
+                priority
+              />
+
+              {/* Hovering Drone (Positioned relatively to the image parent div, moved 1cm up and left) */}
+              <Image 
+                src="/images/hovering_drone.png" 
+                alt="Drone" 
+                width={120}
+                height={120}
+                className="absolute -top-[55px] -left-[55px] md:-top-[78px] md:-left-[78px] w-24 md:w-[120px] rotate-[-12deg] object-contain pointer-events-none" 
+              />
+            </motion.div>
+
+            {/* Right Column: Green Card with irregular/leaf shape and normal flexbox flow */}
+            <motion.div 
+              variants={teamFadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="w-full max-w-[460px] min-h-[340px] bg-[#149655] rounded-[30px_90px_30px_90px] p-6 md:p-8 relative flex flex-col justify-center overflow-hidden z-10 shadow-2xl"
+            >
+              {/* Content with standard padding */}
+              <div className="relative z-10 space-y-4 text-white" style={{ paddingLeft: '0.4cm' }}>
+                <div>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-2">
+                    {t.team?.founderWord?.name}
+                  </h2>
+                  <p className="text-lg sm:text-xl font-medium opacity-90">
+                    {t.team?.founderWord?.signature}
+                  </p>
+                </div>
+                
+                <div className="space-y-4 text-sm sm:text-base font-normal leading-relaxed opacity-95">
+                  <p>{t.team?.founderWord?.desc1}</p>
+                  <p>{t.team?.founderWord?.desc2}</p>
+                </div>
+              </div>
+
+              {/* Pine Trees (Absolute inside container, bottom right corner) */}
+              <Image 
+                src="/images/pine_trees.png" 
+                alt="Pine Trees" 
+                width={144}
+                height={144}
+                className="absolute -bottom-6 -right-6 w-24 md:w-36 h-24 md:h-36 opacity-20 object-contain pointer-events-none z-10" 
+              />
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Members Grid */}
+      <section className="pt-6 lg:pt-8 pb-16 lg:pb-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="pt-6" />
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            variants={stagger}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16 max-w-6xl mx-auto"
+          >
+            {members.map((member, idx) => (
+              <MemberCard key={member.id || idx} member={member} idx={idx} />
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
       {/* ═══════════════════════════════════
           POURQUOI CHOISIR DRONEK
@@ -1300,47 +1494,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               className="mt-6 text-[#444] text-base sm:text-lg max-w-3xl mx-auto leading-relaxed font-medium"
             >
               {lang === 'fr' 
-                ? "DRONEK propose une large gamme de services en foresterie, agroforesterie, gestion de l'environnement et en agriculture. Notre technologie permet d'alléger considérablement le travail de terrain par l'élimination de l'échantillonnage et la prise de données manuelles."
-                : "DRONEK offers a wide range of services in forestry, agroforestry, environmental management, and agriculture. Our technology significantly reduces fieldwork by eliminating sampling and manual data collection."
+                ? "DRONEK combine expertise terrain, technologies innovantes et engagement environnemental pour accompagner vos projets de foresterie, d'agroforesterie et d'agriculture durable. Grâce à notre approche intégrée, nous fournissons des solutions fiables, des données précises et un accompagnement sur mesure pour garantir le succès de vos initiatives."
+                : "DRONEK combines field expertise, innovative technologies, and environmental commitment to support your forestry, agroforestry, and sustainable agriculture projects. Through our integrated approach, we provide reliable solutions, accurate data, and tailored support to ensure the success of your initiatives."
               }
             </motion.p>
           </div>
 
-          {/* Feature blocks */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {whyFeatures.map((feature, idx) => {
-              const Icon = feature.icon;
-              // Define individual animations based on index to match footer style
-              const animProps = [
-                { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, delay: 0 },
-                { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, delay: 0.1 },
-                { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, delay: 0.2 },
-                { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, delay: 0.3 },
-              ][idx] || { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, delay: 0 };
-
-              return (
-                <motion.div 
-                  key={feature.num} 
-                  initial={animProps.initial}
-                  whileInView={animProps.whileInView}
-                  transition={{ duration: 0.8, delay: animProps.delay, ease: "easeOut" }}
-                  viewport={{ once: true }}
-                  className="group h-full"
-                >
-                  <div className="relative h-full p-6 lg:p-8 rounded-2xl border border-black/10 bg-white/80 hover:border-dronek-green/30 transition-all duration-500 hover:bg-white">
-                    <div className="absolute top-4 right-4 w-16 h-16 pointer-events-none opacity-100">
-                      <Image src={feature.image} alt={feature.title(lang)} fill className="object-contain" />
-                    </div>
-                    <div className="relative space-y-4">
-                      <h3 className="text-xl lg:text-2xl font-bold text-dronek-text">{feature.title(lang)}</h3>
-                      <p className="text-dronek-medium text-base lg:text-lg leading-relaxed">{feature.desc(lang)}</p>
-                      <div className="h-0.5 w-12 bg-dronek-green/50 rounded-full" />
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+          {/* Feature blocks - Removed */}
         </div>
       </Section>
 
@@ -1367,42 +1527,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             {/* Middle: Title, Description, Checkmarks and CTA (5 columns) */}
             <div className="lg:col-span-5 space-y-6 text-left">
               <div className="space-y-3 text-center lg:text-left">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">
-                  DSM
-                </h2>
-                <p className="text-dronek-green text-lg font-bold leading-relaxed">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#149655] tracking-tight leading-tight">
                   {lang === 'fr' 
-                    ? "Surveillez la météo de vos parcelles sur Dronek Smart Monitoring et ajustez votre planning d'irrigation en direct."
-                    : "Monitor the weather on your fields with Dronek Smart Monitoring and adjust your irrigation schedule live."}
+                    ? "Découvrez DSM (Dronek Smart Monitoring)"
+                    : "Discover DSM (Dronek Smart Monitoring)"}
+                </h2>
+                <p className="text-dronek-text text-lg font-bold leading-relaxed">
+                  {lang === 'fr' 
+                    ? "DSM – DRONEK SMART MONITORING centralise le suivi des projets de reboisement, la cartographie des parcelles, le monitoring des plants et l’analyse par intelligence artificielle. Une plateforme moderne conçue pour améliorer la traçabilité, la prise de décision et la transparence des initiatives environnementales."
+                    : "DSM – DRONEK SMART MONITORING centralizes reforestation project tracking, parcel mapping, plant monitoring, and artificial intelligence analysis. A modern platform designed to improve traceability, decision-making, and transparency of environmental initiatives."}
                 </p>
               </div>
-
-              <ul className="space-y-4 text-dronek-text font-medium text-base">
-                <li className="flex items-start gap-3">
-                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
-                  <span>
-                    {lang === 'fr'
-                      ? "Mesurez avec précision les facteurs climatiques susceptibles de stresser vos cultures."
-                      : "Accurately measure climate factors likely to stress your crops."}
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
-                  <span>
-                    {lang === 'fr'
-                      ? "Visualisez en direct les précipitations, températures, humidité, ainsi que le vent grâce aux capteurs Dronek."
-                      : "View live precipitation, temperature, humidity, and wind thanks to Dronek sensors."}
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-black font-extrabold mt-0.5 select-none">✓</span>
-                  <span>
-                    {lang === 'fr'
-                      ? "Accédez à vos rapports agronomiques et alertes critiques sur l’interface Dronek Smart Monitoring."
-                      : "Access your agronomic reports and critical alerts on the Dronek Smart Monitoring interface."}
-                  </span>
-                </li>
-              </ul>
 
               <div className="pt-2 text-center lg:text-left">
                 <Button
@@ -1470,7 +1605,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </motion.div>
 
               <div className="text-center">
-                <span className="block text-black text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight mb-1">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
                   {"Nos Projets".split('').map((char, i) => (
                     <motion.span
                       key={i}
@@ -1478,41 +1613,30 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
-                      className="inline-block"
+                      className="inline-block text-black"
                     >
                       {char === ' ' ? '\u00A0' : char}
                     </motion.span>
                   ))}
-                </span>
-                <h2 className="text-[#149655] text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
-                  {"phares".split('').map((char, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: (i + 11) * 0.08, ease: "easeOut" }}
-                      className="inline-block"
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </motion.span>
-                  ))}
+                  {' '}
+                  <span className="text-[#149655]">
+                    {"phares".split('').map((char, i) => (
+                      <motion.span
+                        key={i + 11}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: (i + 11) * 0.08, ease: "easeOut" }}
+                        className="inline-block"
+                      >
+                        {char === ' ' ? '\u00A0' : char}
+                      </motion.span>
+                    ))}
+                  </span>
                 </h2>
               </div>
             </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="mt-6 text-[#444] text-base sm:text-lg max-w-3xl mx-auto leading-relaxed font-medium"
-            >
-              {lang === 'fr'
-                ? "Dronek se distingue par une solide expertise technique et une maîtrise des innovations technologiques dans les secteurs de la foresterie et de l'agriculture."
-                : "Dronek distinguishes itself with solid technical expertise and mastery of technological innovations in the forestry and agriculture sectors."
-              }
-            </motion.p>
           </div>
         </div>
       </Section>
@@ -1670,13 +1794,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       <AnimatePresence>
         {selectedHomeProject && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            {/* Backdrop Blur & Overlay */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedHomeProject(null)}
-              className="absolute inset-0 transition-all"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
             />
             
             {/* Popup Container */}
@@ -1785,6 +1908,88 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         </filter>
       </svg>
     </div>
+  );
+}
+
+const teamFadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+function MemberCard({ member, idx }: { member: TeamMember; idx: number }) {
+  const [imageError, setImageError] = useState(false);
+  const { lang } = useLanguage();
+
+  const formattedName = React.useMemo(() => {
+    let name = member.name.trim();
+    const parts = name.split(' ');
+    
+    if (parts.length === 4 && 
+        parts[0].toLowerCase() === parts[2].toLowerCase() && 
+        parts[1].toLowerCase() === parts[3].toLowerCase()) {
+      name = `${parts[0]} ${parts[1]}`;
+    } else if (parts.length === 2 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
+      name = parts[0];
+    }
+
+    return name.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  }, [member.name]);
+
+  const imgSrc = imageError 
+    ? '/images/founder.jpg'
+    : (member.image.startsWith('http') || member.image.startsWith('/') ? member.image : `/images/${member.image}`);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 150 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 1.5, delay: idx * 0.2, ease: "easeOut" }}
+      className="h-full"
+    >
+      <div className="group flex flex-col items-center text-center p-2 sm:p-4">
+        <div className="relative rounded-full overflow-hidden shadow-2xl mb-6 lg:mb-8 group-hover:shadow-dronek-green/20 transition-all duration-500 bg-gray-100"
+             style={{ 
+               width: 'clamp(140px, 40vw, 256px)', 
+               height: 'clamp(140px, 40vw, 256px)' 
+             }}
+        >
+          <img
+            src={imgSrc}
+            alt={member.name}
+            className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+            onError={() => setImageError(true)}
+          />
+          
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 px-4">
+            {[
+              { icon: Facebook, href: member.facebook },
+              { icon: Linkedin, href: member.linkedin },
+              { icon: Mail, href: member.email ? `mailto:${member.email}` : null }
+            ].map((social, sIdx) => social.href ? (
+              <a
+                key={sIdx}
+                href={social.href}
+                target={social.icon === Mail ? "_self" : "_blank"}
+                rel="noopener noreferrer"
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-dronek-green rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-110 transition-transform duration-200"
+              >
+                <social.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </a>
+            ) : null)}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center text-center h-full">
+          <h3 className="text-xl lg:text-2xl font-bold text-[#149655] leading-tight tracking-tight mb-3">
+            {formattedName}
+          </h3>
+          <p className="text-[#71807e] font-medium text-base lg:text-xl leading-relaxed whitespace-pre-line">
+            {member.role}
+          </p>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 

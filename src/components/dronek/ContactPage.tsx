@@ -151,7 +151,7 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
             className="text-center"
           >
             <h1 className="text-4xl lg:text-6xl font-montserrat-extrabold text-white uppercase tracking-[0.2em] leading-tight">
-              {"Parlons-en".split('').map((char, i) => (
+              {"Contactez-nous".split('').map((char, i) => (
                 <motion.span
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
@@ -183,16 +183,10 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
               className="space-y-8 lg:pr-8"
             >
               <div>
-                <motion.p variants={fadeInUp} className="text-[#2d7a3a] font-medium text-sm mb-4">
-                </motion.p>
-                <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                  <span className="text-[#1a4a2e]">{lang === 'fr' ? 'Contactez-nous' : 'Contact us'}</span><br />
-                  <span className="text-black font-normal">{lang === 'fr' ? 'aujourd\'hui' : 'today'}</span>
-                </motion.h2>
                 <motion.p variants={fadeInUp} className="text-gray-500 text-base sm:text-lg mt-6 leading-relaxed max-w-lg">
                   {lang === 'fr' 
-                    ? 'Remplissez le formulaire suivant pour toute demande de soumission ou d\'information. Propulsons votre croissance opérationnelle grâce à la technologie aérienne par drones.'
-                    : 'Fill out the following form for any quote or information request. Let\'s boost your operational growth with drone aerial technology.'}
+                    ? 'Remplissez ce formulaire pour toute demande d\'information ou de collaboration.'
+                    : 'Please complete this form for any information request or collaboration inquiry.'}
                 </motion.p>
               </div>
 

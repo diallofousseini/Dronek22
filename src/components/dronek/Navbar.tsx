@@ -13,7 +13,6 @@ export type PageView =
   | 'projects'
   | 'blog'
   | 'blog-impact'
-  | 'team'
   | 'production'
   | 'services'
   | 'contact'
@@ -91,7 +90,6 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
 
   const navLinks = [
     { label: t.nav.projects, page: 'projects' as PageView, icon: BriefcaseBusiness },
-    { label: t.nav.team, page: 'team' as PageView, icon: Users },
     { label: t.nav.production, page: 'production' as PageView, icon: MapPinned },
     { label: t.nav.contact, page: 'contact' as PageView, icon: Mail },
   ];

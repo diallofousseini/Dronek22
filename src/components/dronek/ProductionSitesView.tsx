@@ -161,9 +161,7 @@ export default function ProductionSitesView() {
                 <MapPin className="w-4 h-4" />
                 {card.location}
               </p>
-              <p className="mt-4 text-[#1d3b34] text-[15px] sm:text-lg leading-7">
-                {card.desc}
-              </p>
+              {/* description removed per design: keep layout concise */}
 
               {card.stats && (
                 <div className="mt-8 space-y-6">
