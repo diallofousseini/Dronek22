@@ -351,7 +351,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Computer Mockup Displaying Active Screen */}
             <div className="lg:col-span-7 flex flex-col items-center">
-              <div className="relative w-full max-w-[600px] aspect-[16/10] hover:scale-[1.02] transition-transform duration-500 mb-6">
+              <div className="relative w-full max-w-[600px] aspect-[653/382] hover:scale-[1.02] transition-transform duration-500 mb-6">
                 <Image
                   src="/images/ordinateur.png"
                   fill
@@ -359,7 +359,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                   alt="DSM Computer Mockup"
                   priority
                 />
-                <div className="absolute top-[11.5%] left-[13.1%] right-[13.1%] bottom-[21.2%] overflow-hidden bg-black z-20">
+                <div className="absolute top-[6.28%] left-[10.26%] right-[10.72%] bottom-[4.45%] overflow-hidden bg-black z-20">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeScreenIndex}
