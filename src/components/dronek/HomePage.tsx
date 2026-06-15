@@ -413,6 +413,48 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const [dynamicProjects, setDynamicProjects] = useState<any[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
   const [selectedHomeProject, setSelectedHomeProject] = useState<any>(null);
+  const [heroServices, setHeroServices] = useState<any[]>([]);
+
+  const defaultHeroServices = React.useMemo(() => [
+    {
+      id: 'forestry',
+      title: t.services?.forestry?.name || (lang === 'fr' ? 'Foresterie' : 'Forestry'),
+      image: '/images/hero-forest.jpg',
+      service_type: 'forestry'
+    },
+    {
+      id: 'drone',
+      title: t.services?.drone?.name || (lang === 'fr' ? 'Drone et Cartographie' : 'Drone and Mapping'),
+      image: '/images/hero-drone.jpg',
+      service_type: 'drone'
+    },
+    {
+      id: 'surveillance',
+      title: t.services?.surveillance?.name || (lang === 'fr' ? 'Agroforesterie' : 'Agroforestry'),
+      image: '/images/hero-agroforestry.jpg',
+      service_type: 'surveillance'
+    },
+    {
+      id: 'agriculture',
+      title: t.services?.agriculture?.name || (lang === 'fr' ? 'Agriculture' : 'Agriculture'),
+      image: '/images/hero-agriculture.jpg',
+      service_type: 'agriculture'
+    }
+  ], [lang, t]);
+
+  const slides = heroServices.length > 0 ? heroServices : defaultHeroServices;
+
+  const getServiceActivityLabel = useCallback((service: any, currentLang: string) => {
+    const type = (service.service_type || service.serviceType || service.id || '').toLowerCase();
+    const title = (service.title || service.titre || '').toLowerCase();
+    if (type.includes('agriculture') || title.includes('agriculture') || title.includes('culture') || title.includes('élevage') || title.includes('elevage') || title.includes('serre')) {
+      return currentLang === 'fr' ? 'Agriculture' : 'Agriculture';
+    }
+    if (type.includes('drone') || type.includes('tech') || title.includes('drone') || title.includes('cartographie') || title.includes('sig') || title.includes('lidar') || title.includes('technologie')) {
+      return currentLang === 'fr' ? 'Drone & Technologie' : 'Drone & Technology';
+    }
+    return currentLang === 'fr' ? 'Foresterie' : 'Forestry';
+  }, []);
 
   const heroActivities = React.useMemo(() => [
     {
@@ -599,6 +641,36 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         setDynamicServices(getFallbackServices(lang));
       }
 
+      // 5. Fetch Services for Hero Slideshow
+      try {
+        const { data: servicesData, error: servicesError } = await supabase
+          .from('services')
+          .select('*')
+          .or('service_type.neq.domain,service_type.is.null')
+          .in('statut', ['publie', 'Publié', 'Published'])
+          .order('created_at', { ascending: false });
+        
+        if (servicesError) {
+          console.error('[HomePage Fetch] Error fetching services for hero:', servicesError);
+        } else if (servicesData && servicesData.length > 0) {
+          const mapped = servicesData.map((s: any) => {
+            let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
+            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+               imageUrl = '/images/hero-forest.jpg';
+            }
+            return {
+              id: s.id,
+              title: s.titre || s.title || '',
+              image: imageUrl,
+              service_type: s.service_type || ''
+            };
+          });
+          setHeroServices(mapped);
+        }
+      } catch (err) {
+        console.error('[HomePage Fetch] Exception fetching services for hero:', err);
+      }
+
       // 6. Fetch Team
       try {
         const { data: teamData, error: teamError } = await supabase
@@ -638,8 +710,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   // Auto-rotate hero items
   const heroItems = React.useMemo(() => {
-    return heroActivities.map(s => ({ type: 'image' as const, image: s.image, title: s.title }));
-  }, [heroActivities]);
+    return slides.map(s => ({ type: 'image' as const, image: s.image, title: s.title }));
+  }, [slides]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -740,14 +812,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             transition={{ duration: 0.8 }}
             className="space-y-6 mt-[-16px] drop-shadow-2xl"
           >
-            {/* Tagline/Badge above the main title */}
-            <motion.div variants={fadeInUp} className="flex justify-center mb-1">
-              <span className="bg-dronek-green/20 text-dronek-green border border-dronek-green/30 px-5 py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm">
-                {lang === 'fr' ? 'Nos Activités' : 'Our Activities'}
-              </span>
-            </motion.div>
-
-            {/* Title — Animated rotating activity name in grand characters */}
+            {/* Title — Animated rotating service name in grand characters */}
             <motion.h1
               variants={fadeInUp}
               className="text-white font-bold uppercase leading-[1.05] max-w-6xl mx-auto flex flex-col items-center justify-center gap-1 sm:gap-2 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]"
@@ -762,11 +827,41 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     exit={{ y: -40, opacity: 0, transition: { duration: 0.35 } }}
                     className="block text-center leading-[1.08] font-bold"
                   >
-                    {heroActivities[heroIndex]?.title}
+                    {slides[heroIndex]?.title}
                   </motion.span>
                 </AnimatePresence>
               </div>
             </motion.h1>
+
+            {/* Rotating Text Effect: Nos Activités */}
+            <motion.div
+              variants={fadeInUp}
+              className="min-h-[3rem] sm:min-h-[3.5rem] flex flex-wrap items-center justify-center overflow-visible px-4 mt-2"
+            >
+              <span className="text-sm sm:text-lg lg:text-2xl font-medium mr-1.5 text-white whitespace-nowrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                {lang === 'fr' ? 'Nos Activités :' : 'Our Activities:'}
+              </span>
+              <div className="relative inline-flex items-center">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={heroIndex}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1, transition: { duration: 0.4 } }}
+                    exit={{ y: -20, opacity: 0, transition: { duration: 0.3 } }}
+                    className="text-sm sm:text-lg lg:text-2xl text-white font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                  >
+                    {slides[heroIndex] ? getServiceActivityLabel(slides[heroIndex], lang) : ''}
+                  </motion.span>
+                </AnimatePresence>
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
+                  className="text-lg sm:text-xl lg:text-2xl text-dronek-green font-light ml-0.5"
+                >
+                  |
+                </motion.span>
+              </div>
+            </motion.div>
 
             {/* CTA Buttons — Prominent */}
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 sm:pt-4">

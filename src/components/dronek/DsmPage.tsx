@@ -349,20 +349,20 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Column: Computer Mockup Displaying Active Screen */}
+            {/* Left Column: Tablet Mockup Displaying Active Screen */}
             <div className="lg:col-span-7 flex flex-col items-center justify-center">
-              <div className="relative w-full max-w-[600px] aspect-[653/382] mx-auto mb-6 transition-transform duration-500 hover:scale-[1.02]">
-                {/* L'image de l'ordinateur qui dicte naturellement la taille du conteneur parent */}
+              <div className="relative w-full max-w-[480px] aspect-[1448/1086] mx-auto mb-6 transition-transform duration-500 hover:scale-[1.02]">
+                {/* L'image de la tablette qui dicte naturellement la taille du conteneur parent */}
                 <Image
-                  src="/images/ordinateur.png"
+                  src="/images/tablette.png"
                   fill
                   className="object-contain pointer-events-none relative z-10"
-                  alt="DSM Computer Mockup"
+                  alt="DSM Tablet Mockup"
                   priority
                 />
                 
-                {/* L'écran interne dynamique, calé au pourcentage exact de l'ordinateur */}
-                <div className="absolute top-[6.28%] left-[10.26%] right-[10.87%] bottom-[11.78%] overflow-hidden bg-black z-20 rounded-[2px]">
+                {/* L'écran interne dynamique, calé au pourcentage exact de la tablette */}
+                <div className="absolute top-[5.71%] left-[4.42%] right-[4.42%] bottom-[5.80%] overflow-hidden bg-black z-20 rounded-[4px]">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeScreenIndex}
