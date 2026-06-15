@@ -227,7 +227,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
               viewport={{ once: true, margin: "-100px" }}
               className="flex justify-center"
             >
-              <div className="relative w-full max-w-[600px] aspect-[653/382] hover:scale-[1.03] transition-transform duration-500">
+              <div className="relative w-full max-w-[600px] aspect-[653/382] transition-transform duration-500 hover:scale-[1.02]">
                 <Image
                   src="/images/ordinateur.png"
                   fill
@@ -351,7 +351,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Computer Mockup Displaying Active Screen */}
             <div className="lg:col-span-7 flex flex-col items-center">
-              <div className="relative w-full max-w-[600px] aspect-[653/382] hover:scale-[1.03] transition-transform duration-500 mb-6">
+              <div className="relative w-full max-w-full sm:max-w-[600px] aspect-[653/382] transition-transform duration-500 mb-6">
                 <Image
                   src="/images/ordinateur.png"
                   fill
@@ -359,7 +359,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                   alt="DSM Computer Mockup"
                   priority
                 />
-                <div className="absolute top-[6.1%] left-[10.0%] right-[10.5%] bottom-[4.2%] overflow-hidden bg-black z-20">
+                <div className="absolute top-[6.28%] left-[10.26%] right-[10.72%] bottom-[4.45%] overflow-hidden bg-black z-20 rounded-sm">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeScreenIndex}
