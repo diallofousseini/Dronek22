@@ -250,7 +250,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
               </h3>
               <p className="text-gray-600 text-base sm:text-lg leading-relaxed font-medium">
                 {lang === 'fr' 
-                  ? "Cette page d’accueil centralise les indicateurs écologiques globaux pour les partenaires. Elle affiche une bannière de bienvenue, quatre KPIs clés (1 projet, 1 parcelle, 5 usines/coopératives, 80% de taux de survie), et une carte résumant les statistiques du \"Premier projet\" (Bélier). La navigation est simplifiée via une sidebar (Tableau de bord, Espèces, Mon compte) et intègre un bouton d'installation PWA."
+                  ? "Cette page d’accueil centralise les indicateurs écologiques globaux pour les partenaires. Elle affiche une bannière de bienvenue, quatre KPIs clés ( Nombre projet, Nombre parcelle, Nombre Coopératives, taux de survie), et une carte résumant les statistiques du projet . La navigation est simplifiée via une sidebar (Tableau de bord, Espèces, Mon compte) et intègre un bouton d'installation PWA."
                   : "This home page centralizes global ecological indicators for partners. It displays a welcome banner, four key KPIs (1 project, 1 plot, 5 factories/cooperatives, 80% survival rate), and a map summarizing the statistics of the \"Premier projet\" (Bélier). Navigation is simplified via a sidebar (Tableau de bord, Espèces, Mon compte) and integrates a PWA installation button."}
               </p>
             </motion.div>
@@ -266,11 +266,11 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
               className="space-y-6 lg:order-1"
             >
               <h3 className="text-3xl lg:text-4xl font-extrabold text-dronek-dark leading-tight tracking-tight text-center">
-                {lang === 'fr' ? "Module Mon Compte" : "My Account Module"}
+                {lang === 'fr' ? "Mon Compte" : "My Account"}
               </h3>
               <p className="text-gray-600 text-base sm:text-lg leading-relaxed font-medium">
                 {lang === 'fr' 
-                  ? "Cette page fournit un espace personnel permettant à l'utilisateur de consulter ses informations de profil et son périmètre d'action. Elle présente l'identité visuelle de l'utilisateur (\"TYTY\"), son adresse e-mail (tyty@gmail.com), son niveau d'habilitation via le badge vert et le rôle \"Commanditaire\", ainsi qu'un compteur indiquant 1 projet personnellement affecté. La navigation reste structurée par la sidebar latérale gauche qui met en évidence l'onglet actif \"Mon compte\" , tandis que le haut de l'écran conserve le bouton d'installation PWA et le menu de profil."
+                  ? "Cette page fournit un espace personnel permettant à l'utilisateur de consulter ses informations de profil et son périmètre d'action. Elle présente le nom de l'utilisateur, son adresse e-mail, son niveau d'habilitation, ainsi qu'un compteur indiquant le nombre de projet qui lui est affecté. La navigation reste structurée par la sidebar latérale gauche qui met en évidence l'onglet actif \"Mon compte\" , tandis que le haut de l'écran conserve le bouton d'installation PWA et le menu de profil."
                   : "This page provides a personal space allowing the user to view their profile information and scope of action. It presents the user's visual identity (\"TYTY\"), their email address (tyty@gmail.com), their authorization level via the green badge and the \"Commanditaire\" role, as well as a counter indicating 1 personally assigned project. Navigation remains structured by the left lateral sidebar which highlights the active \"Mon compte\" tab, while the top of the screen retains the PWA installation button and the profile menu."}
               </p>
             </motion.div>
@@ -320,11 +320,11 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
               className="space-y-6"
             >
               <h3 className="text-3xl lg:text-4xl font-extrabold text-dronek-dark leading-tight tracking-tight text-center">
-                {lang === 'fr' ? "Modale d'Analyse IA du Projet" : "Project AI Analysis Modal"}
+                {lang === 'fr' ? "Analyse IA du Projet" : "Project AI Analysis"}
               </h3>
               <p className="text-gray-600 text-base sm:text-lg leading-relaxed font-medium">
                 {lang === 'fr' 
-                  ? "Cette interface mobile affiche le diagnostic agronomique automatisé généré par Dronek AI pour le \"Premier projet\". Elle présente un résumé textuel mettant en évidence une progression préliminaire (1 seule parcelle opérationnelle nommée \"Maparcelle\", 5 plantes installées sur un objectif de 500, soit 1 %) , complété par un bloc récapitulatif des \"Données analysées\" et un avertissement d'expertise agronomique. L'en-tête offre deux actions rapides : un bouton pour \"Relancer l'analyse\" et un bouton vert déroulant \"Rapport\" destiné à exporter ce diagnostic."
+                  ? "Cette interface mobile affiche le diagnostic automatisé généré par Dronek AI pour le \"Premier projet\". Elle présente un résumé textuel mettant en évidence une progression préliminaire (Nombre de parcelle opérationnelle nommée \"Maparcelle\", nombre de plantes installées sur un objectif) , complété par un bloc récapitulatif des \"Données analysées\" et un avertissement d'expertise . L'en-tête offre deux actions rapides : un bouton pour \"Relancer l'analyse\" et un bouton vert déroulant \"Rapport\" destiné à exporter ce diagnostic."
                   : "This mobile interface displays the automated agronomic diagnostic generated by Dronek AI for the \"Premier projet\". It presents a textual summary highlighting a preliminary progress (only 1 operational plot named \"Maparcelle\", 5 plants installed out of a target of 500, or 1%), completed by a summary block of \"Données analysées\" and an agronomic expertise disclaimer. The header offers two quick actions: a button to \"Relancer l'analyse\" and a green dropdown \"Rapport\" button intended to export this diagnostic."}
               </p>
             </motion.div>
@@ -351,7 +351,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Computer Mockup Displaying Active Screen */}
             <div className="lg:col-span-7 flex flex-col items-center">
-              <div className="relative w-full max-w-[600px] aspect-[653/382] hover:scale-[1.02] transition-transform duration-500 mb-6">
+              <div className="relative w-full max-w-[600px] aspect-[653/382] hover:scale-[1.03] transition-transform duration-500 mb-6">
                 <Image
                   src="/images/ordinateur.png"
                   fill
@@ -359,7 +359,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                   alt="DSM Computer Mockup"
                   priority
                 />
-                <div className="absolute top-[6.28%] left-[10.26%] right-[10.72%] bottom-[4.45%] overflow-hidden bg-black z-20">
+                <div className="absolute top-[6.1%] left-[10.0%] right-[10.5%] bottom-[4.2%] overflow-hidden bg-black z-20">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeScreenIndex}
@@ -551,8 +551,8 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
             >
               <p>
                 {lang === 'fr' 
-                  ? "DSM ne se limite pas à enregistrer des plantations. La plateforme combine monitoring opérationnel, géolocalisation, visualisation cartographique et intelligence artificielle pour offrir une vision complète de l’état des projets de reboisement."
-                  : "DSM is not limited to logging plantings. The platform combines operational monitoring, geolocation, map visualization, and artificial intelligence to offer a comprehensive view of reforestation project health."}
+                  ? "DSM ne se limite pas à enregistrer des données. La plateforme combine monitoring opérationnel, géolocalisation, visualisation cartographique et intelligence artificielle pour offrir une vision complète de l’état des projets de reboisement."
+                  : "DSM is not limited to logging data. The platform combines operational monitoring, geolocation, map visualization, and artificial intelligence to offer a comprehensive view of reforestation project health."}
               </p>
               <p className="text-gray-500 font-normal text-sm sm:text-base">
                 {lang === 'fr' 
@@ -575,56 +575,28 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-dronek-dark leading-[1.1] tracking-tight text-center">
                   {lang === 'fr' ? (
                     <>
-                      Accédez à l&apos;<span className="text-[#149655]">application DSM</span><br />
-                      depuis votre mobile
+                      Accédez à l&apos;<span className="text-[#149655]">application DSM</span>
                     </>
                   ) : (
                     <>
-                      Access the <span className="text-[#149655]">DSM App</span><br />
-                      from your mobile
+                      Access the <span className="text-[#149655]">DSM App</span>
                     </>
                   )}
                 </h2>
-                <p className="text-gray-600 font-medium text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-                  {lang === 'fr' 
-                    ? "Scannez le QR code ci-dessous pour accéder directement à l'application DSM depuis votre smartphone et gérer vos parcelles où que vous soyez."
-                    : "Scan the QR code below to directly access the DSM application from your smartphone and manage your plots wherever you are."}
-                </p>
               </div>
 
-              {/* Flex container to align Demo button and reduced QR code horizontally on same line */}
-              <div className="flex flex-row items-center justify-center gap-6 mt-8 flex-wrap">
-                {/* Demo button pointing to Contact page — slightly to the left */}
-                <div className="-translate-x-2">
-                  <Button
-                    onClick={() => onNavigate('contact')}
-                    className="inline-flex items-center gap-2 bg-[#149655] hover:bg-[#0f7d43] text-white font-bold px-8 py-3.5 text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-                    style={{ borderRadius: 0 }}
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    {lang === 'fr' ? 'Demander une démonstration' : 'Request a demo'}
-                  </Button>
-                </div>
-
-                {/* QR Code — considerably smaller, positioned slightly right */}
-                <div className="flex items-center gap-3 translate-x-2">
-                  <div className="border border-[#149655]/20 bg-white p-2 shadow-md" style={{ borderRadius: 0 }}>
-                    <div className="relative w-[100px] h-[100px]">
-                      <Image
-                        src="/images/dsm-qr-code.png"
-                        alt="QR Code DSM App"
-                        fill
-                        className="object-contain"
-                        style={{ borderRadius: 0 }}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-normal max-w-[95px] text-left">
-                    {lang === 'fr' ? 'Scanner pour accéder' : 'Scan to access'}
-                  </p>
-                </div>
+              {/* Flex container to align Demo button */}
+              <div className="flex flex-row items-center justify-center mt-8">
+                <Button
+                  onClick={() => onNavigate('contact')}
+                  className="inline-flex items-center gap-2 bg-[#149655] hover:bg-[#0f7d43] text-white font-bold px-8 py-3.5 text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ borderRadius: 0 }}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {lang === 'fr' ? 'Demander une démonstration' : 'Request a demo'}
+                </Button>
               </div>
             </div>
             
