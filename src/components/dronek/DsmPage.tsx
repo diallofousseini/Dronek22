@@ -351,37 +351,24 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Computer Mockup Displaying Active Screen */}
             <div className="lg:col-span-7 flex flex-col items-center justify-center">
-              <div className="relative w-full max-w-[600px] mx-auto mb-6">
-                {/* L'image de l'ordinateur qui dicte naturellement la taille du conteneur parent */}
-                <Image
-                  src="/images/ordinateur.png"
-                  width={653}
-                  height={382}
-                  className="w-full h-auto block pointer-events-none relative z-10"
-                  alt="DSM Computer Mockup"
-                  priority
-                />
-                
-                {/* L'écran interne dynamique, calé au pourcentage exact de l'ordinateur */}
-                <div className="absolute top-[6.28%] left-[10.26%] right-[10.72%] bottom-[4.45%] overflow-hidden bg-black z-20 rounded-sm">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeScreenIndex}
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.3 }}
-                      className="absolute inset-0 w-full h-full"
-                    >
-                      <Image
-                        src={screens[activeScreenIndex].image}
-                        fill
-                        className="object-cover"
-                        alt={screens[activeScreenIndex].title}
-                      />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+              <div className="relative w-full max-w-[600px] aspect-[16/10] mx-auto mb-6 rounded-xl overflow-hidden shadow-2xl border border-gray-100 bg-gray-50">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeScreenIndex}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 w-full h-full"
+                  >
+                    <Image
+                      src={screens[activeScreenIndex].image}
+                      fill
+                      className="object-cover"
+                      alt={screens[activeScreenIndex].title}
+                    />
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
               {/* Centered description line directly below the laptop mockup */}
