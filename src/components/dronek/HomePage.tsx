@@ -410,33 +410,24 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const { t, lang } = useLanguage();
   const [heroIndex, setHeroIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
-  const [heroSloganIndex, setHeroSloganIndex] = useState(0);
   const [dynamicProjects, setDynamicProjects] = useState<any[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
   const [selectedHomeProject, setSelectedHomeProject] = useState<any>(null);
 
-  const defaultServices = React.useMemo(() => [
+  const heroActivities = React.useMemo(() => [
     {
-      title: t.services?.forestry?.name || (lang === 'fr' ? 'Foresterie' : 'Forestry'),
-      image: '/images/hero-forest.jpg',
-      service_type: 'forestry'
+      title: lang === 'fr' ? 'Agriculture' : 'Agriculture',
+      image: '/images/hero-agriculture.jpg'
     },
     {
-      title: t.services?.drone?.name || (lang === 'fr' ? 'Drone et Cartographie' : 'Drone and Mapping'),
-      image: '/images/hero-drone.jpg',
-      service_type: 'drone'
+      title: lang === 'fr' ? 'Foresterie' : 'Forestry',
+      image: '/images/hero-forest.jpg'
     },
     {
-      title: t.services?.surveillance?.name || (lang === 'fr' ? 'Agroforesterie' : 'Agroforestry'),
-      image: '/images/hero-agroforestry.jpg',
-      service_type: 'surveillance'
-    },
-    {
-      title: t.services?.agriculture?.name || (lang === 'fr' ? 'Agriculture' : 'Agriculture'),
-      image: '/images/hero-agriculture.jpg',
-      service_type: 'agriculture'
+      title: lang === 'fr' ? 'Drone & Technologie' : 'Drone & Technology',
+      image: '/images/hero-drone.jpg'
     }
-  ], [lang, t]);
+  ], [lang]);
 
   const handleNav = useCallback((page: PageView) => {
     onNavigate(page);
@@ -459,7 +450,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     return label || name.slice(0, 6);
   };
 
-  const [heroServices, setHeroServices] = useState<Array<{ title: string; image: string; service_type?: string }>>([]);
   const [dynamicServices, setDynamicServices] = useState<any[]>([]);
   const [dynamicMembers, setDynamicMembers] = useState<TeamMember[]>([]);
 
@@ -609,55 +599,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         setDynamicServices(getFallbackServices(lang));
       }
 
-      // 5. Fetch Services for Hero Slideshow (matching AllServices page)
-      try {
-        const { data: servicesData, error: servicesError } = await supabase
-          .from('services')
-          .select('*')
-          .or('service_type.neq.domain,service_type.is.null')
-          .in('statut', ['publie', 'Publié', 'Published'])
-          .order('created_at', { ascending: false });
-        
-        if (servicesError) {
-          console.error('[HomePage Fetch] Error fetching services for hero:', servicesError);
-          setHeroServices(defaultServices);
-        } else if (servicesData && servicesData.length > 0) {
-          const mapped = servicesData.map((s: any) => {
-            let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
-            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
-               imageUrl = '/images/hero-forest.jpg';
-            }
-            return {
-              title: s.titre || s.title || (lang === 'fr' ? 'Sans titre' : 'Untitled'),
-              image: imageUrl,
-              service_type: s.service_type || ''
-            };
-          });
-          
-          const sorted = mapped.sort((a: any, b: any) => {
-            const getVal = (item: any) => {
-              const type = (item.service_type || '').toLowerCase();
-              const title = (item.title || '').toLowerCase();
-              if (type.includes('agriculture') || title.includes('agriculture') || title.includes('culture') || title.includes('élevage') || title.includes('elevage')) {
-                return 1;
-              }
-              if (type.includes('drone') || type.includes('tech') || title.includes('drone') || title.includes('cartographie') || title.includes('sig') || title.includes('lidar') || title.includes('technologie')) {
-                return 2;
-              }
-              return 0;
-            };
-            return getVal(a) - getVal(b);
-          });
-          
-          setHeroServices(sorted);
-        } else {
-          setHeroServices(defaultServices);
-        }
-      } catch (err) {
-        console.error('[HomePage Fetch] Exception fetching services for hero:', err);
-        setHeroServices(defaultServices);
-      }
-
       // 6. Fetch Team
       try {
         const { data: teamData, error: teamError } = await supabase
@@ -697,9 +638,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   // Auto-rotate hero items
   const heroItems = React.useMemo(() => {
-    const list = heroServices.length > 0 ? heroServices : defaultServices;
-    return list.map(s => ({ type: 'image' as const, image: s.image }));
-  }, [heroServices, defaultServices]);
+    return heroActivities.map(s => ({ type: 'image' as const, image: s.image, title: s.title }));
+  }, [heroActivities]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -722,62 +662,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     { num: '03', title: (lang: string) => lang === 'fr' ? 'Exploitation' : 'Exploitation', desc: (lang: string) => lang === 'fr' ? 'Exploitation stratégique des informations pour vos projets.' : 'Strategic use of information for your projects.', icon: Leaf, image: '/images/female-services-support.png' },
     { num: '04', title: (lang: string) => lang === 'fr' ? 'Livraison' : 'Delivery', desc: (lang: string) => lang === 'fr' ? 'Remise des résultats finaux et accompagnement.' : 'Delivery of final results and support.', icon: Users, image: '/images/delivery-truck.png' },
   ];
-
-  const rotatingPhrases = React.useMemo(() => {
-    const list = heroServices.length > 0 ? heroServices : defaultServices;
-    return list.map(s => s.title);
-  }, [heroServices, defaultServices]);
-
-  const heroSlogans = lang === 'fr'
-    ? [
-        'Production de plants',
-        'Aménagement forestier',
-        'Inventaire forestier',
-        'Reboisement',
-        'Agriculture durable & agroforesterie',
-        'Audits des projets et travaux forestiers',
-        'Étude d’impact environnementale et sociale (EIES)',
-        'Formation aux métiers de la foresterie & de l’agriculture',
-        'Technologies & analyse SIG géospatiales',
-        'Construction de serre'
-      ]
-    : [
-        'Seedling production',
-        'Forest management',
-        'Forest inventory',
-        'Reforestation',
-        'Sustainable agriculture & agroforestry',
-        'Forestry audits',
-        'Environmental & Social Impact Studies',
-        'Forestry & Agriculture training',
-        'GIS & Geospatial Analysis',
-        'Greenhouse construction'
-      ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHeroSloganIndex((prev) => (prev + 1) % heroSlogans.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [heroSlogans.length]);
-
-
-
-  const prevHeroSlide = useCallback(() => {
-    setHeroIndex((prev) => (prev === 0 ? heroItems.length - 1 : prev - 1));
-  }, [heroItems.length]);
-
-  const nextHeroSlide = useCallback(() => {
-    setHeroIndex((prev) => (prev + 1) % heroItems.length);
-  }, [heroItems.length]);
-
-  const prevHeroSlogan = useCallback(() => {
-    setHeroSloganIndex((prev) => (prev === 0 ? heroSlogans.length - 1 : prev - 1));
-  }, [heroSlogans.length]);
-
-  const nextHeroSlogan = useCallback(() => {
-    setHeroSloganIndex((prev) => (prev + 1) % heroSlogans.length);
-  }, [heroSlogans.length]);
 
   const testimonials = t.testimonials.items;
   const testimonialAvatars = ['/images/team1.jpg', '/images/team2.jpg', '/images/team3.jpg'];
@@ -854,9 +738,16 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             animate="visible"
             variants={stagger}
             transition={{ duration: 0.8 }}
-            className="space-y-7 mt-[-16px] drop-shadow-2xl"
+            className="space-y-6 mt-[-16px] drop-shadow-2xl"
           >
-            {/* Title — Animated rotating slogan */}
+            {/* Tagline/Badge above the main title */}
+            <motion.div variants={fadeInUp} className="flex justify-center mb-1">
+              <span className="bg-dronek-green/20 text-dronek-green border border-dronek-green/30 px-5 py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm">
+                {lang === 'fr' ? 'Nos Activités' : 'Our Activities'}
+              </span>
+            </motion.div>
+
+            {/* Title — Animated rotating activity name in grand characters */}
             <motion.h1
               variants={fadeInUp}
               className="text-white font-bold uppercase leading-[1.05] max-w-6xl mx-auto flex flex-col items-center justify-center gap-1 sm:gap-2 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]"
@@ -865,47 +756,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="min-h-[1.5em] flex items-center justify-center">
                 <AnimatePresence mode="wait">
                   <motion.span
-                    key={heroSloganIndex}
+                    key={heroIndex}
                     initial={{ y: 40, opacity: 0 }}
                     animate={{ y: 0, opacity: 1, transition: { duration: 0.5 } }}
                     exit={{ y: -40, opacity: 0, transition: { duration: 0.35 } }}
                     className="block text-center leading-[1.08] font-bold"
                   >
-                    {heroSlogans[heroSloganIndex]}
+                    {heroActivities[heroIndex]?.title}
                   </motion.span>
                 </AnimatePresence>
               </div>
             </motion.h1>
-
-            {/* Rotating Text Effect */}
-            <motion.div
-              variants={fadeInUp}
-              className="min-h-[3rem] sm:min-h-[3.5rem] flex flex-wrap items-center justify-center overflow-visible px-4"
-            >
-              <span className="text-sm sm:text-lg lg:text-2xl font-medium mr-1.5 text-white whitespace-nowrap">
-                {lang === 'fr' ? 'Nos Activités :' : 'Our Activities:'}
-              </span>
-              <div className="relative inline-flex items-center">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={heroIndex % rotatingPhrases.length}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1, transition: { duration: 0.4 } }}
-                    exit={{ y: -20, opacity: 0, transition: { duration: 0.3 } }}
-                    className="text-sm sm:text-lg lg:text-2xl text-white font-bold"
-                  >
-                    {rotatingPhrases[heroIndex % rotatingPhrases.length]}
-                  </motion.span>
-                </AnimatePresence>
-                <motion.span
-                  animate={{ opacity: [1, 0] }}
-                  transition={{ duration: 0.6, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-                  className="text-lg sm:text-xl lg:text-2xl text-dronek-green font-light ml-0.5"
-                >
-                  |
-                </motion.span>
-              </div>
-            </motion.div>
 
             {/* CTA Buttons — Prominent */}
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 sm:pt-4">
