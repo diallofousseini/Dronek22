@@ -144,7 +144,7 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-white/80 text-sm lg:text-base font-medium leading-relaxed"
+                className="text-white text-sm lg:text-base font-bold leading-relaxed"
               >
                 {t.production.subtitle}
               </motion.p>

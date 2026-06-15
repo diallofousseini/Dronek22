@@ -20,6 +20,7 @@ interface DashboardItem {
   table: string;
   url?: string;
   sujet?: string;
+  service_type?: string;
 }
 
 const StatusToggle = ({ item, onToggle, lang }: { item: DashboardItem, onToggle: (item: DashboardItem) => void, lang: string }) => {
@@ -301,7 +302,13 @@ export default function AdminDashboard() {
       'actualites': 'actualite'
     };
     const type = typeMap[tableName] || 'service';
-    router.push(`/admin/services/new?type=${type}&id=${id}`);
+    const isDomain = tableName === 'services' && (
+      item?.service_type === 'domain' || 
+      item?.category === "Domaine d'expertise" || 
+      item?.category === "Domain of expertise"
+    );
+    const modeParam = isDomain ? '&mode=featured' : '';
+    router.push(`/admin/services/new?type=${type}&id=${id}${modeParam}`);
   };
 
   return (
@@ -391,13 +398,6 @@ export default function AdminDashboard() {
               </Link>
             )}
 
-            <button
-              onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
-              className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold transition-all text-xs uppercase text-gray-700 shadow-sm"
-            >
-              <Globe className="w-4 h-4 text-[#149655]" />
-              <span>{lang}</span>
-            </button>
 
             <button 
               onClick={handleLogout}

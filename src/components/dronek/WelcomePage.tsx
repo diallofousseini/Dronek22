@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from './LanguageProvider';
 
 interface WelcomePageProps {
   onEnter: () => void;
 }
 
 export default function WelcomePage({ onEnter }: WelcomePageProps) {
+  const { lang } = useLanguage();
   const [titleIndex, setTitleIndex] = useState(0);
-  const titles = ["WELCOME", "BIENVENUE"];
+  const titles = lang === 'fr' ? ["BIENVENUE", "WELCOME"] : ["WELCOME", "BIENVENUE"];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,7 +60,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
               />
             </div>
             <h2 className="text-white/90 text-[12px] sm:text-[15px] md:text-[18px] font-semibold tracking-wide mt-2 text-center px-2">
-              Foresterie - Agriculture - Technologie
+              {lang === 'fr' ? "Foresterie - Agriculture - Technologie" : "Forestry - Agriculture - Technology"}
             </h2>
           </motion.div>
 
@@ -97,7 +99,9 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
             </div>
             
             <p className="text-white/95 text-xs sm:text-base lg:text-lg max-w-3xl font-medium leading-relaxed mt-4 drop-shadow-sm text-center px-2">
-              Solutions innovantes par drone pour l'agriculture, l'inventaire forestier et la surveillance environnementale. Technologie au service de la durabilité.
+              {lang === 'fr'
+                ? "Solutions innovantes par drone pour l'agriculture, l'inventaire forestier et la surveillance environnementale. Technologie au service de la durabilité."
+                : "Innovative drone solutions for agriculture, forest inventory, and environmental monitoring. Technology at the service of sustainability."}
             </p>
 
             <div className="pt-6 sm:pt-8">
@@ -105,7 +109,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
                 onClick={onEnter}
                 className="group bg-white text-[#154f30] font-bold text-[14px] sm:text-[15px] uppercase tracking-[0.1em] px-10 sm:px-12 py-3.5 sm:py-4 rounded-sm shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all hover:scale-105 hover:shadow-[0_15px_50px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3"
               >
-                DÉCOUVRIR <span className="group-hover:translate-x-1 transition-transform font-light">→</span>
+                {lang === 'fr' ? "DÉCOUVRIR" : "DISCOVER"} <span className="group-hover:translate-x-1 transition-transform font-light">→</span>
               </button>
             </div>
           </motion.div>

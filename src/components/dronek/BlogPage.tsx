@@ -108,7 +108,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
                 </motion.span>
               ))}
             </h1>
-            <p className="text-white/90 text-sm lg:text-base max-w-2xl">
+            <p className="text-white text-sm lg:text-base font-bold max-w-2xl">
               {lang === 'fr' 
                 ? 'Suivez les dernières avancées de DRONEK dans la technologie agricole et la gestion forestière durable.'
                 : 'Follow DRONEK\'s latest advances in agricultural technology and sustainable forest management.'}
@@ -145,7 +145,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
                 <div className="activity-card-actions">
                   <button 
                     className="action-btn"
-                    title="Partager"
+                    title={lang === 'fr' ? 'Partager' : 'Share'}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (navigator.share) {
@@ -156,7 +156,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
                         });
                       } else {
                         navigator.clipboard.writeText(window.location.href);
-                        alert('Lien copié !');
+                        alert(lang === 'fr' ? 'Lien copié !' : 'Link copied!');
                       }
                     }}
                   >
@@ -195,7 +195,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dronek-green/10 text-dronek-green text-[10px] font-bold uppercase tracking-widest mb-4">
             <ImageIcon className="w-3 h-3" />
-            <span>Médiathèque</span>
+            <span>{lang === 'fr' ? 'Médiathèque' : 'Media Library'}</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-dronek-text">
             {lang === 'fr' ? 'Notre Médiathèque' : 'Our Media Library'}
@@ -372,7 +372,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
               <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-semibold text-dronek-green uppercase tracking-widest">Actualité</span>
+                    <span className="text-[10px] font-semibold text-dronek-green uppercase tracking-widest">{lang === 'fr' ? 'Actualité' : 'News'}</span>
                     {selectedNews.date && <span className="text-[10px] font-semibold text-[#71807e] uppercase tracking-widest">| {selectedNews.date}</span>}
                   </div>
                   <button onClick={() => setSelectedNewsId(null)} className="hidden md:block hover:scale-110 transition-transform">
@@ -390,7 +390,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
                   </p>
                   
                   <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                    <h4 className="text-[10px] font-bold text-[#149655] uppercase tracking-widest mb-3">En résumé</h4>
+                    <h4 className="text-[10px] font-bold text-[#149655] uppercase tracking-widest mb-3">{lang === 'fr' ? 'En résumé' : 'In Summary'}</h4>
                     <p className="text-xs text-gray-500 leading-relaxed font-medium">
                       {lang === 'fr' 
                         ? 'DRONEK continue d\'innover pour offrir des solutions technologiques de pointe au service du développement durable en Afrique de l\'Ouest.'

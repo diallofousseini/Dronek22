@@ -163,15 +163,6 @@ function Section({ children, className = '', id }: { children: React.ReactNode; 
 }
 
 /* ─────── Hero Slideshow ─────── */
-/* ─────── Hero Slideshow ─────── */
-const defaultHeroImages = [
-  "/IMAGE SITE WEB/Page d'acceuil image 1.jpg",
-  "/IMAGE SITE WEB/Page d'acceuil image 2.jpg",
-  "/IMAGE SITE WEB/Page d'acceuil image 3.jpg",
-  "/IMAGE SITE WEB/Page d'acceuil image 4.jpg",
-  "/IMAGE SITE WEB/Page d'acceuil image 5.jpg",
-  "/IMAGE SITE WEB/Page d'acceuil image 6.jpg",
-];
 
 /* ─────── Floating Particles ─────── */
 function FloatingParticles() {
@@ -1365,12 +1356,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="w-full max-w-[460px] min-h-[340px] bg-[#149655] rounded-[30px_90px_30px_90px] p-6 md:p-8 relative flex flex-col justify-center overflow-hidden z-10 shadow-2xl"
+              className="w-full max-w-[540px] min-h-[300px] bg-[#149655] rounded-[30px_90px_30px_90px] p-6 md:p-8 relative flex flex-col justify-center overflow-hidden z-10 shadow-2xl"
             >
               {/* Content with standard padding */}
               <div className="relative z-10 space-y-4 text-white" style={{ paddingLeft: '0.4cm' }}>
                 <div>
-                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-2">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2">
                     {t.team?.founderWord?.name}
                   </h2>
                   <p className="text-lg sm:text-xl font-medium opacity-90">
@@ -1594,7 +1585,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
               <div className="text-center">
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
-                  {"Nos Projets".split('').map((char, i) => (
+                  {(lang === 'fr' ? "Nos Projets" : "Our Featured").split('').map((char, i) => (
                     <motion.span
                       key={i}
                       initial={{ opacity: 0, y: 20 }}
@@ -1608,7 +1599,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   ))}
                   {' '}
                   <span className="text-[#149655]">
-                    {"phares".split('').map((char, i) => (
+                    {(lang === 'fr' ? "phares" : "Projects").split('').map((char, i) => (
                       <motion.span
                         key={i + 11}
                         initial={{ opacity: 0, y: 20 }}
@@ -1718,7 +1709,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               className="bg-white/95 hover:bg-white text-dronek-dark rounded-full px-10 py-6 text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-3 mx-auto border border-white/20"
               onClick={() => handleNav('projects')}
             >
-              VOIR PLUS
+              {lang === 'fr' ? 'VOIR PLUS' : 'SEE MORE'}
             </Button>
           </motion.div>
         </div>

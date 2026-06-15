@@ -95,7 +95,11 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
       <section className="pt-2 pb-12 bg-white font-sans">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl lg:text-5xl font-extrabold text-dronek-dark mb-8 tracking-tight">
-            Plateforme de <span className="text-[#149655]">Suivi Écologique</span>
+            {lang === 'fr' ? (
+              <>Plateforme de <span className="text-[#149655]">Suivi Écologique</span></>
+            ) : (
+              <><span className="text-[#149655]">Ecological</span> Monitoring Platform</>
+            )}
           </h1>
           <p className="text-gray-700 text-base sm:text-lg font-medium leading-relaxed max-w-3xl mx-auto">
             {lang === 'fr' ? (
@@ -232,7 +236,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                   src="/images/ordinateur.png"
                   fill
                   className="object-contain"
-                  alt="Tableau de Bord DSM"
+                  alt={lang === 'fr' ? "Tableau de Bord DSM" : "DSM Dashboard"}
                   priority
                 />
               </div>
@@ -287,7 +291,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                   src="/images/tablette.png"
                   fill
                   className="object-contain"
-                  alt="Module Mon Compte"
+                  alt={lang === 'fr' ? "Module Mon Compte" : "My Account Module"}
                 />
               </div>
             </motion.div>
@@ -307,7 +311,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                   src="/images/telephone.png"
                   fill
                   className="object-contain"
-                  alt="Modale d'Analyse IA du Projet"
+                  alt={lang === 'fr' ? "Modale d'Analyse IA du Projet" : "Project AI Analysis Modal"}
                 />
               </div>
             </motion.div>

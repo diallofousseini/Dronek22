@@ -111,8 +111,8 @@ export default function ProductionSitesView() {
             services: site.services ? site.services.split(',').map((s: string) => s.trim()) : [],
             image: imageUrl,
             stats: [
-              { label: 'CAPACITÉ', value: site.capacite || site.capacity || 'N/A', progress: 85, icon: Layers, color: 'bg-[#114f2e]' },
-              { label: 'SUPERFICIE', value: site.surface || 'N/A', progress: 100, icon: MapPin, color: 'bg-[#114f2e]' }
+              { label: lang === 'fr' ? 'CAPACITÉ' : 'CAPACITY', value: site.capacite || site.capacity || 'N/A', progress: 85, icon: Layers, color: 'bg-[#114f2e]' },
+              { label: lang === 'fr' ? 'SUPERFICIE' : 'SURFACE', value: site.surface || 'N/A', progress: 100, icon: MapPin, color: 'bg-[#114f2e]' }
             ]
           };
         });
@@ -199,7 +199,7 @@ export default function ProductionSitesView() {
               <div className="mt-10 space-y-4 pt-6 border-t border-gray-100">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-black text-[#71807e] uppercase tracking-[0.2em]">Employés</p>
+                    <p className="text-[10px] font-black text-[#71807e] uppercase tracking-[0.2em]">{lang === 'fr' ? 'Employés' : 'Employees'}</p>
                     <p className="text-lg font-bold text-[#0f4c2e]">{card.employees}</p>
                   </div>
                   <div className="text-right">

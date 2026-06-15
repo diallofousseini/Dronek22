@@ -20,8 +20,8 @@ export default function ContactCTA() {
   };
 
   const handleSend = () => {
-    const subject = `Demande de contact - ${formData.name}`;
-    const body = `Nom: ${formData.name}%0D%0AEmail: ${formData.email}%0D%0ATéléphone: ${formData.phone}%0D%0ABesoin: ${formData.needs}`;
+    const subject = `${lang === 'fr' ? 'Demande de contact - ' : 'Contact request - '}${formData.name}`;
+    const body = `Nom: ${formData.name}%0D%0AEmail: ${formData.email}%0D%0A${lang === 'fr' ? 'Téléphone' : 'Phone'}: ${formData.phone}%0D%0A${lang === 'fr' ? 'Besoin' : 'Need'}: ${formData.needs}`;
     window.location.href = `mailto:info@dronek.net?subject=${subject}&body=${body}`;
   };
 

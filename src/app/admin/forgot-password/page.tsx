@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Mail, Shield, ArrowLeft, Loader2, Globe } from 'lucide-react';
+import { Mail, Shield, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/components/dronek/LanguageProvider';
 
@@ -48,16 +48,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-[#f7fbf8] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Language Toggle Button at top right */}
-      <div className="absolute top-6 right-6 z-50">
-        <button
-          onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
-          className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 px-4 py-2.5 rounded-xl font-bold transition-all text-xs uppercase text-gray-700 shadow-sm"
-        >
-          <Globe className="w-4 h-4 text-[#149655]" />
-          <span>{lang}</span>
-        </button>
-      </div>
+
 
       {/* Brand Background Image - Optimized */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.08]">

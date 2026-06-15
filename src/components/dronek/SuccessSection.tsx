@@ -38,7 +38,7 @@ export default function SuccessSection({ onNavigate }: SuccessSectionProps) {
           <div className="max-w-xl mx-auto lg:mx-0 lg:mr-auto">
             <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight text-dronek-text">
               <span className="text-dronek-green">
-                {"Succès".split('').map((char, i) => (
+                {(lang === 'fr' ? 'Succès' : 'Proven').split('').map((char, i) => (
                   <motion.span
                     key={i}
                     variants={{
@@ -52,7 +52,7 @@ export default function SuccessSection({ onNavigate }: SuccessSectionProps) {
                   </motion.span>
                 ))}
               </span>
-              {" prouvé".split('').map((char, i) => (
+              {(lang === 'fr' ? ' prouvé' : ' Success').split('').map((char, i) => (
                 <motion.span
                   key={i}
                   variants={{
@@ -66,7 +66,7 @@ export default function SuccessSection({ onNavigate }: SuccessSectionProps) {
                 </motion.span>
               ))}
               <br />
-              {"sur le terrain".split('').map((char, i) => (
+              {(lang === 'fr' ? 'sur le terrain' : 'in the Field').split('').map((char, i) => (
                 <motion.span
                   key={i}
                   variants={{

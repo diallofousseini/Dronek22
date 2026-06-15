@@ -99,7 +99,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
             title: c.titre || c.title,
             desc: c.description_courte || c.description,
             image: imageUrl,
-            pdfUrl: c.pdf_url || c.pdfUrl,
+            pdfUrl: c.button_text || c.pdf_url || c.pdfUrl,
             // Support for both 'detail_short_desc' and 'detail_long_desc' columns
             detailTitle: c.detail_title || c.detailTitle,
             detailShortDesc: c.detail_short_desc || c.detailShortDesc,
@@ -334,7 +334,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                     initial={{ opacity: 0, clipPath: "inset(0 100% 0 0)" }}
                     animate={{ opacity: 1, clipPath: "inset(0 0 0 0)" }}
                     transition={{ delay: 0.6, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="text-white/90 text-base lg:text-xl font-medium leading-relaxed italic"
+                    className="text-white text-base lg:text-xl font-bold leading-relaxed italic"
                   >
                     {bannerInfo.description}
                   </motion.p>
@@ -489,7 +489,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                     className="w-full inline-flex items-center justify-center px-10 py-5 rounded-full bg-dronek-green hover:bg-dronek-dark text-white font-bold uppercase tracking-widest text-xs transition-all shadow-xl hover:shadow-dronek-green/30 active:scale-95 gap-3"
                   >
                     <FileText className="w-5 h-5" />
-                    Télécharger la fiche technique
+                    {lang === 'fr' ? 'Télécharger la fiche technique' : 'Download technical sheet'}
                   </a>
                   
                   <button 
@@ -497,7 +497,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                     className="w-full inline-flex items-center justify-center px-10 py-5 rounded-full border-2 border-gray-100 hover:bg-gray-50 text-gray-900 font-bold uppercase tracking-widest text-xs transition-all active:scale-95 gap-3"
                   >
                     <X className="w-5 h-5" />
-                    Fermer la page
+                    {lang === 'fr' ? 'Fermer la page' : 'Close page'}
                   </button>
                 </div>
               </div>

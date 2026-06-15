@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import AnimatedSection from './AnimatedSection';
 import { supabase } from '@/lib/supabase';
+import { translateNews } from '@/lib/i18n';
 
 type NewsPost = {
   id: string;
@@ -57,7 +58,8 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
     return postDate >= sixMonthsAgo;
   };
 
-  const carouselPosts = posts.slice(0, 12);
+  const translatedPosts = posts.map(p => translateNews(p, lang));
+  const carouselPosts = translatedPosts.slice(0, 12);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
@@ -183,10 +185,10 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
     fetchNews();
   }, []);
 
-  const totalPages = Math.ceil(posts.length / itemsPerPage);
+  const totalPages = Math.ceil(translatedPosts.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPosts = posts.slice(indexOfFirstItem, indexOfLastItem);
+  const currentPosts = translatedPosts.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -222,7 +224,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             </motion.div>
 
             <div className="lg:max-w-md">
-              <p className="text-white/80 text-sm lg:text-base font-medium leading-relaxed">
+              <p className="text-white text-sm lg:text-base font-bold leading-relaxed">
                 {lang === 'fr' 
                   ? "Restez informé de nos dernières actualités. Découvrez comment DRONEK contribue au développement durable en Côte d'Ivoire."
                   : "Stay informed about our latest news. Discover how DRONEK contributes to sustainable development in Côte d'Ivoire."}

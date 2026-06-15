@@ -154,7 +154,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
             title: s.titre || s.title || (lang === 'fr' ? 'Sans titre' : 'Untitled'),
             description: s.description_courte || s.description || s.resume || '',
             image: imageUrl,
-            pdfUrl: s.pdf_url || s.pdfUrl || '',
+            pdfUrl: s.button_text || s.pdf_url || s.pdfUrl || '',
             items: s.items && s.items.length > 0 
               ? s.items 
               : (s.description_complete 
@@ -261,42 +261,24 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
             className="object-cover" 
             priority 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-dronek-dark to-dronek-green opacity-85" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-4">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
-            <motion.div initial="hidden" animate="visible" className="flex-1 min-w-0">
-                <motion.h1 
-                  className="text-2xl lg:text-5xl font-bold text-white leading-[1.1] uppercase tracking-tight"
-                >
-                  {t.nav.services.split('').map((char: string, i: number) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.1, delay: i * 0.03 }}
-                      className="inline-block"
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </motion.span>
-                  ))}
-                </motion.h1>
-            </motion.div>
-
             <div className="lg:max-w-2xl">
               <motion.p 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-white/90 text-sm lg:text-base font-medium leading-relaxed"
+                className="text-white text-sm lg:text-base font-bold leading-relaxed"
               >
-                <strong className="text-white text-lg block mb-3 uppercase tracking-wider">
+                <strong className="text-white text-lg block mb-3 uppercase tracking-wider font-extrabold">
                   {t.services.bannerDesc.title}
                 </strong>
                 {t.services.bannerDesc.content.split('\n\n').map((para: string, i: number) => (
-                  <span key={i} className="block mb-4">
+                  <span key={i} className="block mb-4 font-bold">
                     {para}
                   </span>
                 ))}

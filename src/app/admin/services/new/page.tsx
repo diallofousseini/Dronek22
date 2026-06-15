@@ -55,6 +55,7 @@ function CMSRouter() {
   const searchParams = useSearchParams();
   const type = searchParams.get('type') || 'service';
   const id = searchParams.get('id');
+  const mode = searchParams.get('mode');
 
   if (type === 'membre') {
     return (
@@ -87,7 +88,7 @@ function CMSRouter() {
       </div>
 
       <div className="relative z-10">
-        <GenericItemEditor type={type} id={id} />
+        <GenericItemEditor type={type} id={id} mode={mode} />
       </div>
     </div>
   );
@@ -127,13 +128,6 @@ function CMSHeader({ title, onSave, saving, isScrolled, scrollProgress, children
 
       <div className="flex items-center gap-10">
         {children}
-        <button
-          onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
-          className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 px-4 py-2 rounded-xl font-bold transition-all text-xs uppercase text-gray-700 shadow-sm"
-        >
-          <Globe className="w-4 h-4 text-[#149655]" />
-          <span>{lang}</span>
-        </button>
         <button 
           onClick={onSave} 
           disabled={saving} 
@@ -461,7 +455,7 @@ function PdfUpload({ value, onChange, path }: { value: string, onChange: (v: str
   );
 }
 
-function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
+function GenericItemEditor({ type, id, mode }: { type: string, id?: string | null, mode?: string | null }) {
   const { toast } = useToast();
   const router = useRouter();
   const { lang } = useLanguage();
@@ -482,7 +476,9 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [formMode, setFormMode] = useState<'featured' | 'regular'>('regular');
+  const [formMode, setFormMode] = useState<'featured' | 'regular'>(
+    mode === 'featured' ? 'featured' : 'regular'
+  );
   const [allExpertiseDomains, setAllExpertiseDomains] = useState<any[]>([]);
 
   useEffect(() => {
@@ -612,6 +608,10 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
             });
 
             if (type === 'service') {
+              const isDomain = item.service_type === 'domain';
+              if (isDomain) {
+                setFormMode('featured');
+              }
               supabase.from('contacts').select('*').eq('sujet', 'MainServices').single().then(({ data: config }) => {
                 if (config && config.message) {
                   try {
@@ -856,7 +856,7 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
       <CMSHeader title={labels[type]} onSave={handleSave} saving={saving} isScrolled={isScrolled} scrollProgress={scrollProgress} />
       <main className="max-w-[1000px] mx-auto py-8 px-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
         <div className="space-y-12">
-          {type === 'service' && (
+          {type === 'service' && !id && !mode && (
             <div className="flex justify-center mb-4">
               <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-2 border border-gray-200 shadow-inner">
                 <button
@@ -948,7 +948,31 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                    <div className="space-y-8">
                      <VerticalField labelSize="13px" label="Nom du Site" value={data.name} onChange={(v: string) => setData({ ...data, name: v })} placeholder="ex: Site de Bonoua" />
                      <VerticalField labelSize="13px" label="Localisation" value={data.location} onChange={(v: string) => setData({ ...data, location: v })} placeholder="ex: Bonoua, Côte d'Ivoire" />
-                     <VerticalField labelSize="13px" label="Description" type="textarea" value={data.desc} onChange={(v: string) => setData({ ...data, desc: v })} placeholder="Description du site..." />
+                      <div className="space-y-3">
+                        <label className="text-[13px] font-black text-[#111] uppercase tracking-[0.1em] block">Géolocalisation sur la carte</label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center gap-2 bg-white border border-[#e5e7eb] rounded-2xl px-4 h-[60px] shadow-sm">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lat</label>
+                            <input 
+                              type="text" 
+                              value={data.lat} 
+                              onChange={(e) => setData({ ...data, lat: e.target.value })} 
+                              placeholder="ex: 5.2719"
+                              className="w-full bg-transparent outline-none font-bold text-sm text-center"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2 bg-white border border-[#e5e7eb] rounded-2xl px-4 h-[60px] shadow-sm">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lng</label>
+                            <input 
+                              type="text" 
+                              value={data.lng} 
+                              onChange={(e) => setData({ ...data, lng: e.target.value })} 
+                              placeholder="ex: -3.5950"
+                              className="w-full bg-transparent outline-none font-bold text-sm text-center"
+                            />
+                          </div>
+                        </div>
+                      </div>
                    </div>
 
                    {/* Right Column: Image */}
@@ -958,40 +982,6 @@ function GenericItemEditor({ type, id }: { type: string, id?: string | null }) {
                        <SimpleUpload value={data.image} onChange={(v) => setData({ ...data, image: v })} path={`uploads/${type}`} />
                      </div>
                    </div>
-                 </div>
-                 
-                 {/* Geolocalisation Section */}
-                 <div className="space-y-10 pt-4">
-                    <div className="flex flex-col items-center gap-4 mb-2">
-                       <div className="w-14 h-14 bg-[#149655]/5 rounded-full flex items-center justify-center border border-[#149655]/10">
-                          <MapPin className="w-6 h-6 text-[#149655]" />
-                       </div>
-                       <h3 className="text-xl font-black text-[#111] uppercase tracking-[0.15em] text-center">Géolocalisation sur la carte</h3>
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-12">
-                      <div className="flex items-center gap-4">
-                        <label className="text-xs font-black text-[#111] uppercase tracking-widest">Latitude</label>
-                        <input 
-                          type="text" 
-                          value={data.lat} 
-                          onChange={(e) => setData({ ...data, lat: e.target.value })} 
-                          placeholder="ex: 5.2719"
-                          className="h-[50px] w-32 px-4 bg-white border border-[#e5e7eb] rounded-xl focus:border-[#149655] outline-none text-center font-bold"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <label className="text-xs font-black text-[#111] uppercase tracking-widest">Longitude</label>
-                        <input 
-                          type="text" 
-                          value={data.lng} 
-                          onChange={(e) => setData({ ...data, lng: e.target.value })} 
-                          placeholder="ex: -3.5950"
-                          className="h-[50px] w-32 px-4 bg-white border border-[#e5e7eb] rounded-xl focus:border-[#149655] outline-none text-center font-bold"
-                        />
-                      </div>
-                    </div>
                  </div>
                </motion.div>
              )}

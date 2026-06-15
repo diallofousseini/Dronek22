@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function ImpactPage() {
   const { lang } = useLanguage();
-  const title = "Notre impact en images";
+  const title = lang === 'fr' ? "Notre impact en images" : "Our impact in images";
   const [activeVideo, setActiveVideo] = React.useState<string | null>(null);
   const [playingIndex, setPlayingIndex] = React.useState<number | null>(null);
   const [mediatheque, setMediatheque] = React.useState<{ images: string[], videos: string[] }>({
@@ -262,7 +262,7 @@ export default function ImpactPage() {
                           setActiveVideo(video.id || video.url);
                         }}
                         className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-dronek-green backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all group-hover:scale-110 shadow-lg"
-                        title="Agrandir la vidéo"
+                        title={lang === 'fr' ? "Agrandir la vidéo" : "Enlarge video"}
                       >
                         <ExternalLink size={18} />
                       </button>

@@ -151,7 +151,7 @@ export default function ContactPage({ onNavigate }: { onNavigate: (page: PageVie
             className="text-center"
           >
             <h1 className="text-4xl lg:text-6xl font-montserrat-extrabold text-white uppercase tracking-[0.2em] leading-tight">
-              {"Contactez-nous".split('').map((char, i) => (
+              {(lang === 'fr' ? "Contactez-nous" : "Contact Us").split('').map((char, i) => (
                 <motion.span
                   key={i}
                   initial={{ opacity: 0, y: 20 }}

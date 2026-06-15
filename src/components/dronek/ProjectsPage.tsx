@@ -12,6 +12,18 @@ import SuccessSection from './SuccessSection';
 import { projects as hardcodedProjects } from '@/lib/projects';
 import { supabase } from '@/lib/supabase';
 import { ScrollTitle } from './ScrollTitle';
+import { translateProject } from '@/lib/i18n';
+
+const getCategoryLabel = (category: string, lang: string) => {
+  if (!category) return lang === 'fr' ? 'Projet' : 'Project';
+  const catUpper = category.toUpperCase().trim();
+  if (catUpper === 'FORESTERIE') return lang === 'fr' ? 'Foresterie' : 'Forestry';
+  if (catUpper === 'AGRICULTURE') return lang === 'fr' ? 'Agriculture' : 'Agriculture';
+  if (catUpper === 'DRONE ET CARTOGRAPHIE' || catUpper === 'DRONE') return lang === 'fr' ? 'Drone et Cartographie' : 'Drone & Mapping';
+  if (catUpper === 'AGROFORESTERIE') return lang === 'fr' ? 'Agroforesterie' : 'Agroforestry';
+  if (catUpper === 'ARCHIVE ACTUALITÉ' || catUpper === 'NEWS ARCHIVE') return lang === 'fr' ? 'Archive Actualité' : 'News Archive';
+  return category;
+};
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
@@ -152,7 +164,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
     loadData();
   }, [lang]);
 
-  const allProjectsRaw = dynamicProjects.length > 0 ? dynamicProjects : hardcodedProjects;
+  const allProjectsRaw = (dynamicProjects.length > 0 ? dynamicProjects : hardcodedProjects).map((p: any) => translateProject(p, lang));
   const allProjects = selectedCategory === 'Tous' 
     ? allProjectsRaw 
     : allProjectsRaw.filter((p: any) => p.categoryLabel === selectedCategory || p.category === selectedCategory);
@@ -330,7 +342,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                       
                       <div className="absolute top-4 left-4">
                         <span className="inline-flex items-center rounded-full border border-dronek-green/20 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-dronek-green shadow-sm backdrop-blur-sm">
-                          {project.categoryLabel}
+                          {getCategoryLabel(project.categoryLabel, lang)}
                         </span>
                       </div>
                     </div>
@@ -431,7 +443,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               {/* Content Side */}
               <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-semibold text-dronek-green uppercase tracking-widest">{selectedProject.categoryLabel}</span>
+                  <span className="text-xs font-semibold text-dronek-green uppercase tracking-widest">{getCategoryLabel(selectedProject.categoryLabel, lang)}</span>
                   <button onClick={() => setSelectedProjectSlug(null)} className="hidden md:block hover:scale-110 transition-transform">
                     <X className="w-6 h-6 text-gray-300 hover:text-dronek-text" />
                   </button>

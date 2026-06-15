@@ -13,6 +13,8 @@ export const translations = {
       production: "Sites de Production",
       contact: "Contact",
       admin: "Admin",
+      latestPosts: "Derniers posts",
+      mediaLibrary: "Notre médiathèque",
     },
     hero: {
       title: "Technologies Innovantes pour une Gestion Durable des Forêts et de l'Agriculture",
@@ -595,6 +597,8 @@ export const translations = {
       production: "Production Sites",
       contact: "Contact",
       admin: "Admin",
+      latestPosts: "Latest posts",
+      mediaLibrary: "Our media library",
     },
     hero: {
       title: "Innovative Technologies for Sustainable Forest and Agriculture Management",
@@ -1171,3 +1175,266 @@ export const translations = {
 } as const;
 
 export type Translations = typeof translations.fr;
+
+export function translateProject(project: any, lang: string) {
+  if (lang === 'fr' || !project) return project;
+  
+  const title = (project.title || '').toLowerCase().trim();
+  
+  if (title.includes('tai') || title.includes('taï')) {
+    return {
+      ...project,
+      title: "Forest Inventory of Taï National Park",
+      summary: "Complete mapping of 5000 hectares of primary forest with identification of over 300 plant species. Project carried out in collaboration with OIPR.",
+      location: "Taï National Park",
+      detail: "This ambitious project involved a complete forest inventory of Taï National Park, a UNESCO World Heritage Site. Over 5000 hectares, our team identified and mapped over 300 plant species, assessed forest biomass and carbon stocks. The collected data enabled the development of a sustainable management plan for the coming decades.",
+      objectives: [
+        "Identify dominant species and sensitive areas",
+        "Produce reference maps for sustainable management",
+        "Provide a monitoring baseline for conservation actions"
+      ],
+      impacts: [
+        "Updated view of the park status in the studied areas",
+        "Better prioritization of conservation actions",
+        "Data directly usable by field teams"
+      ]
+    };
+  }
+  if (title.includes('cacao') || title.includes('sud-ouest')) {
+    return {
+      ...project,
+      title: "Training of Southwest Cocoa Cooperatives",
+      summary: "Training program for 200 farmers in best practices for sustainable cocoa cultivation and agroforestry.",
+      location: "Soubré, San Pedro",
+      detail: "DRONEK implemented a comprehensive training program for cocoa cooperatives in southwestern Côte d'Ivoire. Over 200 farmers were trained in sustainable cocoa cultivation techniques, including agroforestry practices, integrated pest management and sustainable certification. This program led to an average 30% increase in yields.",
+      objectives: [
+        "Professionalization of cultivation and farm management methods",
+        "Sustainable optimization of yields through the adoption of innovative technical paths",
+        "Integration of resilient agroforestry models in the face of climate challenges"
+      ],
+      impacts: [
+        "Structural transformation of farmers' technical know-how",
+        "Measurable adoption of agricultural practices respectful of biodiversity",
+        "Consolidation of the value chain through certified local supervision"
+      ]
+    };
+  }
+  if (title.includes('redd')) {
+    return {
+      ...project,
+      title: "Drone Mapping for REDD+ Project",
+      summary: "Drone mapping of 10000 hectares for the REDD+ project in the Sub-prefecture of Grabo.",
+      location: "Grabo, Tabou",
+      detail: "As part of the REDD+ project (Reducing Emissions from Deforestation and Forest Degradation), DRONEK carried out high-resolution drone mapping of 10000 hectares in the Grabo region. This mapping established a carbon stock baseline and monitored forest cover evolution with centimeter precision.",
+      objectives: [
+        "Provide a usable orthomosaic for project management",
+        "Measure cover evolutions with precision",
+        "Support decisions related to the REDD+ project"
+      ],
+      impacts: [
+        "Precision gain on monitored areas",
+        "Deliverables adapted to project team needs",
+        "Reduction of field intervention time"
+      ]
+    };
+  }
+  if (title.includes('irrigu') || title.includes('irrigation')) {
+    return {
+      ...project,
+      title: "Development of Irrigated Areas in the North",
+      summary: "Study and development of irrigation systems for market gardening.",
+      location: "Korhogo, Côte d'Ivoire",
+      detail: "This project aims to secure agricultural production during the dry season by installing efficient and sustainable irrigation systems.",
+      objectives: [
+        "Optimize water management",
+        "Increase market gardening yields"
+      ],
+      impacts: [
+        "Increase in producers' income",
+        "Strengthened food security"
+      ]
+    };
+  }
+  if (title.includes('lamto')) {
+    return {
+      ...project,
+      title: "Reforestation of Lamto Reserve",
+      summary: "Planting of 50000 trees on 200 degraded hectares with adapted local species.",
+      location: "Lamto, Tiassalé",
+      detail: "DRONEK coordinated an ambitious reforestation program in the Lamto Reserve, affected by degradation. A total of 50000 trees of 15 local species were planted on 200 hectares. The project includes drone monitoring every 6 months to assess plant survival and growth, with a success rate exceeding 85%.",
+      objectives: [
+        "Restore the degraded ecosystem",
+        "Favor the return of wild fauna"
+      ],
+      impacts: [
+        "50,000 plants put into the ground",
+        "Plant survival rate exceeding 90%"
+      ]
+    };
+  }
+  if (title.includes('palmeraie') || title.includes('sanitaire')) {
+    return {
+      ...project,
+      title: "Sanitary Monitoring of Palm Groves by Drone",
+      summary: "Early detection of diseases and nutritional deficiencies by multispectral imagery.",
+      location: "Grand-Lahou",
+      detail: "The use of multispectral sensors makes it possible to identify stressed trees before symptoms are visible to the eye.",
+      objectives: [
+        "Reduce pesticide use",
+        "Target interventions precisely"
+      ],
+      impacts: [
+        "Reduction in production losses",
+        "Savings on agricultural inputs"
+      ]
+    };
+  }
+  if (title.includes('communautaire') || title.includes('pepiniere') && title.includes('adzop')) {
+    return {
+      ...project,
+      title: "Community Agroforestry Nursery",
+      summary: "Production of 100,000 fruit and forest plants for smallholders.",
+      location: "Adzopé",
+      detail: "Establishment of a local nursery to facilitate farmers' access to high-quality plants.",
+      objectives: [
+        "Democratize agroforestry",
+        "Improve farmers' income"
+      ],
+      impacts: [
+        "Empowerment of rural women",
+        "Crop diversification"
+      ]
+    };
+  }
+  if (title.includes('biomasse') || title.includes('carbone')) {
+    return {
+      ...project,
+      title: "Biomass and Carbon Inventory of the North",
+      summary: "Assessment of carbon stocks for carbon offset projects.",
+      location: "Ferkessédougou",
+      detail: "Precise measurement of aboveground biomass to quantify the potential carbon credits of a protected area.",
+      objectives: [
+        "Estimate carbon stocks",
+        "Support carbon certification"
+      ],
+      impacts: [
+        "Robust scientific data",
+        "Access to the carbon market"
+      ]
+    };
+  }
+  if (title.includes('audit')) {
+    return {
+      ...project,
+      title: "Agro-Economic Audit of Cooperatives",
+      summary: "Financial and technical diagnosis of 10 agricultural cooperatives.",
+      location: "Yamoussoukro",
+      detail: "Strengthening the governance and operational efficiency of producer organizations.",
+      objectives: [
+        "Identify growth drivers",
+        "Improve financial transparency"
+      ],
+      impacts: [
+        "More resilient cooperatives",
+        "Better access to credit"
+      ]
+    };
+  }
+  if (title.includes('industriel') || title.includes('topographie')) {
+    return {
+      ...project,
+      title: "Aerial Topography for Industrial Site",
+      summary: "High-resolution topographic surveys for industrial site planning.",
+      location: "San Pedro",
+      detail: "Generation of digital terrain models and contour lines with centimeter accuracy.",
+      objectives: [
+        "Accelerate field surveys",
+        "Provide accurate 3D data"
+      ],
+      impacts: [
+        "Reduction in survey costs",
+        "Optimized planning"
+      ]
+    };
+  }
+  
+  return project;
+}
+
+export function translateNews(post: any, lang: string) {
+  if (lang === 'fr' || !post) return post;
+  const title = (post.title || post.titre || '').toLowerCase().trim();
+  
+  let translatedTitle = post.title || post.titre;
+  let translatedContent = post.content || post.contenu || post.detail;
+  let translatedSummary = post.summary || post.resume;
+  
+  if (title.includes('culture agricole')) {
+    translatedTitle = "Agricultural Cultivation";
+    translatedContent = "For Dronek, optimizing agricultural cultivation means using aerial tools to eliminate manual sampling. This includes:\n\nMultispectral remote sensing: Specific sensors analyze plant health (chlorophyll, water stress, diseases) directly from the sky.\n\nPlot mapping: Precise identification of soil conditions to know exactly where and how to plant.\n\nInput management: Reducing the use of chemicals by targeting only the diseased areas of the plantation.";
+    translatedSummary = "For Dronek, optimizing agricultural cultivation means using aerial tools to eliminate manual sampling...";
+  } else if (title.includes('restauration forestière') || title.includes('restauration forestiere')) {
+    translatedTitle = "DRONEK at the service of forest restoration";
+    translatedContent = "Faced with the climate emergency and the alarming rate of deforestation, DRONEK is committed to setting up quality nurseries, an essential link in the restoration of our forests and agroforests.\n\nOur know-how translates into the construction and management of modern infrastructures for the intensive production of forest plants:\n\n• Metal greenhouses with shade nets: robust, durable and modular, they provide up to 60% shade, thus ensuring optimal protection of young plants against excessive sunlight and extreme weather conditions.\n\n• Increased weather resistance and optimal working comfort for our teams.\n\n• Maximized production capacity, effectively meeting the needs of reforestation and agroforestry projects in Côte d'Ivoire.\n\n• Tailor-made irrigation systems adapted to the specific requirements of each client, for a controlled water supply.\n\n• Possibility of automating watering through the integration of smart sensors, allowing real-time monitoring of humidity and optimal water management.\n\nWe believe that every plant produced is a promise for the future, one step closer to restored forests and sustainable agriculture.";
+    translatedSummary = "Faced with the climate emergency and the alarming rate of deforestation, DRONEK is committed to setting up quality nurseries...";
+  } else if (title.includes('travail') || title.includes('1er mai')) {
+    translatedTitle = "International Workers' Day";
+    translatedContent = "On this International Workers' Day, DRONEK wishes to salute the commitment, rigor and passion of all those who work every day to build a better future.\n\nTo our employees, partners and all workers: thank you for your dedication. Happy Labour Day!\n\n#1stMay #LabourDay #DRONEK";
+    translatedSummary = "On this International Workers' Day, DRONEK wishes to salute the commitment...";
+  } else if (title.includes('planting') || title.includes('abengourou')) {
+    translatedTitle = "Tree planting marathon in Abengourou";
+    translatedContent = "On August 2, 2023, DRONEK took part in the second edition of the \"Forest Tree Planting Marathon\" operation organized by the General Directorate of the Ministry of Water and Forests in Abengourou.\n\nThis initiative aimed to safeguard the Assamela (Pericopsis Elata), a threatened precious tree species that naturally evolves only in the South-East of Côte d'Ivoire.\n\nIn total, 1,600 Assamela plants were planted and mapped over an area of two hectares by the organizers and their guests.\n\n\"The forest is everyone's business. That is why we are committed to restoring the forest cover,\" said the DRONEK representative.\n\nColonel Guy Charbel Gnago Ni, Regional Director of Water and Forests of Indénié, welcomed this civic commitment: \"Today, the situation is alarming. We must become aware to reverse the trend: plant instead of destroy.\"";
+    translatedSummary = "On August 2, 2023, DRONEK took part in the second edition of the Forest Tree Planting Marathon...";
+  } else if (title.includes('reforestation') && title.includes('phase 2')) {
+    translatedTitle = "Contribution to reforestation - Phase 2";
+    translatedContent = "DRONEK has proudly contributed to Phase 2 of the reforestation program of the Café Cacao Council of Côte d'Ivoire.\n\nThis phase was marked by the record production of 1,500,000 shade plants, distributed to coffee-cocoa cooperatives throughout the national territory.\n\nThis achievement demonstrates our ability to produce quality forest plants in large quantities, thanks to:\n• Our modern nursery infrastructure\n• Our qualified nursery team\n• Our rigorous quality management system.\n\nThese plants contribute to the regeneration of cocoa plantations and the preservation of the environment.";
+    translatedSummary = "DRONEK has proudly contributed to Phase 2 of the reforestation program of the Café Cacao Council...";
+  } else if (title.includes('reforestation') && title.includes('phase 3')) {
+    translatedTitle = "Contribution to reforestation - Phase 3";
+    translatedContent = "As part of our partnership with the Café Cacao Council of Côte d'Ivoire, DRONEK implemented Phase 3 of the reforestation program.\n\nThis phase enabled the production of 300,000 shade plants for coffee-cocoa cooperatives across the country.\n\nThe plants produced include various forest species adapted to cocoa production areas, thus making it possible to:\n• Improve the quality of plantations\n• Preserve biodiversity\n• Fight against climate change\n• Increase producers' income.\n\nThis contribution is part of the national strategy for reforestation and preservation of Ivorian forest ecosystems.";
+    translatedSummary = "As part of our partnership with the Café Cacao Council, DRONEK implemented Phase 3...";
+  } else if (title.includes('sara 2023')) {
+    translatedTitle = "SARA 2023 - Presentation of Agroforestry";
+    translatedContent = "From October 9 to 18, 2023, DRONEK participated in the International Exhibition of Agriculture and Animal Resources (SARA) at the Abidjan Exhibition Center in Port-Bouët.\n\nThis 6th edition of SARA was an opportunity for DRONEK to present its expertise in agroforestry and sustainable agriculture. Our General Manager hosted a conference on the benefits of agroforestry for Ivorian producers.\n\nSARA 2023 welcomed more than 400,000 visitors over 10 days, with:\n• 169 B2B meetings\n• 950 business meetings\n• 80 conferences, workshops and panels\n• 119 institutional visits.\n\nDRONEK thanks all the visitors who came to discover our innovative solutions for sustainable agriculture in Côte d'Ivoire.";
+    translatedSummary = "From October 9 to 18, 2023, DRONEK participated in the International Exhibition of Agriculture...";
+  } else if (title.includes('pionnier') || title.includes('agriculture durable')) {
+    translatedTitle = "Dronek, pioneer of sustainable agriculture in Côte d'Ivoire";
+    translatedContent = "Founded by Elvis Kouacou, a visionary agricultural engineer, DRONEK has established itself as a key player in promoting sustainable agricultural practices in Côte d'Ivoire. At the International Agricultural Show (SIA) 2024, DRONEK presented its innovative solutions combining technology and respect for the environment. Our approach combines:\n\n• The use of drones for mapping and crop monitoring\n• Training in good agricultural practices\n• Supporting producers in the transition to sustainable agriculture.\n\n\"Our mission is to show that it is possible to combine productivity and respect for the environment. Agroforestry is a winning solution for producers and the planet,\" explains the founder. DRONEK continues to develop its partnerships with cooperatives and institutions to democratize these practices throughout Côte d'Ivoire.";
+    translatedSummary = "Founded by Elvis Kouacou, a visionary agricultural engineer, DRONEK has established itself...";
+  } else if (title.includes('campagne') || title.includes('reboisement')) {
+    translatedTitle = "REFORESTATION CAMPAIGN";
+    translatedContent = "DRONEK launched a major reforestation campaign to restore degraded forests in Côte d'Ivoire. Through drone mapping and multispectral data analysis, we identify priority areas and precisely track the growth of young trees.";
+    translatedSummary = "DRONEK launched a major reforestation campaign to restore degraded forests in Côte d'Ivoire.";
+  } else if (title.includes('séminaire') || title.includes('seminaire') || title.includes('écologique') || title.includes('ecologique')) {
+    translatedTitle = "ECOLOGICAL SEMINAR";
+    translatedContent = "Active participation of DRONEK in the national seminar on the preservation of biodiversity. We presented our environmental monitoring solutions by drone, demonstrating the contribution of technology in the fight against deforestation and poaching.";
+    translatedSummary = "Active participation of DRONEK in the national seminar on the preservation of biodiversity.";
+  } else if (title.includes('innovation')) {
+    translatedTitle = "DRONEK INNOVATION";
+    translatedContent = "Introduction of new thermal and LiDAR sensors to optimize forest mapping under canopy. This technological innovation allows DRONEK to provide ultra-precise 3D models of forest massifs, facilitating conservation work.";
+    translatedSummary = "Introduction of new thermal and LiDAR sensors to optimize forest mapping under canopy.";
+  } else if (title.includes('protection') || title.includes('forêts') || title.includes('forets')) {
+    translatedTitle = "FOREST PROTECTION";
+    translatedContent = "Strengthened collaboration with local authorities for aerial surveillance of classified forests. Our regular drone patrols allow for the rapid detection of fire outbreaks and illegal logging activities.";
+    translatedSummary = "Strengthened collaboration with local authorities for aerial surveillance of classified forests.";
+  } else if (title.includes('cartographie tai')) {
+    translatedTitle = "TAI MAPPING";
+    translatedContent = "Launch of the new high-resolution mapping phase of the Taï National Park. This major project will update cartographic data and analyze the impact of climate change on the park's biodiversity.";
+    translatedSummary = "Launch of the new high-resolution mapping phase of the Taï National Park.";
+  } else if (title.includes('mission') || title.includes('réussie') || title.includes('reussie')) {
+    translatedTitle = "SUCCESSFUL MISSION";
+    translatedContent = "End of the health assessment mission for coffee-cocoa plantations in the east of the country. Detailed reports and multispectral maps were delivered to partner cooperatives, offering them unprecedented visibility into the health of their crops.";
+    translatedSummary = "End of the mission of health evaluation of coffee-cocoa plantations in the East of the country.";
+  }
+  
+  return {
+    ...post,
+    title: translatedTitle,
+    titre: translatedTitle,
+    content: translatedContent,
+    contenu: translatedContent,
+    detail: translatedContent,
+    summary: translatedSummary,
+    resume: translatedSummary
+  };
+}

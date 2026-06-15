@@ -240,7 +240,7 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
                             <Newspaper className="w-5 h-5 text-gray-400 group-hover/item:text-dronek-green transition-colors" />
                           </div>
                           <div>
-                            <h4 className="font-bold text-[13px] text-dronek-dark uppercase tracking-wider">Derniers posts</h4>
+                            <h4 className="font-bold text-[13px] text-dronek-dark uppercase tracking-wider">{t.nav.latestPosts}</h4>
                           </div>
                         </button>
                         <button onClick={() => handleNav('blog-impact')} className="group/item flex items-center gap-3 p-3 rounded-none hover:bg-gray-100 transition-all duration-200 text-left">
@@ -248,7 +248,7 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
                             <Images className="w-5 h-5 text-gray-400 group-hover/item:text-dronek-green transition-colors" />
                           </div>
                           <div>
-                            <h4 className="font-bold text-[13px] text-dronek-dark uppercase tracking-wider">Notre médiathèque</h4>
+                            <h4 className="font-bold text-[13px] text-dronek-dark uppercase tracking-wider">{t.nav.mediaLibrary}</h4>
                           </div>
                         </button>
                       </div>
@@ -396,12 +396,11 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
                   )}
                 </AnimatePresence>
               </div>
-
               <div className="space-y-1">
                 <motion.button custom={2} variants={linkVariants} onClick={() => setMobileBlogOpen(!mobileBlogOpen)} className="flex items-center justify-between w-full p-4 rounded-2xl text-lg font-bold text-dronek-dark hover:bg-gray-50 transition-colors">
                   <span className="flex items-center gap-4">
                     <Newspaper className="w-6 h-6 text-dronek-green" />
-                    ACTUALITÉS
+                    {t.nav.news.toUpperCase()}
                   </span>
                   <ChevronDown className={cn('w-5 h-5 transition-transform duration-300', mobileBlogOpen && 'rotate-180')} />
                 </motion.button>
@@ -410,10 +409,10 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
                   {mobileBlogOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pl-14 pr-4">
                       <button onClick={() => handleNav('blog')} className="w-full py-3 text-left text-base font-medium text-dronek-dark/70 hover:text-dronek-green transition-colors">
-                        Derniers posts
+                        {t.nav.latestPosts}
                       </button>
                       <button onClick={() => handleNav('blog-impact')} className="w-full py-3 text-left text-base font-medium text-dronek-dark/70 hover:text-dronek-green transition-colors">
-                        Notre médiathèque
+                        {t.nav.mediaLibrary}
                       </button>
                     </motion.div>
                   )}
