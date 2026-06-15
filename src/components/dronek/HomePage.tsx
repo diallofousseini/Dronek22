@@ -410,7 +410,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const { t, lang } = useLanguage();
   const [heroIndex, setHeroIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
-  const [rotatingIndex, setRotatingIndex] = useState(0);
   const [heroSloganIndex, setHeroSloganIndex] = useState(0);
   const [dynamicProjects, setDynamicProjects] = useState<any[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
@@ -707,12 +706,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     return () => clearInterval(interval);
   }, [heroSlogans.length]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRotatingIndex((prev) => (prev + 1) % rotatingPhrases.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [rotatingPhrases.length]);
+
 
   const prevHeroSlide = useCallback(() => {
     setHeroIndex((prev) => (prev === 0 ? heroItems.length - 1 : prev - 1));
@@ -839,13 +833,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <div className="relative inline-flex items-center">
                 <AnimatePresence mode="wait">
                   <motion.span
-                    key={rotatingIndex}
+                    key={heroIndex % rotatingPhrases.length}
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1, transition: { duration: 0.4 } }}
                     exit={{ y: -20, opacity: 0, transition: { duration: 0.3 } }}
                     className="text-sm sm:text-lg lg:text-2xl text-white font-bold"
                   >
-                    {rotatingPhrases[rotatingIndex]}
+                    {rotatingPhrases[heroIndex % rotatingPhrases.length]}
                   </motion.span>
                 </AnimatePresence>
                 <motion.span
@@ -1393,24 +1387,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* Members Grid */}
-      <section className="pt-6 lg:pt-8 pb-16 lg:pb-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="pt-6" />
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-50px' }}
-            variants={stagger}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16 max-w-6xl mx-auto"
-          >
-            {members.map((member, idx) => (
-              <MemberCard key={member.id || idx} member={member} idx={idx} />
-            ))}
-          </motion.div>
-        </div>
-      </section>
 
       {/* ═══════════════════════════════════
           POURQUOI CHOISIR DRONEK
@@ -1916,80 +1893,5 @@ const teamFadeInUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
-function MemberCard({ member, idx }: { member: TeamMember; idx: number }) {
-  const [imageError, setImageError] = useState(false);
-  const { lang } = useLanguage();
 
-  const formattedName = React.useMemo(() => {
-    let name = member.name.trim();
-    const parts = name.split(' ');
-    
-    if (parts.length === 4 && 
-        parts[0].toLowerCase() === parts[2].toLowerCase() && 
-        parts[1].toLowerCase() === parts[3].toLowerCase()) {
-      name = `${parts[0]} ${parts[1]}`;
-    } else if (parts.length === 2 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
-      name = parts[0];
-    }
-
-    return name.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  }, [member.name]);
-
-  const imgSrc = imageError 
-    ? '/images/founder.jpg'
-    : (member.image.startsWith('http') || member.image.startsWith('/') ? member.image : `/images/${member.image}`);
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 150 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 1.5, delay: idx * 0.2, ease: "easeOut" }}
-      className="h-full"
-    >
-      <div className="group flex flex-col items-center text-center p-2 sm:p-4">
-        <div className="relative rounded-full overflow-hidden shadow-2xl mb-6 lg:mb-8 group-hover:shadow-dronek-green/20 transition-all duration-500 bg-gray-100"
-             style={{ 
-               width: 'clamp(140px, 40vw, 256px)', 
-               height: 'clamp(140px, 40vw, 256px)' 
-             }}
-        >
-          <img
-            src={imgSrc}
-            alt={member.name}
-            className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
-            onError={() => setImageError(true)}
-          />
-          
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 px-4">
-            {[
-              { icon: Facebook, href: member.facebook },
-              { icon: Linkedin, href: member.linkedin },
-              { icon: Mail, href: member.email ? `mailto:${member.email}` : null }
-            ].map((social, sIdx) => social.href ? (
-              <a
-                key={sIdx}
-                href={social.href}
-                target={social.icon === Mail ? "_self" : "_blank"}
-                rel="noopener noreferrer"
-                className="w-10 h-10 sm:w-12 sm:h-12 bg-dronek-green rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-110 transition-transform duration-200"
-              >
-                <social.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-              </a>
-            ) : null)}
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center text-center h-full">
-          <h3 className="text-xl lg:text-2xl font-bold text-[#149655] leading-tight tracking-tight mb-3">
-            {formattedName}
-          </h3>
-          <p className="text-[#71807e] font-medium text-base lg:text-xl leading-relaxed whitespace-pre-line">
-            {member.role}
-          </p>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
 

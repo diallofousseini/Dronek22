@@ -365,23 +365,7 @@ export const translations = {
         name: "Kouacou Yao Elvis Franklin",
         signature: "Fondateur et Directeur Général",
       },
-      members: [
-        {
-          name: "Diallo Fousseini",
-          role: "Développeur Full-stack",
-          image: "team2.jpg",
-        },
-        {
-          name: "Kouacou Yao Elvis Franklin",
-          role: "Fondateur et Directeur Général",
-          image: "founder.jpg",
-        },
-        {
-          name: "Adjoua Koné",
-          role: "Responsable Agricole",
-          image: "team1.jpg",
-        },
-      ],
+      members: [],
     },
     production: {
       title: "Sites de Production",
@@ -966,23 +950,7 @@ export const translations = {
         name: "Kouacou Yao Elvis Franklin",
         signature: "Founder and CEO",
       },
-      members: [
-        {
-          name: "Diallo Fousseini",
-          role: "Fullstack Developer",
-          image: "team2.jpg",
-        },
-        {
-          name: "Kouacou Yao Elvis Franklin",
-          role: "Founder and CEO",
-          image: "founder.jpg",
-        },
-        {
-          name: "Adjoua Koné",
-          role: "Agricultural Manager",
-          image: "team1.jpg",
-        },
-      ],
+      members: [],
     },
     production: {
       title: "Production Sites",

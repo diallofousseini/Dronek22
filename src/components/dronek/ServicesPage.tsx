@@ -39,6 +39,21 @@ const scaleIn = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
 };
 
+const getFallbackPdfUrl = (s: any) => {
+  const type = (s.service_type || s.serviceType || s.id || '').toLowerCase();
+  const title = (s.title || s.titre || '').toLowerCase();
+  if (type.includes('agriculture') || title.includes('agriculture') || title.includes('élevage') || title.includes('elevage')) {
+    return '/pdf/fiche-technique-agriculture.pdf';
+  }
+  if (type.includes('drone') || type.includes('cartographie') || type.includes('topographie') || title.includes('drone') || title.includes('cartographie')) {
+    return '/pdf/fiche-technique-drone.pdf';
+  }
+  if (type.includes('agroforestry') || type.includes('surveillance') || title.includes('agroforesterie') || title.includes('plants')) {
+    return '/pdf/fiche-technique-surveillance.pdf';
+  }
+  return '/pdf/fiche-technique-forestry.pdf';
+};
+
 export default function ServicesPage({ service, onNavigate }: ServicesPageProps) {
   const { t, lang } = useLanguage();
   const config = serviceConfig[service];
@@ -373,10 +388,10 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                     </motion.div>
                   </div>
                   {/* Right Column - Text Content */}
-                  <div className="p-8 lg:p-16 pb-12 lg:pb-20 flex flex-col justify-center bg-white">
+                  <div className="p-8 lg:p-16 pb-12 lg:pb-20 flex flex-col justify-center items-start text-left bg-white w-full">
                     <ScrollTitle
                       as="h3"
-                      className="font-montserrat-extrabold uppercase text-3xl md:text-4xl text-dronek-dark mb-6 leading-none"
+                      className="font-montserrat-extrabold uppercase text-3xl md:text-4xl text-dronek-dark mb-6 leading-none text-left"
                     >
                       {item.title}
                     </ScrollTitle>
@@ -386,7 +401,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                       whileInView={{ opacity: 1 }}
                       transition={{ delay: 0.5, duration: 0.8 }}
                       viewport={{ once: true }}
-                      className="text-base md:text-lg text-dronek-medium leading-relaxed font-medium"
+                      className="text-base md:text-lg text-dronek-medium leading-relaxed font-medium text-justify w-full"
                     >
                       {item.desc}
                     </motion.p>
@@ -436,32 +451,22 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
               className="relative w-full max-w-6xl bg-white rounded-[2rem] lg:rounded-[3rem] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] flex flex-col lg:flex-row h-auto max-h-[90vh] lg:h-[700px]"
             >
               {/* Left Column - Image Background & Text Overlay */}
-              <div className="lg:w-[45%] relative min-h-[300px] lg:min-h-full">
+              <div className="lg:w-[45%] relative min-h-[300px] lg:min-h-full overflow-hidden group">
                 <Image 
                   src={selectedItem.image || config.image} 
                   alt={selectedItem.title} 
                   fill 
-                  className="object-cover"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-dronek-dark via-dronek-dark/40 to-transparent" />
+                <div className="expertise-card-overlay" />
                 
-                <div className="absolute inset-0 p-8 lg:p-12 flex flex-col justify-end text-white">
-                  <motion.h2 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-3xl lg:text-5xl font-montserrat-extrabold uppercase leading-none mb-6"
-                  >
+                <div className="absolute inset-0 p-8 lg:p-12 flex flex-col justify-end text-white z-10">
+                  <h2 className="text-3xl lg:text-5xl font-bold uppercase leading-none mb-4 text-white drop-shadow-md text-left">
                     {selectedItem.detailTitle || selectedItem.title}
-                  </motion.h2>
-                  <motion.p 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-white/80 text-base lg:text-lg font-medium leading-relaxed italic"
-                  >
+                  </h2>
+                  <p className="text-white/80 text-base lg:text-lg font-medium leading-relaxed italic text-left">
                     {selectedItem.detailShortDesc || selectedItem.desc}
-                  </motion.p>
+                  </p>
                 </div>
               </div>
 
@@ -470,7 +475,7 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
                 <div>
                   <div className="w-12 h-1.5 bg-dronek-green rounded-full mb-10" />
                   <div className="prose prose-lg max-w-none">
-                    <p className="text-gray-600 text-lg lg:text-xl leading-relaxed font-medium">
+                    <p className="text-gray-600 text-lg lg:text-xl leading-relaxed font-medium text-justify">
                       {selectedItem.detailLongDesc || selectedItem.desc}
                     </p>
                   </div>
@@ -478,8 +483,9 @@ export default function ServicesPage({ service, onNavigate }: ServicesPageProps)
 
                 <div className="mt-12 flex flex-col items-center gap-4">
                   <a 
-                    href={selectedItem.pdfUrl} 
-                    download
+                    href={selectedItem.pdfUrl || getFallbackPdfUrl(selectedItem)} 
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-full inline-flex items-center justify-center px-10 py-5 rounded-full bg-dronek-green hover:bg-dronek-dark text-white font-bold uppercase tracking-widest text-xs transition-all shadow-xl hover:shadow-dronek-green/30 active:scale-95 gap-3"
                   >
                     <FileText className="w-5 h-5" />

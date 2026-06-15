@@ -127,7 +127,6 @@ export default function AdminDashboard() {
     { id: 'services', label: t.admin.tabs.services, icon: Zap },
     { id: 'projets', label: t.admin.tabs.projects, icon: Briefcase },
     { id: 'actualites', label: t.admin.tabs.news, icon: FileText },
-    { id: 'equipe', label: t.admin.tabs.team, icon: Users },
     { id: 'contacts', label: t.admin.tabs.contacts, icon: MessageSquare },
     { id: 'production_sites', label: t.admin.tabs.production_sites, icon: Globe },
     { id: 'mediatheque', label: t.admin.tabs.mediatheque, icon: ImageIcon },
@@ -149,7 +148,7 @@ export default function AdminDashboard() {
     setErrorState(null);
     
     const tablesToFetch = activeTab === 'all' 
-      ? ['projets', 'actualites', 'equipe', 'contacts', 'production_sites', 'services']
+      ? ['projets', 'actualites', 'contacts', 'production_sites', 'services']
       : activeTab === 'mediatheque' ? ['contacts'] : [activeTab];
 
     const fetchData = async () => {

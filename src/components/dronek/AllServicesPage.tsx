@@ -52,6 +52,21 @@ const getServiceDomainLabel = (s: any, lang: string) => {
   return lang === 'fr' ? 'Foresterie' : 'Forestry';
 };
 
+const getFallbackPdfUrl = (s: any) => {
+  const type = (s.service_type || s.serviceType || s.id || '').toLowerCase();
+  const title = (s.title || s.titre || '').toLowerCase();
+  if (type.includes('agriculture') || title.includes('agriculture') || title.includes('élevage') || title.includes('elevage')) {
+    return '/pdf/fiche-technique-agriculture.pdf';
+  }
+  if (type.includes('drone') || type.includes('cartographie') || type.includes('topographie') || title.includes('drone') || title.includes('cartographie')) {
+    return '/pdf/fiche-technique-drone.pdf';
+  }
+  if (type.includes('agroforestry') || type.includes('surveillance') || title.includes('agroforesterie') || title.includes('plants')) {
+    return '/pdf/fiche-technique-surveillance.pdf';
+  }
+  return '/pdf/fiche-technique-forestry.pdf';
+};
+
 interface AllServicesPageProps {
   onNavigate: (page: PageView) => void;
 }
@@ -358,26 +373,26 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                     </div>
 
                     {/* Right side: Content */}
-                    <div className="p-8 lg:p-14 pb-12 lg:pb-16 flex flex-col justify-center items-center text-center h-full relative overflow-hidden bg-white/90 backdrop-blur-sm z-0">
-                      <div className="relative z-10 flex flex-col items-center">
+                    <div className="p-8 lg:p-14 pb-12 lg:pb-16 flex flex-col justify-center items-start text-left h-full relative overflow-hidden bg-white/90 backdrop-blur-sm z-0">
+                      <div className="relative z-10 flex flex-col items-start w-full">
 
-                        <h2 className="text-3xl lg:text-4xl font-normal text-[#149655]/80 leading-[1.05] mb-6 uppercase tracking-tight text-center">
+                        <h2 className="text-3xl lg:text-4xl font-normal text-[#149655]/80 leading-[1.05] mb-6 uppercase tracking-tight text-left">
                           {service.title}
                         </h2>
 
                         {service.description && (
-                          <p className="text-gray-600 font-medium text-lg lg:text-xl leading-relaxed mb-6 line-clamp-3 text-center">
+                          <p className="text-gray-600 font-medium text-lg lg:text-xl leading-relaxed mb-6 line-clamp-3 text-justify w-full">
                             {service.description}
                           </p>
                         )}
 
                         {/* Items List - Restored for exact match */}
                         {service.items && service.items.length > 0 && (
-                          <div className="flex flex-col gap-3 mb-10 w-full items-center">
+                          <div className="flex flex-col gap-3 mb-10 w-full items-start">
                             {service.items.slice(0, 4).map((item: any, iIdx: number) => (
-                              <div key={iIdx} className="flex items-center gap-3 group/item justify-center text-center">
-                                <div className="w-1.5 h-1.5 rounded-full bg-dronek-green shrink-0" />
-                                <span className="text-[14px] lg:text-[15px] text-gray-700 font-semibold leading-snug group-hover/item:text-dronek-green transition-colors">
+                              <div key={iIdx} className="flex items-start gap-3 group/item justify-start text-left w-full">
+                                <div className="w-1.5 h-1.5 rounded-full bg-dronek-green shrink-0 mt-2" />
+                                <span className="text-[14px] lg:text-[15px] text-gray-700 font-semibold leading-snug group-hover/item:text-dronek-green transition-colors text-justify">
                                   {item.title}
                                 </span>
                               </div>
@@ -387,7 +402,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
 
                         <button 
                           onClick={() => setSelectedService(service)}
-                          className="inline-flex items-center gap-3 bg-dronek-green hover:bg-dronek-dark text-white px-8 py-5 rounded-full font-bold transition-all shadow-lg shadow-dronek-green/30 group/btn mx-auto"
+                          className="inline-flex items-center gap-3 bg-dronek-green hover:bg-dronek-dark text-white px-8 py-5 rounded-full font-bold transition-all shadow-lg shadow-dronek-green/30 group/btn"
                         >
                           <span className="uppercase tracking-widest text-sm">{t.services.learnMore}</span>
                           <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
@@ -430,22 +445,20 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                 <X className="w-6 h-6 text-black" />
               </button>
               
-              {/* Intro Text Side */}
-              <div className="md:w-1/2 relative min-h-[300px] md:h-auto bg-[#1a4a2e] flex flex-col justify-center p-8 lg:px-12 lg:pb-12 lg:pt-10 text-white overflow-hidden">
-                {/* Subtle background texture */}
-                <div className="absolute inset-0 z-0 opacity-10 grayscale brightness-200 p-10 lg:p-20">
-                  <Image 
-                    src={selectedService.image || "/images/dronek_image3-removebg-preview.png"} 
-                    alt="" 
-                    fill 
-                    className="object-cover opacity-30 mix-blend-overlay" 
-                  />
-                </div>
-
-                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center text-center">
-                   <h2 className="text-3xl lg:text-4xl font-normal text-white/70 uppercase tracking-tighter leading-tight mb-4">
-                      {selectedService.title}
-                   </h2>
+              {/* Left Column - Image Background & Text Overlay */}
+              <div className="md:w-1/2 relative min-h-[300px] md:h-auto overflow-hidden group">
+                <Image 
+                  src={selectedService.image || "/images/hero-forest.jpg"} 
+                  alt={selectedService.title} 
+                  fill 
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="expertise-card-overlay" />
+                
+                <div className="absolute inset-0 p-8 lg:p-12 flex flex-col justify-end text-white z-10">
+                  <h2 className="text-3xl lg:text-5xl font-bold uppercase leading-none mb-4 text-white drop-shadow-md text-left">
+                    {selectedService.title}
+                  </h2>
                 </div>
               </div>
 
@@ -459,7 +472,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
 
                 <div className="space-y-8">
                   {selectedService.description && (
-                    <p className="text-gray-600 leading-relaxed text-sm md:text-base font-medium">
+                    <p className="text-gray-600 leading-relaxed text-sm md:text-base font-medium text-justify">
                       {selectedService.description}
                     </p>
                   )}
@@ -471,7 +484,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                         {selectedService.items.map((item: any, i: number) => (
                           <div key={i} className="flex items-start gap-3">
                             <div className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-dronek-green" />
-                            <p className="text-sm text-gray-700 font-medium">{item.title}</p>
+                            <p className="text-sm text-gray-700 font-medium text-justify">{item.title}</p>
                           </div>
                         ))}
                       </div>
@@ -479,17 +492,15 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
                   )}
 
                   <div className="pt-6 space-y-3">
-                    {selectedService.pdfUrl && (
-                      <a 
-                        href={selectedService.pdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full bg-white border-2 border-dronek-green text-dronek-green hover:bg-dronek-green hover:text-white font-extrabold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm"
-                      >
-                        <Download className="w-5 h-5" />
-                        <span>{lang === 'fr' ? 'Télécharger la fiche technique' : 'Download technical sheet'}</span>
-                      </a>
-                    )}
+                    <a 
+                      href={selectedService.pdfUrl || getFallbackPdfUrl(selectedService)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full bg-white border-2 border-dronek-green text-dronek-green hover:bg-dronek-green hover:text-white font-extrabold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm"
+                    >
+                      <Download className="w-5 h-5" />
+                      <span>{lang === 'fr' ? 'Télécharger la fiche technique' : 'Download technical sheet'}</span>
+                    </a>
 
                     <button 
                       onClick={() => setSelectedService(null)}

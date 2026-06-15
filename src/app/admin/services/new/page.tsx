@@ -56,6 +56,21 @@ function CMSRouter() {
   const type = searchParams.get('type') || 'service';
   const id = searchParams.get('id');
 
+  if (type === 'membre') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f9fafb] p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-6">
+          <Shield className="w-8 h-8" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Accès Non Autorisé</h1>
+        <p className="text-gray-500 mb-6">Le formulaire de membre de l'équipe a été désactivé.</p>
+        <Link href="/admin" className="bg-[#149655] hover:bg-[#0f7a44] text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg">
+          Retour au tableau de bord
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f9fafb] selection:bg-[#149655]/10 relative overflow-hidden">
       {/* Brand Background Image - Same as Login */}
