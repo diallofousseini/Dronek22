@@ -363,7 +363,7 @@ export default function DsmPage({ onNavigate }: { onNavigate: (page: any) => voi
                 />
                 
                 {/* L'écran interne dynamique, calé au pourcentage exact de l'ordinateur */}
-                <div className="absolute top-[6.28%] left-[10.26%] right-[10.72%] bottom-[4.45%] overflow-hidden bg-black z-20 rounded-[2px]">
+                <div className="absolute top-[6.28%] left-[10.26%] right-[10.72%] bottom-[11.52%] overflow-hidden bg-black z-20 rounded-[2px]">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeScreenIndex}

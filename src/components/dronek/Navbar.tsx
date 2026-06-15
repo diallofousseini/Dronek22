@@ -182,7 +182,7 @@ export default function Navbar({ currentPage, onNavigate, triggerNewsMenu }: Nav
             </button>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-2 justify-center min-w-0 pr-2 lg:pr-3">
+            <div className="hidden lg:flex items-center gap-1.5 lg:gap-2.5 justify-end min-w-0 pr-4 lg:pr-8">
               <button
                 onClick={() => handleNav('home')}
                 className={cn(

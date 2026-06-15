@@ -415,6 +415,29 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
   const [selectedHomeProject, setSelectedHomeProject] = useState<any>(null);
 
+  const defaultServices = React.useMemo(() => [
+    {
+      title: t.services?.forestry?.name || (lang === 'fr' ? 'Foresterie' : 'Forestry'),
+      image: '/images/hero-forest.jpg',
+      service_type: 'forestry'
+    },
+    {
+      title: t.services?.drone?.name || (lang === 'fr' ? 'Drone et Cartographie' : 'Drone and Mapping'),
+      image: '/images/hero-drone.jpg',
+      service_type: 'drone'
+    },
+    {
+      title: t.services?.surveillance?.name || (lang === 'fr' ? 'Agroforesterie' : 'Agroforestry'),
+      image: '/images/hero-agroforestry.jpg',
+      service_type: 'surveillance'
+    },
+    {
+      title: t.services?.agriculture?.name || (lang === 'fr' ? 'Agriculture' : 'Agriculture'),
+      image: '/images/hero-agriculture.jpg',
+      service_type: 'agriculture'
+    }
+  ], [lang, t]);
+
   const handleNav = useCallback((page: PageView) => {
     onNavigate(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -436,7 +459,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     return label || name.slice(0, 6);
   };
 
-  const [dynamicHeroImages, setDynamicHeroImages] = useState<string[]>(defaultHeroImages);
+  const [heroServices, setHeroServices] = useState<Array<{ title: string; image: string; service_type?: string }>>([]);
   const [dynamicServices, setDynamicServices] = useState<any[]>([]);
   const [dynamicMembers, setDynamicMembers] = useState<TeamMember[]>([]);
 
@@ -586,23 +609,53 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         setDynamicServices(getFallbackServices(lang));
       }
 
-      // 5. Fetch Hero Media
+      // 5. Fetch Services for Hero Slideshow (matching AllServices page)
       try {
-        const { data: mediaData, error: mediaError } = await supabase
-          .from('media')
+        const { data: servicesData, error: servicesError } = await supabase
+          .from('services')
           .select('*')
-          .eq('type', 'hero')
-          .in('statut', ['publie', 'Publié', 'Published']);
+          .or('service_type.neq.domain,service_type.is.null')
+          .in('statut', ['publie', 'Publié', 'Published'])
+          .order('created_at', { ascending: false });
         
-        if (mediaError) {
-          setDynamicHeroImages(defaultHeroImages);
-        } else if (mediaData && mediaData.length > 0) {
-          setDynamicHeroImages(mediaData.map(m => (m as any).url));
+        if (servicesError) {
+          console.error('[HomePage Fetch] Error fetching services for hero:', servicesError);
+          setHeroServices(defaultServices);
+        } else if (servicesData && servicesData.length > 0) {
+          const mapped = servicesData.map((s: any) => {
+            let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
+            if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+               imageUrl = '/images/hero-forest.jpg';
+            }
+            return {
+              title: s.titre || s.title || (lang === 'fr' ? 'Sans titre' : 'Untitled'),
+              image: imageUrl,
+              service_type: s.service_type || ''
+            };
+          });
+          
+          const sorted = mapped.sort((a: any, b: any) => {
+            const getVal = (item: any) => {
+              const type = (item.service_type || '').toLowerCase();
+              const title = (item.title || '').toLowerCase();
+              if (type.includes('agriculture') || title.includes('agriculture') || title.includes('culture') || title.includes('élevage') || title.includes('elevage')) {
+                return 1;
+              }
+              if (type.includes('drone') || type.includes('tech') || title.includes('drone') || title.includes('cartographie') || title.includes('sig') || title.includes('lidar') || title.includes('technologie')) {
+                return 2;
+              }
+              return 0;
+            };
+            return getVal(a) - getVal(b);
+          });
+          
+          setHeroServices(sorted);
         } else {
-          setDynamicHeroImages(defaultHeroImages);
+          setHeroServices(defaultServices);
         }
       } catch (err) {
-        setDynamicHeroImages(defaultHeroImages);
+        console.error('[HomePage Fetch] Exception fetching services for hero:', err);
+        setHeroServices(defaultServices);
       }
 
       // 6. Fetch Team
@@ -643,9 +696,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
  // Added lang to dependencies
 
   // Auto-rotate hero items
-  const heroItems = [
-    ...dynamicHeroImages.map(img => ({ type: 'image', image: img }))
-  ];
+  const heroItems = React.useMemo(() => {
+    const list = heroServices.length > 0 ? heroServices : defaultServices;
+    return list.map(s => ({ type: 'image' as const, image: s.image }));
+  }, [heroServices, defaultServices]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -669,9 +723,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     { num: '04', title: (lang: string) => lang === 'fr' ? 'Livraison' : 'Delivery', desc: (lang: string) => lang === 'fr' ? 'Remise des résultats finaux et accompagnement.' : 'Delivery of final results and support.', icon: Users, image: '/images/delivery-truck.png' },
   ];
 
-  const rotatingPhrases = lang === 'fr'
-    ? ['Foresterie Durable', 'Cartographie 3D', 'Agroforesterie', 'Solutions Innovantes', 'Inventaire Forestier', 'SIG & Télédétection']
-    : ['Sustainable Forestry', '3D Mapping', 'Agroforestry', 'Innovative Solutions', 'Forest Inventory', 'GIS & Remote Sensing'];
+  const rotatingPhrases = React.useMemo(() => {
+    const list = heroServices.length > 0 ? heroServices : defaultServices;
+    return list.map(s => s.title);
+  }, [heroServices, defaultServices]);
 
   const heroSlogans = lang === 'fr'
     ? [
