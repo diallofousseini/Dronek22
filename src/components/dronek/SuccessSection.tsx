@@ -125,7 +125,7 @@ export default function SuccessSection({ onNavigate }: SuccessSectionProps) {
             <div className="success-carousel-wrapper mt-6">
               <div className="success-carousel-track success-carousel-track-reverse hover:[animation-play-state:paused]">
                 {/* Reverse the order for the second row */}
-                {[...partners.reverse(), ...partners.reverse()].map((partner, idx) => (
+                {[...[...partners].reverse(), ...[...partners].reverse()].map((partner, idx) => (
                   <div key={`partner-rev-${partner.name}-${idx}`} className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-black/5 h-20 sm:h-24 w-[140px] sm:w-[160px] flex items-center justify-center p-2 flex-none mx-3 transition-transform duration-300 hover:-translate-y-1">
                     <img
                       src={partner.image}

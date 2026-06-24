@@ -27,7 +27,6 @@ import { useLanguage } from './LanguageProvider';
 import { ScrollTitle, ScrollBold } from './ScrollTitle';
 import type { PageView } from './Navbar';
 import { cn } from '@/lib/utils';
-import { partners } from '@/lib/partners';
 import Partners from './Partners';
 import ContactCTA from './ContactCTA';
 import { supabase } from '@/lib/supabase';
