@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Mail, Shield, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/components/dronek/LanguageProvider';
 
@@ -76,8 +76,14 @@ export default function ForgotPassword() {
 
         {/* Top Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-[#149655]/10 flex items-center justify-center">
-            <Shield className="w-10 h-10 text-[#149655]" />
+          <div className="w-20 h-20 rounded-full bg-[#149655]/10 flex items-center justify-center overflow-hidden">
+            <Image 
+              src="/ssss.png" 
+              alt="Security Lock" 
+              width={48} 
+              height={48} 
+              className="object-contain"
+            />
           </div>
         </div>
 

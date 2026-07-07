@@ -1,0 +1,25 @@
+name: Keep Supabase Awake
+
+on:
+  schedule:
+    # Runs every 12 hours (at 00:00 and 12:00 UTC)
+    - cron: '0 0,12 * * *'
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions tab
+
+jobs:
+  ping:
+    name: Ping Database Keep-Alive Route
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Ping Request
+        run: |
+          echo "Pinging Dronek Website Keep-Alive Route..."
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://dronek.vercel.app/api/cron/ping-supabase)
+          echo "Response Status Code: $STATUS_CODE"
+          if [ "$STATUS_CODE" -ne 200 ]; then
+            echo "Warning: Received non-200 status code: $STATUS_CODE. Re-trying..."
+            sleep 5
+            curl -s -o /dev/null -w "%{http_code}" https://dronek.vercel.app/api/cron/ping-supabase
+          else
+            echo "Database pinged successfully. Supabase is kept active."
+          fi

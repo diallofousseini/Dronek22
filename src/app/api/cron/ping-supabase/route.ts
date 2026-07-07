@@ -6,13 +6,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   try {
-    // 1. Security Check: verify the Authorization header if CRON_SECRET is configured
-    const authHeader = req.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      console.warn('[Cron Supabase Ping] Unauthorized access attempt blocked.');
-      return new Response('Unauthorized', { status: 401 });
-    }
-
     // 2. Heartbeat Query: Perform a quick, light read on the services table to keep Supabase awake
     const { data, error } = await supabase
       .from('services')
