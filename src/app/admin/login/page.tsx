@@ -79,10 +79,10 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 w-full bg-white relative overflow-hidden">
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-5 w-full bg-white relative overflow-hidden">
       
       {/* Partie Gauche (Brand Panel) - Desktop uniquement */}
-      <div className="hidden md:flex flex-col items-center justify-center bg-[#f7fbf8] p-12 relative overflow-hidden">
+      <div className="hidden md:flex md:col-span-2 flex-col items-center justify-center bg-[#f7fbf8] p-12 relative overflow-hidden">
         {/* Subtly animated decorative watermark */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.08]">
           <div className="relative w-[500px] h-[500px] lg:w-[700px] lg:h-[700px]">
@@ -113,8 +113,8 @@ export default function AdminLogin() {
         </motion.div>
       </div>
 
-      {/* Partie Droite (Form Panel) - Fond vert principal */}
-      <div className="flex flex-col items-center justify-center bg-[#149655] p-6 sm:p-12 relative overflow-hidden">
+      {/* Partie Droite (Form Panel) - Fond vert principal (Vert du footer #14532d) */}
+      <div className="flex md:col-span-3 flex-col items-center justify-center bg-[#14532d] p-6 sm:p-12 relative overflow-hidden">
         {/* Subtle corner watermark on green background */}
         <div className="absolute top-[-40px] right-[-40px] w-64 h-64 opacity-[0.08] pointer-events-none">
           <Image 
@@ -144,12 +144,12 @@ export default function AdminLogin() {
             />
           </div>
 
-          {/* Form Header */}
+          {/* Form Header (Coloré avec le vert du footer) */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-1 tracking-tight">
+            <h1 className="text-3xl font-extrabold text-[#14532d] mb-1 tracking-tight">
               {lang === 'fr' ? 'Connexion' : 'Login'}
             </h1>
-            <p className="text-gray-500 text-xs font-semibold">
+            <p className="text-[#14532d]/80 text-xs font-semibold">
               {lang === 'fr' ? 'Connectez-vous à votre espace' : 'Connect to your space'}
             </p>
           </div>
@@ -159,7 +159,7 @@ export default function AdminLogin() {
             
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-700 ml-1">
+              <label className="block text-xs font-bold text-gray-800 ml-1">
                 {lang === 'fr' ? 'Email' : 'Email'}
               </label>
               <div className="relative">
@@ -172,14 +172,14 @@ export default function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="votre.email@dronek.net"
-                  className="w-full pl-11 pr-4 py-3.5 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all text-sm font-medium"
+                  className="w-full pl-11 pr-4 py-3.5 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#14532d]/20 focus:border-[#14532d] transition-all text-sm font-medium"
                 />
               </div>
             </div>
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-700 ml-1">
+              <label className="block text-xs font-bold text-gray-800 ml-1">
                 {lang === 'fr' ? 'Mot de passe' : 'Password'}
               </label>
               <div className="relative">
@@ -192,7 +192,7 @@ export default function AdminLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-11 py-3.5 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all text-sm font-medium"
+                  className="w-full pl-11 pr-11 py-3.5 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#14532d]/20 focus:border-[#14532d] transition-all text-sm font-medium"
                 />
                 <button
                   type="button"
@@ -205,15 +205,15 @@ export default function AdminLogin() {
             </div>
 
             {/* Notice Box */}
-            <div className="bg-[#f0f4f2] text-gray-600 px-4 py-2.5 rounded-xl text-[9px] border border-[#149655]/10 font-bold uppercase tracking-widest text-center">
-              {t.admin.login.notice}
+            <div className="bg-[#f4f7f5] text-[#14532d] px-4 py-2.5 rounded-xl text-[10px] border border-[#14532d]/15 font-bold uppercase tracking-widest text-center">
+              {lang === 'fr' ? 'Accès réservé au Administrateur' : 'Access restricted to Administrator'}
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white py-3.5 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-[#149655]/20 disabled:opacity-70 active:scale-95"
+              className="w-full flex items-center justify-center gap-2 bg-[#14532d] hover:bg-[#0d361d] text-white py-3.5 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-[#14532d]/20 disabled:opacity-70 active:scale-95"
             >
               {loading ? t.admin.login.loading : (lang === 'fr' ? 'Je me connecte' : 'Login')}
               {!loading && <ArrowRight className="w-5 h-5" />}
@@ -231,7 +231,7 @@ export default function AdminLogin() {
             
             <Link 
               href="/admin/forgot-password" 
-              className="text-[#149655] hover:text-[#0b3b24] text-[10px] font-bold uppercase tracking-wider transition-colors duration-300"
+              className="text-[#14532d] hover:text-[#0d361d] text-[10px] font-bold uppercase tracking-wider transition-colors duration-300"
             >
               {lang === 'fr' ? 'Mot de passe oublié ?' : 'Forgot Password?'}
             </Link>
@@ -261,10 +261,10 @@ export default function AdminLogin() {
                   strokeDasharray={2 * Math.PI * 88}
                   strokeDashoffset={2 * Math.PI * 88 * (1 - progress / 100)}
                   strokeLinecap="round"
-                  className="text-[#149655] transition-all duration-75 ease-linear" 
+                  className="text-[#14532d] transition-all duration-75 ease-linear" 
                 />
               </svg>
-              <div className="absolute text-5xl font-black text-[#149655] drop-shadow-md">{progress}%</div>
+              <div className="absolute text-5xl font-black text-[#14532d] drop-shadow-md">{progress}%</div>
             </motion.div>
             <motion.p 
               initial={{ y: 20, opacity: 0 }}
@@ -306,7 +306,7 @@ export default function AdminLogin() {
               <p className="text-gray-500 mb-8 font-medium">{t.admin.login.errorDesc}</p>
               <button 
                 onClick={() => setShowErrorModal(false)}
-                className="w-full bg-[#149655] hover:bg-[#0f7a44] text-white font-bold py-3.5 px-8 rounded-xl transition-all active:scale-95 shadow-lg shadow-[#149655]/20"
+                className="w-full bg-[#14532d] hover:bg-[#0d361d] text-white font-bold py-3.5 px-8 rounded-xl transition-all active:scale-95 shadow-lg shadow-[#14532d]/20"
               >
                 OK
               </button>
