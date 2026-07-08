@@ -79,119 +79,165 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7fbf8] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-
-
-      {/* Brand Background Image - Optimized */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.08]">
-        <div className="relative w-[600px] h-[600px] lg:w-[800px] lg:h-[800px]">
-          <Image 
-            src="/images/dronek_image3-removebg-preview.png" 
-            alt="" 
-            fill 
-            className="object-contain grayscale"
-            priority
-          />
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 w-full bg-white relative overflow-hidden">
+      
+      {/* Partie Gauche (Brand Panel) - Desktop uniquement */}
+      <div className="hidden md:flex flex-col items-center justify-center bg-[#f7fbf8] p-12 relative overflow-hidden">
+        {/* Subtly animated decorative watermark */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.08]">
+          <div className="relative w-[500px] h-[500px] lg:w-[700px] lg:h-[700px]">
+            <Image 
+              src="/images/dronek_image3-removebg-preview.png" 
+              alt="" 
+              fill 
+              className="object-contain grayscale"
+              priority
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white w-full max-w-md rounded-3xl p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative z-10 overflow-hidden">
-        {/* Subtle corner watermark */}
-        <div className="absolute top-[-20px] right-[-20px] w-32 h-32 opacity-[0.05] pointer-events-none">
-          <Image 
-            src="/images/dronek_image3-removebg-preview.png" 
-            alt="" 
-            fill 
-            className="object-contain grayscale rotate-12"
-          />
-        </div>
-        
-        {/* Logo */}
-        <div className="flex justify-center h-[100px] mb-10 items-center pointer-events-none overflow-visible">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 w-full max-w-[320px] flex flex-col items-center justify-center"
+        >
           <Image 
             src="/logo.png" 
             alt="DRONEK Logo" 
-            width={240} 
-            height={80} 
-            className="h-[100px] w-auto object-contain scale-[2.5] origin-center"
+            width={350} 
+            height={120} 
+            className="w-full h-auto object-contain scale-[1.3]"
             priority
+          />
+        </motion.div>
+      </div>
+
+      {/* Partie Droite (Form Panel) - Fond vert principal */}
+      <div className="flex flex-col items-center justify-center bg-[#149655] p-6 sm:p-12 relative overflow-hidden">
+        {/* Subtle corner watermark on green background */}
+        <div className="absolute top-[-40px] right-[-40px] w-64 h-64 opacity-[0.08] pointer-events-none">
+          <Image 
+            src="/images/dronek_image3-removebg-preview.png" 
+            alt="" 
+            fill 
+            className="object-contain invert brightness-0 rotate-12"
           />
         </div>
 
-
-
-        {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="bg-white w-full max-w-md rounded-[32px] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative z-10 overflow-hidden"
+        >
           
-          {/* Email */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t.admin.login.email}
-              className="w-full pl-11 pr-4 py-4 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all font-medium text-center"
+          {/* Logo mobile uniquement */}
+          <div className="flex md:hidden justify-center h-[60px] mb-6 items-center pointer-events-none">
+            <Image 
+              src="/logo.png" 
+              alt="DRONEK Logo" 
+              width={160} 
+              height={50} 
+              className="h-full w-auto object-contain scale-[1.5]"
+              priority
             />
           </div>
 
-          {/* Password */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+          {/* Form Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
+              {lang === 'fr' ? 'Connexion' : 'Login'}
+            </h1>
+            <p className="text-gray-500 text-sm font-semibold">
+              {lang === 'fr' ? 'Connectez-vous à votre espace' : 'Connect to your space'}
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-6">
+            
+            {/* Email Field */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 ml-1">
+                {lang === 'fr' ? 'Email' : 'Email'}
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="votre.email@dronek.net"
+                  className="w-full pl-12 pr-4 py-4 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all font-medium"
+                />
+              </div>
             </div>
-            <input
-              type={showPassword ? "text" : "password"}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t.admin.login.password}
-              className="w-full pl-11 pr-12 py-4 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all font-medium text-center"
-            />
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 ml-1">
+                {lang === 'fr' ? 'Mot de passe' : 'Password'}
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-12 pr-12 py-4 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Notice Box */}
+            <div className="bg-[#f0f4f2] text-gray-600 px-4 py-3.5 rounded-xl text-[10px] border border-[#149655]/10 font-bold uppercase tracking-widest text-center">
+              {t.admin.login.notice}
+            </div>
+
+            {/* Submit Button */}
             <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-[#149655]/20 disabled:opacity-70 active:scale-95"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {loading ? t.admin.login.loading : (lang === 'fr' ? 'Je me connecte' : 'Login')}
+              {!loading && <ArrowRight className="w-5 h-5" />}
             </button>
+          </form>
+
+          {/* Footer Links */}
+          <div className="mt-8 flex justify-between items-center px-1">
+            <Link 
+              href="/" 
+              className="text-gray-400 hover:text-gray-600 text-[10px] font-bold uppercase tracking-widest transition-all"
+            >
+              {lang === 'fr' ? 'Retour' : 'Back'}
+            </Link>
+            
+            <Link 
+              href="/admin/forgot-password" 
+              className="text-[#149655] hover:text-[#0b3b24] text-[10px] font-bold uppercase tracking-wider transition-colors duration-300"
+            >
+              {lang === 'fr' ? 'Mot de passe oublié ?' : 'Forgot Password?'}
+            </Link>
           </div>
 
-          {/* Notice Box */}
-          <div className="bg-[#f0f4f2] text-gray-600 px-4 py-3.5 rounded-xl text-[11px] border border-[#149655]/10 font-bold uppercase tracking-widest text-center">
-            {t.admin.login.notice}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white py-4 rounded-xl font-bold text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-[#149655]/20 disabled:opacity-70 active:scale-95"
-          >
-            {loading ? t.admin.login.loading : t.admin.login.submit}
-            {!loading && <ArrowRight className="w-5 h-5" />}
-          </button>
-        </form>
-
-        {/* Footer Links */}
-        <div className="mt-8 flex flex-col gap-4 items-center">
-          <Link 
-            href="/admin/forgot-password" 
-            className="text-[#149655] hover:text-[#0b3b24] text-[11px] font-bold uppercase tracking-wider transition-colors duration-300"
-          >
-            {t.admin.login.forgot}
-          </Link>
-          <Link 
-            href="/" 
-            className="text-gray-400 hover:text-gray-600 text-[10px] font-bold uppercase tracking-[0.2em] transition-all text-center"
-          >
-            {t.admin.login.back}
-          </Link>
-        </div>
-
+        </motion.div>
       </div>
 
       <AnimatePresence>
