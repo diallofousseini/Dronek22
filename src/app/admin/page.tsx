@@ -69,6 +69,9 @@ export default function AdminDashboard() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [sortField, setSortField] = useState<'category' | 'status' | 'date' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
   const uniqueCategories = Array.from(new Set(items.map(item => item.category)));
 
   const filteredItems = items.filter(item => {
@@ -82,6 +85,38 @@ export default function AdminDashboard() {
       (selectedStatus === 'brouillon' && (item.status === 'Brouillon' || item.status === 'Draft' || item.status === 'brouillon'));
 
     return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  const handleSort = (field: 'category' | 'status' | 'date') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let valA = '';
+    let valB = '';
+
+    if (sortField === 'category') {
+      valA = a.category || '';
+      valB = b.category || '';
+    } else if (sortField === 'status') {
+      valA = a.status || '';
+      valB = b.status || '';
+    } else if (sortField === 'date') {
+      const timeA = new Date(a.created_at || 0).getTime();
+      const timeB = new Date(b.created_at || 0).getTime();
+      return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
+    }
+
+    return sortDirection === 'asc' 
+      ? valA.localeCompare(valB) 
+      : valB.localeCompare(valA);
   });
 
   const getDescription = (item: any) => {
@@ -297,7 +332,7 @@ return (
     <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#14532d]/5 blur-[120px] pointer-events-none" />
 
     {/* Sidebar - Desktop uniquement */}
-    <aside className="hidden md:flex flex-col w-64 bg-[#14532d] h-screen sticky top-0 text-white p-6 relative overflow-hidden flex-shrink-0 border-r border-white/5 shadow-2xl">
+    <aside className="hidden md:flex flex-col w-64 bg-[#14532d] fixed top-0 bottom-0 left-0 text-white p-6 overflow-hidden border-r border-white/5 shadow-2xl z-30">
       {/* Subtle corner watermark on green sidebar */}
       <div className="absolute top-[-40px] right-[-40px] w-48 h-48 opacity-[0.05] pointer-events-none">
         <Image 
@@ -309,13 +344,13 @@ return (
       </div>
 
       {/* Logo */}
-      <div className="mb-10 pl-2 relative z-10 flex items-center h-16">
+      <div className="mb-10 pl-2 relative z-10 flex items-center h-32 justify-center">
         <Image 
           src="/logo.png" 
           alt="DRONEK" 
-          width={180} 
-          height={50} 
-          className="w-auto h-12 object-contain brightness-0 invert" 
+          width={400} 
+          height={120} 
+          className="w-full h-auto max-h-24 object-contain brightness-0 invert" 
           priority 
         />
       </div>
@@ -376,13 +411,13 @@ return (
             </button>
 
             {/* Logo */}
-            <div className="mb-10 pl-2 flex items-center h-16">
+            <div className="mb-10 pl-2 flex items-center h-32 justify-center">
               <Image 
                 src="/logo.png" 
                 alt="DRONEK" 
-                width={180} 
-                height={50} 
-                className="w-auto h-12 object-contain brightness-0 invert" 
+                width={400} 
+                height={120} 
+                className="w-full h-auto max-h-24 object-contain brightness-0 invert" 
                 priority 
               />
             </div>
@@ -421,7 +456,7 @@ return (
     </AnimatePresence>
 
     {/* Main Area */}
-    <div className="flex-1 flex flex-col min-h-screen relative z-10 overflow-y-auto">
+    <div className="flex-1 flex flex-col min-h-screen md:pl-64 relative z-10 overflow-y-auto">
       
       {/* Header */}
       <header className={cn(
@@ -533,41 +568,6 @@ return (
               className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#14532d]/10 focus:border-[#14532d] transition-all font-medium text-sm shadow-sm"
             />
           </div>
-
-          <div className="flex flex-wrap sm:flex-nowrap gap-3">
-            {/* Category Select */}
-            <div className="relative flex-1 sm:flex-initial">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full sm:w-auto appearance-none bg-white border border-gray-200 rounded-2xl pl-5 pr-10 py-3.5 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#14532d]/10 focus:border-[#14532d] cursor-pointer shadow-sm hover:bg-gray-50 transition-colors uppercase tracking-wider"
-              >
-                <option value="all">{lang === 'fr' ? 'Toutes les catégories' : 'All Categories'}</option>
-                {uniqueCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-450">
-                <ChevronDown className="w-4 h-4" />
-              </div>
-            </div>
-
-            {/* Status Select */}
-            <div className="relative flex-1 sm:flex-initial">
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full sm:w-auto appearance-none bg-white border border-gray-200 rounded-2xl pl-5 pr-10 py-3.5 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#14532d]/10 focus:border-[#14532d] cursor-pointer shadow-sm hover:bg-gray-50 transition-colors uppercase tracking-wider"
-              >
-                <option value="all">{lang === 'fr' ? 'Tous les statuts' : 'All Statuses'}</option>
-                <option value="publie">{lang === 'fr' ? 'Publié' : 'Published'}</option>
-                <option value="brouillon">{lang === 'fr' ? 'Brouillon' : 'Draft'}</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-450">
-                <ChevronDown className="w-4 h-4" />
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Table Container Card */}
@@ -577,9 +577,39 @@ return (
             <thead>
               <tr className="bg-gray-55/60 border-b border-gray-100">
                 <th className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest">{lang === 'fr' ? 'Actualité' : 'Item'}</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest">{t.admin.table.category}</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest text-center">{t.admin.table.status}</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest">{t.admin.table.date}</th>
+                <th 
+                  onClick={() => handleSort('category')}
+                  className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest cursor-pointer hover:text-[#14532d] transition-colors select-none"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>{t.admin.table.category}</span>
+                    {sortField === 'category' && (
+                      <span className="text-[10px]">{sortDirection === 'asc' ? ' ▲' : ' ▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => handleSort('status')}
+                  className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest cursor-pointer hover:text-[#14532d] transition-colors select-none text-center"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>{t.admin.table.status}</span>
+                    {sortField === 'status' && (
+                      <span className="text-[10px]">{sortDirection === 'asc' ? ' ▲' : ' ▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => handleSort('date')}
+                  className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest cursor-pointer hover:text-[#14532d] transition-colors select-none"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>{t.admin.table.date}</span>
+                    {sortField === 'date' && (
+                      <span className="text-[10px]">{sortDirection === 'asc' ? ' ▲' : ' ▼'}</span>
+                    )}
+                  </div>
+                </th>
                 <th className="px-6 py-4 text-xs font-black text-gray-550 uppercase tracking-widest text-right">{t.admin.table.actions}</th>
               </tr>
             </thead>
@@ -622,8 +652,8 @@ return (
                     </div>
                   </td>
                 </tr>
-              ) : filteredItems.length > 0 ? (
-                filteredItems.map((item) => (
+              ) : sortedItems.length > 0 ? (
+                sortedItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
@@ -741,8 +771,8 @@ return (
                   </button>
                 </div>
               </div>
-            ) : filteredItems.length > 0 ? (
-              filteredItems.map((item) => (
+            ) : sortedItems.length > 0 ? (
+              sortedItems.map((item) => (
                 <div key={item.id} className="p-4 flex flex-col gap-4 hover:bg-gray-50/50 transition-colors">
                   <div className="flex gap-4">
                     {item.url && item.url !== "" ? (
@@ -813,27 +843,7 @@ return (
             )}
           </div>
 
-          {/* Pagination Controls */}
-          {filteredItems.length > 0 && (
-            <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-[10px] font-black text-gray-450 uppercase tracking-widest">
-                {lang === 'fr' 
-                  ? `Affichage 1 à ${filteredItems.length} sur ${filteredItems.length} éléments` 
-                  : `Showing 1 to ${filteredItems.length} of ${filteredItems.length} items`}
-              </span>
-              <div className="flex items-center gap-1.5">
-                <button className="w-8 h-8 rounded-xl border border-gray-250 bg-white flex items-center justify-center text-gray-400 hover:text-[#14532d] hover:bg-gray-50 transition-all active:scale-95 shadow-sm">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button className="w-8 h-8 rounded-xl bg-[#14532d] flex items-center justify-center text-white font-extrabold text-xs shadow-sm">
-                  1
-                </button>
-                <button className="w-8 h-8 rounded-xl border border-gray-250 bg-white flex items-center justify-center text-gray-400 hover:text-[#14532d] hover:bg-gray-50 transition-all active:scale-95 shadow-sm">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
+
         </div>
       </main>
     </div>
