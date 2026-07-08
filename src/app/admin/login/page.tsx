@@ -44,38 +44,50 @@ export default function AdminLogin() {
     e.preventDefault();
     if (!email || !password) return;
 
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'tall3333333333@gmail.com';
-    const masterPassword = 'f75Y0&5H04@';
-
-    // Master credential bypass (useful if Firebase user is not yet created or service is down)
-    if (email === adminEmail && password === masterPassword) {
-      setLoading(true);
-      localStorage.setItem('dronek_mock_auth', 'true');
-      setShowCountdown(true);
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      console.error("Login error:", error);
-      setShowErrorModal(true);
-      setLoading(false);
-      return;
-    }
-
-    if (data.user?.email !== adminEmail) {
-      await supabase.auth.signOut();
-      setShowErrorModal(true);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
-    setShowCountdown(true);
+
+    try {
+      // 1. Try our secure admin override login API
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const loginData = await res.json();
+
+      if (loginData.success && loginData.mockAuth) {
+        localStorage.setItem('dronek_mock_auth', 'true');
+        setShowCountdown(true);
+        return;
+      }
+
+      // 2. Fall back to standard Supabase auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+        setShowErrorModal(true);
+        setLoading(false);
+        return;
+      }
+
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'tall3333333333@gmail.com';
+      if (data.user?.email !== adminEmail) {
+        await supabase.auth.signOut();
+        setShowErrorModal(true);
+        setLoading(false);
+        return;
+      }
+
+      setShowCountdown(true);
+    } catch (err) {
+      console.error("Login error:", err);
+      setShowErrorModal(true);
+      setLoading(false);
+    }
   };
 
   return (
