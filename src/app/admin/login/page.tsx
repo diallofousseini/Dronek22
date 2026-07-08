@@ -129,42 +129,42 @@ export default function AdminLogin() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white w-full max-w-md rounded-[32px] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative z-10 overflow-hidden"
+          className="bg-white w-full max-w-md rounded-[32px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative z-10 overflow-hidden"
         >
           
           {/* Logo mobile uniquement */}
-          <div className="flex md:hidden justify-center h-[60px] mb-6 items-center pointer-events-none">
+          <div className="flex md:hidden justify-center h-[50px] mb-4 items-center pointer-events-none">
             <Image 
               src="/logo.png" 
               alt="DRONEK Logo" 
-              width={160} 
-              height={50} 
-              className="h-full w-auto object-contain scale-[1.5]"
+              width={140} 
+              height={44} 
+              className="h-full w-auto object-contain scale-[1.3]"
               priority
             />
           </div>
 
           {/* Form Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-1 tracking-tight">
               {lang === 'fr' ? 'Connexion' : 'Login'}
             </h1>
-            <p className="text-gray-500 text-sm font-semibold">
+            <p className="text-gray-500 text-xs font-semibold">
               {lang === 'fr' ? 'Connectez-vous à votre espace' : 'Connect to your space'}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-4">
             
             {/* Email Field */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 ml-1">
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-700 ml-1">
                 {lang === 'fr' ? 'Email' : 'Email'}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="email"
@@ -172,19 +172,19 @@ export default function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="votre.email@dronek.net"
-                  className="w-full pl-12 pr-4 py-4 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all font-medium"
+                  className="w-full pl-11 pr-4 py-3.5 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all text-sm font-medium"
                 />
               </div>
             </div>
 
             {/* Password Field */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 ml-1">
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-700 ml-1">
                 {lang === 'fr' ? 'Mot de passe' : 'Password'}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -192,20 +192,20 @@ export default function AdminLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-12 py-4 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all font-medium"
+                  className="w-full pl-11 pr-11 py-3.5 bg-[#f8faf9] border border-transparent rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#149655]/20 focus:border-[#149655] transition-all text-sm font-medium"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
             {/* Notice Box */}
-            <div className="bg-[#f0f4f2] text-gray-600 px-4 py-3.5 rounded-xl text-[10px] border border-[#149655]/10 font-bold uppercase tracking-widest text-center">
+            <div className="bg-[#f0f4f2] text-gray-600 px-4 py-2.5 rounded-xl text-[9px] border border-[#149655]/10 font-bold uppercase tracking-widest text-center">
               {t.admin.login.notice}
             </div>
 
@@ -213,7 +213,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-[#149655]/20 disabled:opacity-70 active:scale-95"
+              className="w-full flex items-center justify-center gap-2 bg-[#149655] hover:bg-[#0b3b24] text-white py-3.5 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-[#149655]/20 disabled:opacity-70 active:scale-95"
             >
               {loading ? t.admin.login.loading : (lang === 'fr' ? 'Je me connecte' : 'Login')}
               {!loading && <ArrowRight className="w-5 h-5" />}
@@ -221,7 +221,7 @@ export default function AdminLogin() {
           </form>
 
           {/* Footer Links */}
-          <div className="mt-8 flex justify-between items-center px-1">
+          <div className="mt-5 flex justify-between items-center px-1">
             <Link 
               href="/" 
               className="text-gray-400 hover:text-gray-600 text-[10px] font-bold uppercase tracking-widest transition-all"
