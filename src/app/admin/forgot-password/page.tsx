@@ -76,12 +76,12 @@ export default function ForgotPassword() {
 
         {/* Top Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-[#149655]/10 flex items-center justify-center overflow-hidden">
+          <div className="relative w-28 h-28 flex items-center justify-center">
             <Image 
               src="/ssss.png" 
               alt="Security Lock" 
-              width={48} 
-              height={48} 
+              width={96} 
+              height={96} 
               className="object-contain"
             />
           </div>

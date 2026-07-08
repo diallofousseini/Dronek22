@@ -344,13 +344,13 @@ return (
       </div>
 
       {/* Logo */}
-      <div className="mb-10 pl-2 relative z-10 flex items-center h-28">
+      <div className="mb-10 pl-2 relative z-10 flex items-center h-32">
         <Image 
-          src="/logo.png" 
+          src="/images/AAAAAA-removebg-preview.png" 
           alt="DRONEK" 
           width={300} 
-          height={85} 
-          className="w-auto h-20 object-contain brightness-0 invert" 
+          height={120} 
+          className="w-auto h-24 object-contain brightness-0 invert" 
           priority 
         />
       </div>
@@ -411,13 +411,13 @@ return (
             </button>
 
             {/* Logo */}
-            <div className="mb-10 pl-2 flex items-center h-28">
+            <div className="mb-10 pl-2 flex items-center h-32">
               <Image 
-                src="/logo.png" 
+                src="/images/AAAAAA-removebg-preview.png" 
                 alt="DRONEK" 
                 width={300} 
-                height={85} 
-                className="w-auto h-20 object-contain brightness-0 invert" 
+                height={120} 
+                className="w-auto h-24 object-contain brightness-0 invert" 
                 priority 
               />
             </div>
