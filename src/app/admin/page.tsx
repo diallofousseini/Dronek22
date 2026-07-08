@@ -297,7 +297,7 @@ return (
     <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#14532d]/5 blur-[120px] pointer-events-none" />
 
     {/* Sidebar - Desktop uniquement */}
-    <aside className="hidden md:flex flex-col w-64 bg-[#14532d] min-h-screen text-white p-6 relative overflow-hidden flex-shrink-0 border-r border-white/5 shadow-2xl">
+    <aside className="hidden md:flex flex-col w-64 bg-[#14532d] h-screen sticky top-0 text-white p-6 relative overflow-hidden flex-shrink-0 border-r border-white/5 shadow-2xl">
       {/* Subtle corner watermark on green sidebar */}
       <div className="absolute top-[-40px] right-[-40px] w-48 h-48 opacity-[0.05] pointer-events-none">
         <Image 
@@ -309,13 +309,13 @@ return (
       </div>
 
       {/* Logo */}
-      <div className="mb-10 pl-2 relative z-10 flex items-center h-12">
+      <div className="mb-10 pl-2 relative z-10 flex items-center h-16">
         <Image 
           src="/logo.png" 
           alt="DRONEK" 
-          width={140} 
-          height={40} 
-          className="w-auto h-8 object-contain brightness-0 invert" 
+          width={180} 
+          height={50} 
+          className="w-auto h-12 object-contain brightness-0 invert" 
           priority 
         />
       </div>
@@ -376,13 +376,13 @@ return (
             </button>
 
             {/* Logo */}
-            <div className="mb-10 pl-2 flex items-center h-12">
+            <div className="mb-10 pl-2 flex items-center h-16">
               <Image 
                 src="/logo.png" 
                 alt="DRONEK" 
-                width={140} 
-                height={40} 
-                className="w-auto h-8 object-contain brightness-0 invert" 
+                width={180} 
+                height={50} 
+                className="w-auto h-12 object-contain brightness-0 invert" 
                 priority 
               />
             </div>
@@ -510,68 +510,6 @@ return (
       {/* Content Container */}
       <main className="flex-1 p-6 max-w-[1440px] w-full mx-auto">
         
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Card 1: Actualités publiées */}
-          <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-50 flex items-center gap-5">
-            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-[#14532d] flex-shrink-0">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                {lang === 'fr' ? 'Actualités publiées' : 'Published News'}
-              </p>
-              <h3 className="text-3xl font-black text-gray-900 mt-1">24</h3>
-            </div>
-          </div>
-
-          {/* Card 2: Catégories */}
-          <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-50 flex items-center gap-5">
-            <div className="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600 flex-shrink-0">
-              <Folder className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                {lang === 'fr' ? 'Catégories' : 'Categories'}
-              </p>
-              <h3 className="text-3xl font-black text-gray-900 mt-1">5</h3>
-            </div>
-          </div>
-
-          {/* Card 3: Vues totales */}
-          <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-50 flex items-center gap-5">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
-              <Eye className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                {lang === 'fr' ? 'Vues totales' : 'Total Views'}
-              </p>
-              <h3 className="text-3xl font-black text-gray-900 mt-1">1 248</h3>
-            </div>
-          </div>
-
-          {/* Card 4: Dernière publication */}
-          <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-50 flex items-center gap-5">
-            <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 flex-shrink-0">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                {lang === 'fr' ? 'Dernière publication' : 'Last Publication'}
-              </p>
-              <div className="flex flex-col mt-1">
-                <h3 className="text-sm font-extrabold text-gray-900">
-                  {items.filter(i => i.table === 'actualites' && (i.status === 'Publié' || i.status === 'Published' || i.status === 'publie'))[0]?.date || '12/06/2026'}
-                </h3>
-                <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">
-                  {lang === 'fr' ? "Aujourd'hui" : 'Today'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Search & Filters Row */}
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
           {/* Search Input */}
@@ -629,12 +567,6 @@ return (
                 <ChevronDown className="w-4 h-4" />
               </div>
             </div>
-
-            {/* Filters Badge */}
-            <button className="flex items-center justify-center gap-2 bg-[#dcfce7] hover:bg-[#bbf7d0] text-[#14532d] px-5 py-3.5 rounded-2xl font-black text-xs transition-all active:scale-95 shadow-sm uppercase tracking-wider">
-              <SlidersHorizontal className="w-4 h-4" />
-              <span>{lang === 'fr' ? 'Filtres' : 'Filters'}</span>
-            </button>
           </div>
         </div>
 
@@ -706,7 +638,9 @@ return (
                         )}
                         <div className="flex flex-col">
                           <span className="font-black text-gray-900 text-base uppercase tracking-tight leading-snug group-hover:text-[#14532d] transition-colors">{item.title}</span>
-                          <span className="text-xs text-gray-500 mt-1 line-clamp-1 font-medium max-w-xs">{getDescription(item)}</span>
+                          {getDescription(item) !== "Aucune description" && getDescription(item) !== "No description" && getDescription(item) !== "" && (
+                            <span className="text-xs text-gray-500 mt-1 line-clamp-1 font-medium max-w-xs">{getDescription(item)}</span>
+                          )}
                         </div>
                       </div>
                     </td>
