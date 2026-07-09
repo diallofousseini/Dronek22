@@ -15,7 +15,7 @@ export default function ForgotPassword() {
 
   const leftImageSrc = (step === 'email' || step === 'reset') 
     ? '/ssss.png' 
-    : '/ChatGPT Image 9 juil. 2026, 00_46_42.png';
+    : '/chatgpt_image_otp.png';
   
   // State variables
   const [email, setEmail] = useState('');
@@ -257,10 +257,10 @@ export default function ForgotPassword() {
           {/* Logo mobile uniquement */}
           <div className="flex md:hidden justify-center h-[120px] mb-6 items-center pointer-events-none">
             <Image 
-              src="/ChatGPT Image 9 juil. 2026, 00_46_42.png" 
+              src={leftImageSrc} 
               alt="OTP Logo" 
-              width={140} 
-              height={140} 
+              width={120} 
+              height={120} 
               className="h-full w-auto object-contain"
               priority
             />
