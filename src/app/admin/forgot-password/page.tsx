@@ -12,6 +12,10 @@ type RecoveryStep = 'email' | 'otp' | 'reset' | 'success';
 export default function ForgotPassword() {
   const { t, lang } = useLanguage();
   const [step, setStep] = useState<RecoveryStep>('email');
+
+  const leftImageSrc = (step === 'email' || step === 'reset') 
+    ? '/ssss.png' 
+    : '/ChatGPT Image 9 juil. 2026, 00_46_42.png';
   
   // State variables
   const [email, setEmail] = useState('');
@@ -212,19 +216,20 @@ export default function ForgotPassword() {
             />
           </div>
         </div>
-
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative z-10 w-full max-w-[320px] flex flex-col items-center justify-center"
+          key={leftImageSrc}
+          initial={{ opacity: 0, scale: 0.9, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -10 }}
+          transition={{ duration: 0.4 }}
+          className="relative z-10 w-full flex flex-col items-center justify-center"
         >
           <Image 
-            src="/ChatGPT Image 9 juil. 2026, 00_46_42.png" 
-            alt="OTP Logo" 
-            width={350} 
-            height={350} 
-            className="w-full h-auto object-contain"
+            src={leftImageSrc} 
+            alt="Brand Graphic" 
+            width={leftImageSrc === '/ssss.png' ? 220 : 350} 
+            height={leftImageSrc === '/ssss.png' ? 220 : 350} 
+            className="object-contain"
             priority
           />
         </motion.div>
