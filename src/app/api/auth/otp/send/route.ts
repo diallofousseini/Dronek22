@@ -2,6 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendOTP } from '@/lib/sms';
 
+async function getContactConfig() {
+  try {
+    const { data } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('sujet', 'Configuration')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data;
+  } catch (e) {
+    console.error('Error fetching contact config:', e);
+    return null;
+  }
+}
+
+function obfuscatePhoneNumber(phoneStr: string): string {
+  const cleaned = phoneStr.trim();
+  // If it's a typical +225 number or similar split by spaces or slashes
+  if (cleaned.includes('+')) {
+    const parts = cleaned.replace(/[\/\n]/g, ' ').replace(/\s+/g, ' ').split(' ');
+    if (parts.length >= 3) {
+      return `${parts[0]} ${parts[1]} •• •• ${parts[parts.length - 1]}`;
+    }
+  }
+  if (cleaned.length > 8) {
+    return `${cleaned.slice(0, 7)} •• •• ${cleaned.slice(-4)}`;
+  }
+  return '•• •• •• ••';
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -11,13 +42,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Adresse email requise.' }, { status: 400 });
     }
 
+    // Fetch dynamic coordinates from the site's Configuration row
+    const config = await getContactConfig();
+    const configEmail = config?.email ? String(config.email).trim().toLowerCase() : 'contact@dronek.ci';
     const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'tall3333333333@gmail.com').toLowerCase();
-    const officialEmail = 'contact@dronek.ci';
 
     // Verify if it is the authorized admin email
-    if (email !== adminEmail && email !== officialEmail) {
+    if (email !== adminEmail && email !== configEmail) {
       return NextResponse.json({ error: 'Adresse email non autorisée.' }, { status: 400 });
     }
+
+    // Determine target phone number from active configuration
+    const configPhone = config?.telephone ? String(config.telephone).trim() : '+225 07 07 73 22 64';
+    
+    // Parse first phone number E.164-style for Twilio API
+    const rawNum = configPhone.split(/[\/\n]/)[0].trim();
+    const cleanedPhone = rawNum.startsWith('+') 
+      ? '+' + rawNum.replace(/\D/g, '') 
+      : rawNum.replace(/\D/g, '');
 
     // Generate a 6-digit OTP code
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -47,11 +89,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Trigger SMS and email send via sendOTP helper
-    const adminPhone = '+2250707732264'; // Official number
-    await sendOTP(otpCode, adminPhone, email);
+    await sendOTP(otpCode, cleanedPhone, email);
 
-    // Obfuscate phone number for UI display
-    const obfuscatedPhone = '+225 07 •• •• 22 64';
+    // Obfuscate active phone number for UI display
+    const obfuscatedPhone = obfuscatePhoneNumber(rawNum);
 
     return NextResponse.json({
       success: true,
