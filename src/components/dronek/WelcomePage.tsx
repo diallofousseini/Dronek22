@@ -109,7 +109,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
                 onClick={onEnter}
                 className="group bg-white text-[#154f30] font-bold text-[14px] sm:text-[15px] uppercase tracking-[0.1em] px-10 sm:px-12 py-3.5 sm:py-4 rounded-sm shadow-[0_10px_40px_rgba(0,0,0,0.3)] transition-all hover:scale-105 hover:shadow-[0_15px_50px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3"
               >
-                {lang === 'fr' ? "DÉCOUVRIR" : "DISCOVER"} <span className="group-hover:translate-x-1 transition-transform font-light">→</span>
+                {lang === 'fr' ? "DÉMARRER" : "GET STARTED"} <span className="group-hover:translate-x-1 transition-transform font-light">→</span>
               </button>
             </div>
           </motion.div>

@@ -407,10 +407,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   const defaultHeroServices = React.useMemo(() => [
     {
-      id: 'forestry',
-      title: t.services?.forestry?.name || (lang === 'fr' ? 'Foresterie' : 'Forestry'),
-      image: '/images/hero-forest.jpg',
-      service_type: 'forestry'
+      id: 'serre',
+      title: lang === 'fr' ? 'Construction de serre moderne' : 'Modern Greenhouse Construction',
+      image: '/IMAGE SITE WEB/Services agriculture 2.JPG',
+      service_type: 'agriculture'
     },
     {
       id: 'drone',
@@ -1331,7 +1331,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             >
               {/* Young Sprout and Fruits (Main Image) */}
               <Image 
-                src="/ELVIS.png" 
+                src="/Fondateur.jpeg" 
                 alt="Kouacou Yao Elvis Franklin" 
                 width={340}
                 height={340}

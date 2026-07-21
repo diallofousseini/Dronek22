@@ -96,10 +96,10 @@ export default function SolutionsPerformantes() {
                 {/* 3 Services Blocks */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end relative">
                   
-                  {/* Left: FORESTERIE */}
+                  {/* Left: SERRE MODERNE */}
                   <motion.button 
                     onClick={() => {
-                      const el = document.getElementById('forestry');
+                      const el = document.getElementById('agriculture') || document.getElementById('serre');
                       if (el) {
                         const yOffset = -120; 
                         const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
@@ -111,13 +111,13 @@ export default function SolutionsPerformantes() {
                   >
                     <div className="relative mb-4">
                       <img 
-                        src="/images/33333-removebg-preview.png" 
-                        alt="FORESTERIE" 
+                        src="/images/44444-removebg-preview.png" 
+                        alt="Serre Moderne" 
                         className="w-20 h-20 object-contain transition-transform group-hover:scale-110" 
                       />
                     </div>
                     <h3 className="text-white text-base font-bold group-hover:text-green-400 transition-colors uppercase">
-                      {lang === 'fr' ? 'FORESTERIE' : 'FORESTRY'}
+                      {lang === 'fr' ? 'CONSTRUCTION DE SERRE MODERNE' : 'MODERN GREENHOUSE CONSTRUCTION'}
                     </h3>
                   </motion.button>
 
