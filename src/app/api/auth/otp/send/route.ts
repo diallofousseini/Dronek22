@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendOTP } from '@/lib/sms';
+import { isRecognizedEmail } from '@/lib/authCrypto';
 
 async function getContactConfig() {
   try {
@@ -42,15 +43,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Adresse email requise.' }, { status: 400 });
     }
 
-    // Fetch dynamic coordinates from the site's Configuration row
-    const config = await getContactConfig();
-    const configEmail = config?.email ? String(config.email).trim().toLowerCase() : 'contact@dronek.ci';
-    const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'tall3333333333@gmail.com').toLowerCase();
+    // Check if the email is recognized in the database
+    const recognized = await isRecognizedEmail(email);
 
-    // Verify if it is the authorized admin email
-    if (email !== adminEmail && email !== configEmail) {
+    if (!recognized) {
       return NextResponse.json({ error: 'Adresse email non autorisée.' }, { status: 400 });
     }
+
+    // Fetch dynamic coordinates from the site's Configuration row
+    const config = await getContactConfig();
 
     // Determine target phone number from active configuration
     const configPhone = config?.telephone ? String(config.telephone).trim() : '+225 07 07 73 22 64';
