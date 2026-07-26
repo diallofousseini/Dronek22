@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from './LanguageProvider';
-import { ArrowRight, X, ChevronLeft, ChevronRight, Phone, Share2, Link as LinkIcon, ArrowLeft } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Share2, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 import type { PageView } from './Navbar';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -58,6 +58,9 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   
+  // Footer 3-image carousel state
+  const [footerImgIndex, setFooterImgIndex] = useState(0);
+
   const isWithin6Months = (dateStr: string) => {
     const postDate = new Date(dateStr);
     const sixMonthsAgo = new Date();
@@ -180,7 +183,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             gallery: n.gallery || null,
             customDate: n.date_publication || null,
             createdAt: n.date_publication || new Date().toISOString(),
-            category: n.categorie || 'Actualité'
+            category: n.categorie || 'Actualités'
           };
         });
 
@@ -201,7 +204,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             gallery: p.gallery || null,
             customDate: p.customDate || null,
             createdAt: p.createdAt || new Date().toISOString(),
-            category: 'Actualité'
+            category: 'Actualités'
           }));
           allPosts = [...allPosts, ...localPosts];
         }
@@ -271,6 +274,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   // Handle selecting a post and scrolling to top
   const handleSelectPost = (post: NewsPost) => {
     setSelectedPost(post);
+    setFooterImgIndex(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -285,6 +289,25 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   // ============================================
   if (selectedPost) {
     const galleryImages = getGalleryImages(selectedPost);
+    
+    // Combine main image + gallery images + other post images for 3-image horizontal carousel
+    const allFooterImages = [
+      selectedPost.image,
+      ...galleryImages,
+      ...posts.map(p => p.image)
+    ].filter((img): img is string => !!img && typeof img === 'string' && img.length > 0);
+
+    const currentFooterImages = Array.from({ length: Math.min(3, allFooterImages.length) }, (_, i) => {
+      return allFooterImages[(footerImgIndex + i) % allFooterImages.length];
+    });
+
+    const handlePrevFooterImg = () => {
+      setFooterImgIndex((prev) => (prev === 0 ? allFooterImages.length - 1 : prev - 1));
+    };
+
+    const handleNextFooterImg = () => {
+      setFooterImgIndex((prev) => (prev + 1) % allFooterImages.length);
+    };
 
     return (
       <div className="bg-white min-h-screen pb-20 font-sans">
@@ -357,47 +380,57 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           </div>
         </motion.div>
 
-        {/* Gallery Section */}
-        {galleryImages.length > 0 && (
+        {/* Horizontal 3-Image Carousel replacing bottom Back Button */}
+        {allFooterImages.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
-            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16"
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-12"
           >
-            <div className={`grid gap-4 ${
-              galleryImages.length === 1 ? 'grid-cols-1' :
-              galleryImages.length === 2 ? 'grid-cols-2' :
-              'grid-cols-2 sm:grid-cols-3'
-            }`}>
-              {galleryImages.map((imgUrl, idx) => (
-                <motion.div 
-                  key={idx} 
-                  whileHover={{ scale: 1.03 }}
-                  className="aspect-[4/3] rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer bg-gray-50 group"
-                  onClick={() => openLightbox(galleryImages, idx)}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                {lang === 'fr' ? 'Photos de l\'article' : 'Article Photos'}
+              </h3>
+              {/* Navigation buttons to cycle through photos */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrevFooterImg}
+                  className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 hover:bg-dronek-green hover:text-white hover:border-dronek-green transition-all"
+                  title={lang === 'fr' ? 'Précédent' : 'Previous'}
                 >
-                  <img 
-                    src={imgUrl} 
-                    alt={`${selectedPost.title} - Photo ${idx + 1}`} 
-                    className="w-full h-full object-cover group-hover:brightness-90 transition-all duration-300" 
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={handleNextFooterImg}
+                  className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 hover:bg-dronek-green hover:text-white hover:border-dronek-green transition-all"
+                  title={lang === 'fr' ? 'Suivant' : 'Next'}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Horizontal Images */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {currentFooterImages.map((imgUrl, idx) => (
+                <motion.div
+                  key={idx}
+                  whileHover={{ scale: 1.03 }}
+                  className="aspect-[4/3] rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 shadow-sm cursor-pointer group"
+                  onClick={() => openLightbox(allFooterImages, (footerImgIndex + idx) % allFooterImages.length)}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`Photo ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
                   />
                 </motion.div>
               ))}
             </div>
           </motion.div>
         )}
-
-        {/* Bottom back button */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Button 
-            onClick={handleBackToList}
-            className="w-full sm:w-auto rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-5 px-10 h-auto shadow-lg shadow-dronek-green/20 uppercase tracking-widest text-xs"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {lang === 'fr' ? 'Retour aux actualités' : 'Back to news'}
-          </Button>
-        </div>
 
         {/* Lightbox */}
         <AnimatePresence>
@@ -465,7 +498,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   }
 
   // ============================================
-  // NEWS LIST VIEW
+  // NEWS LIST VIEW (Cards matching ProjectsPage format)
   // ============================================
   return (
     <div className="bg-white min-h-screen pb-20 font-sans">
@@ -518,19 +551,9 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           }
           .publication-card {
             min-width: calc(16.66% - 1.5rem);
-            height: 480px; 
-            background: white; 
-            border-radius: 1.25rem;
-            padding: 1rem; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            height: 440px; 
             flex-shrink: 0;
-            display: flex; 
-            flex-direction: column; 
-            border: 1px solid #f0f0f0; 
-            cursor: pointer; 
-            transition: all 0.3s ease;
           }
-          .publication-card:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
           .nav-btn {
             width: 42px; height: 42px; border-radius: 50%; background: white; border: 1px solid #e5e7eb;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -569,48 +592,39 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             {carouselPosts.map((pub, index) => {
               const imageUrl = pub.image || '/images/hero-forest.jpg';
               return (
-                <div key={index} className="publication-card" onClick={() => handleSelectPost(pub)}>
-                  <div className="relative flex-1 w-full rounded-xl overflow-hidden bg-gray-100 group">
-                    <img src={imageUrl} alt={pub.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <span className="text-white/70 text-[10px] font-bold uppercase tracking-[0.15em]">
-                        {formatTimeAgo(pub.createdAt, lang)}
-                      </span>
-                      <h3 className="text-white text-[13px] font-extrabold leading-snug mt-1 line-clamp-3">
-                        {pub.title.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                      </h3>
+                <div key={index} className="publication-card">
+                  {/* Card formatted exactly like ProjectsPage cards */}
+                  <div 
+                    className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
+                    onClick={() => handleSelectPost(pub)}
+                  >
+                    <div className="relative h-[250px] sm:h-[280px] overflow-hidden">
+                      <img 
+                        src={imageUrl} 
+                        alt={pub.title} 
+                        className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105" 
+                        onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }} 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/0 to-transparent" />
+                      
+                      <div className="absolute top-4 left-4">
+                        <span className="inline-flex items-center rounded-full border border-dronek-green/20 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-dronek-green shadow-sm backdrop-blur-sm">
+                          {pub.category || (lang === 'fr' ? 'Actualités' : 'News')}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <motion.button 
-                        whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (navigator.share) {
-                            navigator.share({ title: pub.title, url: window.location.href });
-                          } else {
-                            alert("Partage non supporté sur ce navigateur");
-                          }
-                        }}
-                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-xl transition-all duration-300"
-                        title="Partager"
-                     >
-                        <Share2 size={20} />
-                     </motion.button>
-                     <motion.button 
-                        whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
-                        whileTap={{ scale: 0.9 }}
-                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-xl transition-all duration-300"
-                        title={t.blog.readMore}
-                     >
-                        <LinkIcon size={20} />
-                     </motion.button>
-                  </div>
-
-
+                    <div className="p-6 lg:p-7 flex flex-col items-center text-center flex-1">
+                      <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-tight tracking-tight mb-5 line-clamp-2">
+                        {pub.title.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      </h3>
+                      
+                      <Button
+                        className="mt-auto w-fit rounded-full bg-dronek-green hover:bg-green-700 text-white px-6 py-2 h-auto text-sm font-semibold"
+                      >
+                        {t.blog.readMore}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );
@@ -619,56 +633,53 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         </div>
       </section>
 
-
-      {/* 📰 CONTENT GRID */}
+      {/* 📰 CONTENT GRID (Cards formatted matching ProjectsPage) */}
       <section id="news-grid-start" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <AnimatePresence mode="wait">
-            <motion.div key="news-posts-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-              {currentPosts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  whileHover={{ scale: 1.02 }}
-                  className="h-full"
+          <motion.div key="news-posts-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+            {currentPosts.map((post, index) => (
+              <motion.div
+                key={post.id}
+                whileHover={{ scale: 1.02 }}
+                className="h-full"
+              >
+                {/* Card format identical to ProjectsPage */}
+                <div 
+                  className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
+                  onClick={() => handleSelectPost(post)}
                 >
-                  <div 
-                    className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
-                    onClick={() => handleSelectPost(post)}
-                  >
-                    <div className="relative h-[300px] sm:h-[340px] overflow-hidden bg-gray-100">
-                      <img 
-                        src={post.image || '/images/hero-forest.jpg'} 
-                        alt={post.title}
-                        className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
-                        onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/0 to-transparent" />
-                      
-                      <div className="absolute top-4 left-0 right-0 flex justify-center">
-                        <span className="inline-flex items-center rounded-full border border-white/60 bg-white/90 px-4 py-1.5 text-[10px] font-semibold text-[#71807e] shadow-sm backdrop-blur-sm uppercase tracking-widest">
-                          {formatTimeAgo(post.createdAt, lang)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-6 lg:p-7 space-y-4 flex flex-col flex-1 items-center text-center">
-                      <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-snug line-clamp-3">
-                        {post.title.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                      </h3>
-                      
-                      <div className="mt-auto">
-                        <Button
-                          className="w-fit rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-6 py-4 text-sm font-medium shadow-none transition-all duration-300"
-                        >
-                          {t.blog.readMore}
-                        </Button>
-                      </div>
+                  <div className="relative h-[250px] sm:h-[280px] overflow-hidden">
+                    <img 
+                      src={post.image || '/images/hero-forest.jpg'} 
+                      alt={post.title}
+                      className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+                      onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/0 to-transparent" />
+                    
+                    <div className="absolute top-4 left-4">
+                      <span className="inline-flex items-center rounded-full border border-dronek-green/20 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-dronek-green shadow-sm backdrop-blur-sm">
+                        {post.category || (lang === 'fr' ? 'Actualités' : 'News')}
+                      </span>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
 
+                  <div className="p-6 lg:p-7 flex flex-col items-center text-center flex-1">
+                    <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-tight tracking-tight mb-5 line-clamp-3">
+                      {post.title.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </h3>
+                    
+                    <Button
+                      className="mt-auto w-fit rounded-full bg-dronek-green hover:bg-green-700 text-white px-6 py-2 h-auto text-sm font-semibold"
+                    >
+                      {t.blog.readMore}
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       {/* 🔢 PAGINATION */}
