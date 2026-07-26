@@ -1,17 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BriefcaseBusiness, X, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ChevronLeft, ChevronRight, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from './LanguageProvider';
 import type { PageView } from './Navbar';
 import SuccessSection from './SuccessSection';
 import { projects as hardcodedProjects } from '@/lib/projects';
 import { supabase } from '@/lib/supabase';
-import { ScrollTitle } from './ScrollTitle';
 import { translateProject } from '@/lib/i18n';
 
 const getCategoryLabel = (category: string, lang: string) => {
@@ -24,6 +22,7 @@ const getCategoryLabel = (category: string, lang: string) => {
   if (catUpper === 'ARCHIVE ACTUALITÉ' || catUpper === 'NEWS ARCHIVE') return lang === 'fr' ? 'Archive Actualité' : 'News Archive';
   return category;
 };
+
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
@@ -52,100 +51,78 @@ interface ProjectsPageProps {
 }
 
 export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
-  const { t, lang } = useLanguage();
+  const { lang, t } = useLanguage();
+  const [selectedCategory, setSelectedCategory] = useState<string>('Tous');
   const [selectedProjectSlug, setSelectedProjectSlug] = useState<string | null>(null);
-  const [showAboutModal, setShowAboutModal] = useState(false);
-  const [dynamicProjects, setDynamicProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [currentPage, setCurrentPage] = useState(1);
+  const [dynamicProjects, setDynamicProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const itemsPerPage = 6;
 
-  const categories = [
-    { id: 'Tous', label: lang === 'fr' ? 'Tous' : 'All' },
-    { id: 'FORESTERIE', label: lang === 'fr' ? 'Foresterie' : 'Forestry' },
-    { id: 'AGRICULTURE', label: lang === 'fr' ? 'Agriculture' : 'Agriculture' },
-    { id: 'DRONE ET CARTOGRAPHIE', label: lang === 'fr' ? 'Drone et Cartographie' : 'Drone & Mapping' },
-    { id: 'AGROFORESTERIE', label: lang === 'fr' ? 'Agroforesterie' : 'Agroforestry' },
-  ];
+  // Lightbox state for project detail view
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  
+  // Footer 3-image carousel state
+  const [footerImgIndex, setFooterImgIndex] = useState(0);
 
-  const isOlderThan6Months = (dateStr: string) => {
-    if (!dateStr) return false;
-    const postDate = new Date(dateStr);
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    return postDate < sixMonthsAgo;
-  };
-
-  React.useEffect(() => {
-    setLoading(true);
-    
+  useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       try {
-        const [projSnap, newsSnap] = await Promise.all([
-          supabase.from('projets').select('*').in('statut', ['publie', 'Publié', 'Published']).order('created_at', { ascending: false }),
-          supabase.from('actualites').select('*').in('statut', ['publie', 'Publié', 'Published']).order('date_publication', { ascending: false })
-        ]);
+        const { data: supaProjects, error: supaError } = await supabase
+          .from('projets')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-        const projectsData = projSnap.data || [];
-        const newsData = newsSnap.data || [];
-
-        // Standard Projects
-        const standardProjects: Project[] = projectsData.map(p => {
-          let imageUrl = p.image_url || '/images/hero-main.jpg';
-          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
-            imageUrl = '/images/hero-main.jpg';
-          }
-
-          let year = '2023';
-          let objectives: string[] = [];
-          let impacts: string[] = [];
-          let detail = p.description_complete || '';
-
-          if (p.description_complete && p.description_complete.startsWith('{') && p.description_complete.endsWith('}')) {
-            try {
-              const parsed = JSON.parse(p.description_complete);
-              detail = parsed.detail || '';
-              year = parsed.year || '2023';
-              objectives = parsed.objectives || [];
-              impacts = parsed.impacts || [];
-            } catch (e) {
-              console.error("Error parsing description_complete JSON:", e);
-            }
-          }
-
-          return {
+        let standardProjects: any[] = [];
+        if (supaProjects && supaProjects.length > 0) {
+          standardProjects = supaProjects.map((p: any) => ({
             slug: p.id,
-            title: p.titre,
-            summary: p.description_courte || detail || '',
-            image: imageUrl,
-            categoryLabel: p.categorie || 'Projet',
-            location: p.localisation || (lang === 'fr' ? 'Sénégal' : 'Senegal'),
-            year: year,
-            objectives: objectives,
-            impacts: impacts,
-            detail: detail,
+            title: p.titre || '',
+            summary: p.resume || p.contenu || '',
+            detail: p.contenu || p.resume || '',
+            image: p.image_url || '/images/dronek_image3.png',
+            categoryLabel: p.categorie || 'FORESTERIE',
+            location: p.localisation || 'Côte d\'Ivoire',
+            year: p.annee || '2024',
+            objectives: p.objectifs ? (Array.isArray(p.objectifs) ? p.objectifs : [p.objectifs]) : [],
+            impacts: p.impacts ? (Array.isArray(p.impacts) ? p.impacts : [p.impacts]) : [],
+            gallery: p.gallery || null,
             isFeatured: p.is_featured || false
-          };
-        });
+          }));
+        }
 
-        // Archived News (> 6 months)
-        const archivedNews: Project[] = newsData
-          .filter(n => isOlderThan6Months(n.date_publication))
-          .map(n => {
-            let imageUrl = n.image_url || '/images/hero-main.jpg';
+        const { data: newsData } = await supabase
+          .from('actualites')
+          .select('*')
+          .in('statut', ['publie', 'Publié', 'Published'])
+          .order('date_publication', { ascending: false });
+
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        const archivedNews = (newsData || [])
+          .filter((n: any) => new Date(n.date_publication || n.created_at) < sixMonthsAgo)
+          .map((n: any) => {
+            let imageUrl = n.image_url || null;
             if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
-              imageUrl = '/images/hero-main.jpg';
+              imageUrl = null;
             }
             return {
-              slug: n.id,
-              title: n.titre,
-              summary: n.resume || n.contenu,
-              image: imageUrl,
-              categoryLabel: lang === 'fr' ? 'Archive Actualité' : 'News Archive',
-              location: n.location || 'DRONEK',
-              year: n.date_publication ? n.date_publication.split('-')[0] : new Date().getFullYear().toString(),
-              detail: n.contenu
+              slug: `news-${n.id}`,
+              title: n.titre || '',
+              summary: n.resume || n.contenu || '',
+              detail: n.contenu || n.resume || '',
+              image: imageUrl || '/images/hero-forest.jpg',
+              categoryLabel: 'ARCHIVE ACTUALITÉ',
+              location: "Côte d'Ivoire",
+              year: new Date(n.date_publication || n.created_at).getFullYear().toString(),
+              objectives: [],
+              impacts: [],
+              gallery: n.gallery || null,
+              isFeatured: false
             };
           });
 
@@ -176,7 +153,6 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Scroll to the categories section to show results
     const section = document.getElementById('projects-grid-start');
     if (section) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -188,8 +164,277 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSelectProject = (slug: string) => {
+    setSelectedProjectSlug(slug);
+    setFooterImgIndex(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBackToList = () => {
+    setSelectedProjectSlug(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const selectedProject = selectedProjectSlug ? allProjects.find((project) => project.slug === selectedProjectSlug) : null;
 
+  // Open lightbox
+  const openLightbox = (images: string[], index: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  // ============================================
+  // PROJECT DETAIL VIEW (Exact same full page format as Actualités)
+  // ============================================
+  if (selectedProject) {
+    let galleryImages: string[] = [];
+    if ((selectedProject as any).gallery) {
+      try {
+        const parsed = JSON.parse((selectedProject as any).gallery);
+        if (Array.isArray(parsed)) galleryImages = parsed.filter((s: any) => typeof s === 'string' && s.length > 0);
+      } catch (e) {}
+    }
+
+    const allFooterImages = [
+      selectedProject.image,
+      ...galleryImages,
+      ...allProjects.map(p => p.image)
+    ].filter((img): img is string => !!img && typeof img === 'string' && img.length > 0);
+
+    const currentFooterImages = Array.from({ length: Math.min(3, allFooterImages.length) }, (_, i) => {
+      return allFooterImages[(footerImgIndex + i) % allFooterImages.length];
+    });
+
+    const handlePrevFooterImg = () => {
+      setFooterImgIndex((prev) => (prev === 0 ? allFooterImages.length - 1 : prev - 1));
+    };
+
+    const handleNextFooterImg = () => {
+      setFooterImgIndex((prev) => (prev + 1) % allFooterImages.length);
+    };
+
+    return (
+      <div className="bg-white min-h-screen pb-20 font-sans">
+        {/* Back Button Header */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32">
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={handleBackToList}
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-dronek-green transition-colors mb-8 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-semibold text-sm uppercase tracking-widest">
+              {lang === 'fr' ? 'Retour aux projets' : 'Back to projects'}
+            </span>
+          </motion.button>
+
+          {/* Project Title */}
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#111] leading-tight uppercase tracking-tight mb-4"
+          >
+            {selectedProject.title}
+          </motion.h1>
+
+          {/* Project Metadata / Category & Location */}
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="text-sm text-dronek-green font-semibold italic mb-8"
+          >
+            {getCategoryLabel(selectedProject.categoryLabel, lang)} • {selectedProject.location} • {(selectedProject as any).year || '2024'}
+          </motion.p>
+        </div>
+
+        {/* Main Image */}
+        {selectedProject.image && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-10"
+          >
+            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg bg-gray-50">
+              <img 
+                src={selectedProject.image} 
+                alt={selectedProject.title} 
+                className="w-full max-h-[550px] object-cover"
+                onError={(e) => { e.currentTarget.src = '/images/dronek_image3.png'; }}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {/* Project Content & Details */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 space-y-8"
+        >
+          <div className="prose prose-lg max-w-none">
+            <p className="text-gray-700 leading-[1.9] text-[15px] sm:text-base whitespace-pre-line text-justify">
+              {(selectedProject as any).detail || selectedProject.summary}
+            </p>
+          </div>
+
+          {/* Objectives */}
+          {(selectedProject as any).objectives && (selectedProject as any).objectives.length > 0 && (
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+              <h3 className="text-base font-bold text-[#149655] tracking-wide mb-4 uppercase">
+                {t.projects.objectivesLabel}
+              </h3>
+              <ul className="space-y-3">
+                {(selectedProject as any).objectives.map((obj: string, i: number) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                    <div className="w-2 h-2 rounded-full bg-dronek-green mt-2 shrink-0" />
+                    <span>{obj}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Impacts */}
+          {(selectedProject as any).impacts && (selectedProject as any).impacts.length > 0 && (
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+              <h3 className="text-base font-bold text-[#149655] tracking-wide mb-4 uppercase">
+                {t.projects.impactsLabel}
+              </h3>
+              <ul className="space-y-3">
+                {(selectedProject as any).impacts.map((impact: string, i: number) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                    <div className="w-2 h-2 rounded-full bg-dronek-green mt-2 shrink-0" />
+                    <span>{impact}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Horizontal 3-Image Carousel at Bottom with controls */}
+        {allFooterImages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-12"
+          >
+            <div className="flex items-center justify-end mb-4">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrevFooterImg}
+                  className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 hover:bg-dronek-green hover:text-white hover:border-dronek-green transition-all"
+                  title={lang === 'fr' ? 'Précédent' : 'Previous'}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={handleNextFooterImg}
+                  className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 hover:bg-dronek-green hover:text-white hover:border-dronek-green transition-all"
+                  title={lang === 'fr' ? 'Suivant' : 'Next'}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Horizontal Images */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {currentFooterImages.map((imgUrl, idx) => (
+                <motion.div
+                  key={idx}
+                  whileHover={{ scale: 1.03 }}
+                  className="aspect-[4/3] rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 shadow-sm cursor-pointer group"
+                  onClick={() => openLightbox(allFooterImages, (footerImgIndex + idx) % allFooterImages.length)}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`Photo ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => { e.currentTarget.src = '/images/dronek_image3.png'; }}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Lightbox */}
+        <AnimatePresence>
+          {lightboxOpen && lightboxImages.length > 0 && (
+            <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                onClick={() => setLightboxOpen(false)} 
+                className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+              />
+              
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                exit={{ opacity: 0, scale: 0.9 }} 
+                className="relative max-w-5xl w-full max-h-[85vh]"
+              >
+                <button 
+                  onClick={() => setLightboxOpen(false)} 
+                  className="absolute -top-12 right-0 z-50 bg-white/20 backdrop-blur-md rounded-full p-2 hover:bg-white/40 transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+
+                <img 
+                  src={lightboxImages[lightboxIndex]} 
+                  alt={`Photo ${lightboxIndex + 1}`} 
+                  className="w-full max-h-[85vh] object-contain rounded-xl" 
+                />
+
+                {lightboxImages.length > 1 && (
+                  <>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev) => (prev === 0 ? lightboxImages.length - 1 : prev - 1)); }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/40 transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev) => (prev === lightboxImages.length - 1 ? 0 : prev + 1)); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/40 transition-colors"
+                    >
+                      <ChevronRight className="w-6 h-6 text-white" />
+                    </button>
+
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {lightboxImages.map((_, idx) => (
+                        <button 
+                          key={idx} 
+                          onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
+                          className={`w-2.5 h-2.5 rounded-full transition-all ${idx === lightboxIndex ? 'bg-white scale-125' : 'bg-white/40'}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // ============================================
+  // PROJECTS LIST VIEW
+  // ============================================
   return (
     <div>
       {/* Full Hero Section with Video and Overlays */}
@@ -197,9 +442,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            {/* Left Content */}
             <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-xl relative min-h-[250px] flex flex-col justify-center">
-              {/* Decorative background image for the left section - Optimized for full visibility */}
               <div className="absolute inset-0 z-0 opacity-[0.12] pointer-events-none select-none flex items-center justify-center lg:justify-start">
                 <div className="relative w-full h-full max-w-[650px] max-h-[650px]">
                   <Image 
@@ -243,93 +486,49 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
 
             {/* Right Content - Circular Image with overlays */}
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="relative mx-auto lg:mx-0 lg:ml-auto w-full max-w-[480px] aspect-square">
-              {/* Main Circular Image */}
               <div className="absolute inset-4 sm:inset-6 rounded-full overflow-hidden border-[8px] border-[#f7f7f5] shadow-[0_20px_50px_rgba(0,0,0,0.15)] bg-black">
                 <video src="https://res.cloudinary.com/dpcbr467k/video/upload/v1776869570/No-video-title-fdown.net_2_kuo0v5.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
-              </div>
-              
-              {/* Watch Video Circle Overlay */}
-              <div className="absolute bottom-6 left-0 sm:left-4 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white shadow-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300 z-10 border-4 border-white p-0 overflow-hidden">
-                <img 
-                  src="/images/ChatGPT Image 24 avr. 2026, 12_47_28.png" 
-                  alt="DRONEK Logo" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Pill Image Overlay */}
-              <div className="absolute bottom-12 right-0 sm:right-2 w-48 h-16 sm:w-56 sm:h-20 rounded-full overflow-hidden border-[5px] border-white shadow-xl z-10 hidden sm:block">
-                 <Image src="/images/nursery-detail.jpg" alt="Soil detail" fill className="object-cover" />
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      <section className="bg-white pt-4 lg:pt-6 pb-0">
+      {/* Projects Grid Section */}
+      <section id="projects-grid-start" className="py-16 bg-[#fcfcfb]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* 🏷️ TABS NAVIGATION — Project Filter */}
-          <div id="projects-grid-start" className="flex items-center justify-start md:justify-center px-4 md:px-0 gap-6 sm:gap-8 overflow-x-auto no-scrollbar mb-12">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`
-                  whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300
-                  ${selectedCategory === category.id 
-                    ? 'bg-dronek-green text-white shadow-lg shadow-dronek-green/20' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
-                `}
-              >
-                {category.label}
-              </button>
-            ))}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div>
+              <span className="text-xs font-semibold text-dronek-green uppercase tracking-widest block mb-2">{t.projects.tagline}</span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-dronek-text uppercase">{t.projects.sectionTitle}</h2>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap gap-2">
+              {['Tous', 'Foresterie', 'Agriculture', 'Drone et Cartographie', 'Agroforesterie'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => { setSelectedCategory(cat); setCurrentPage(1); }}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${selectedCategory === cat ? 'bg-dronek-green text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <motion.div 
-            layout 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.12,
-                  delayChildren: 0.1
-                }
-              }
-            }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8"
-          >
+          {/* Grid Container */}
+          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
             {currentProjects.map((project, index) => {
-              // Determine direction based on index
-              const directions = [
-                { x: -100, y: 0 },   // From Left
-                { x: 0, y: -100 },    // From Top
-                { x: 100, y: 0 },    // From Right
-                { x: 0, y: 100 },     // From Bottom
-              ];
-              const dir = directions[index % directions.length];
-
               return (
                 <motion.article 
                   key={project.slug} 
-                  initial={{ opacity: 0, ...dir }}
-                  whileInView={{ opacity: 1, x: 0, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ 
-                    duration: 0.8, 
-                    delay: (index % 3) * 0.1,
-                    ease: [0.21, 1.11, 0.81, 0.99] // Smooth bounce-like ease
-                  }}
                   whileHover={{ scale: 1.02 }}
                   className="h-full"
                 >
                   <div 
-                    className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer"
-                    onClick={() => setSelectedProjectSlug(project.slug)}
+                    className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
+                    onClick={() => handleSelectProject(project.slug)}
                   >
                     <div className="relative h-[250px] sm:h-[280px] overflow-hidden">
                       <Image 
@@ -347,7 +546,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                       </div>
                     </div>
 
-                    <div className="p-6 lg:p-7 flex flex-col items-center text-center h-[calc(100%-250px)] sm:h-[calc(100%-280px)]">
+                    <div className="p-6 lg:p-7 flex flex-col items-center text-center flex-1">
                       <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-tight tracking-tight mb-5">
                         {project.title.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </h3>
@@ -364,7 +563,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
             })}
           </motion.div>
 
-          {/* 🔢 PAGINATION */}
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-3 mt-16 mb-8">
               <button
@@ -402,197 +601,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
         </div>
       </section>
 
-
-
       <SuccessSection onNavigate={handleNav} />
-
-      {/* Premium Popup Implementation */}
-      <AnimatePresence>
-        {selectedProject && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            {/* Backdrop Blur & Overlay */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedProjectSlug(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
-            />
-            
-            {/* Popup Container */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.95 }}
-              className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
-            >
-              {/* Close Button Mobile */}
-              <button 
-                onClick={() => setSelectedProjectSlug(null)}
-                className="absolute top-4 right-4 z-50 md:hidden bg-white/80 backdrop-blur-md rounded-full p-2 shadow-lg"
-              >
-                <X className="w-6 h-6 text-dronek-text" />
-              </button>
-
-              {/* Image / Gallery Side */}
-              <div className="md:w-1/2 relative h-64 md:h-auto bg-gray-100">
-                <Image src={selectedProject.image} alt={selectedProject.title} fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </div>
-
-              {/* Content Side */}
-              <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-semibold text-dronek-green uppercase tracking-widest">{getCategoryLabel(selectedProject.categoryLabel, lang)}</span>
-                  <button onClick={() => setSelectedProjectSlug(null)} className="hidden md:block hover:scale-110 transition-transform">
-                    <X className="w-6 h-6 text-gray-300 hover:text-dronek-text" />
-                  </button>
-                </div>
-                
-                <h2 className="text-2xl md:text-3xl font-bold text-[#149655] mb-4 leading-tight">
-                  {selectedProject.title.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
-                </h2>
-
-                <div className="space-y-6">
-                  {/* Detailed Description */}
-                  <p className="text-gray-600 leading-relaxed text-sm md:text-base">
-                    {(selectedProject as any).detail || selectedProject.summary}
-                  </p>
-
-                  {/* Info Grid */}
-                  <div className="grid grid-cols-2 gap-4 py-4 border-y border-gray-100">
-                    <div>
-                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.projects.locationLabel}</span>
-                      <span className="text-sm font-semibold text-dronek-text">{selectedProject.location}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.projects.yearLabel}</span>
-                      <span className="text-sm font-semibold text-dronek-text">{(selectedProject as any).year || '2023'}</span>
-                    </div>
-                  </div>
-
-                  {/* Objectives */}
-                  {(selectedProject as any).objectives && (
-                    <div>
-                      <h4 className="text-sm font-bold text-[#149655] tracking-widest mb-3">{t.projects.objectivesLabel}</h4>
-                      <ul className="space-y-2">
-                        {(selectedProject as any).objectives.map((obj: string, i: number) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-gray-500">
-                            <div className="w-1.5 h-1.5 rounded-full bg-dronek-green mt-1.5" />
-                            {obj}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Results / Impacts */}
-                  {(selectedProject as any).impacts && (
-                    <div>
-                      <h4 className="text-sm font-bold text-[#149655] tracking-widest mb-3">{t.projects.impactsLabel}</h4>
-                      <ul className="space-y-2">
-                        {(selectedProject as any).impacts.map((impact: string, i: number) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-gray-500">
-                            <div className="w-1.5 h-1.5 rounded-full bg-dronek-green mt-1.5" />
-                            {impact}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                {/* Final Action */}
-                <div className="mt-10">
-                  <Button 
-                    onClick={() => setSelectedProjectSlug(null)}
-                    className="w-full rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-6 h-auto shadow-lg shadow-dronek-green/20"
-                  >
-                    {t.projects.close}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-      {/* About DRONEK Modal */}
-      <AnimatePresence>
-        {showAboutModal && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowAboutModal(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white w-full max-w-4xl rounded-[2rem] overflow-hidden shadow-2xl p-8 md:p-12"
-            >
-              {/* Background Image Texture for Modal */}
-              <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none flex items-center justify-center">
-                <div className="relative w-full h-full p-12">
-                  <Image 
-                    src="/images/dronek_image3.png" 
-                    alt="Modal Background" 
-                    fill 
-                    className="object-contain grayscale"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/20" />
-              </div>
-
-              <button 
-                onClick={() => setShowAboutModal(false)}
-                className="absolute top-6 right-6 z-50 bg-gray-100 rounded-full p-2 hover:bg-gray-200 transition-colors"
-              >
-                <X className="w-5 h-5 text-dronek-text" />
-              </button>
-
-              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
-                {/* Left side: Logo & Title */}
-                <div className="md:col-span-4 flex flex-col items-center text-center">
-                  <div className="w-64 h-40 flex items-center justify-center mb-6">
-                    <img 
-                      src="/Typographie/logoV.png" 
-                      alt="Dronek Logo" 
-                      className="w-full h-full object-contain" 
-                    />
-                  </div>
-                  <h2 
-                    className="text-2xl md:text-3xl font-black text-dronek-text uppercase leading-tight"
-                    style={{ transform: 'translateY(-1.8667cm)' }}
-                  >
-                    {t.projects.aboutTitle}
-                  </h2>
-                </div>
-
-                {/* Right side: Content & Action */}
-                <div className="md:col-span-8 flex flex-col">
-                  <div className="prose prose-sm prose-green max-w-none text-left">
-                    <p className="text-gray-600 leading-relaxed text-base lg:text-lg whitespace-pre-line">
-                      {t.projects.aboutText}
-                    </p>
-                  </div>
-                  <div className="mt-8">
-                    <Button 
-                      onClick={() => setShowAboutModal(false)}
-                      className="w-full md:w-fit rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-2 px-6 text-sm h-auto shadow-md shadow-dronek-green/10 uppercase tracking-widest transition-all duration-300"
-                    >
-                      {t.projects.close}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
-

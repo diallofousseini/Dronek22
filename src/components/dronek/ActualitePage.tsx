@@ -547,51 +547,49 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         </div>
       </AnimatedSection>
 
-      {/* 🎠 PUBLICATIONS CAROUSEL (Articles récents au format Post Facebook compact) */}
+      {/* 🎠 PUBLICATIONS CAROUSEL (Articles récents au format Post Facebook compact réduit de moitié sans trait noir) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10 overflow-hidden relative">
         <style dangerouslySetInnerHTML={{ __html: `
           .carousel-container { 
             overflow: hidden; 
             position: relative; 
-            padding: 20px 0; 
+            padding: 15px 0; 
             width: 100%;
           }
           .carousel-track { 
             display: flex; 
-            gap: 1.5rem; 
+            gap: 1.25rem; 
             transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .publication-card {
-            min-width: calc(16.66% - 1.5rem);
-            height: 440px; 
+            min-width: calc(25% - 1.25rem);
+            height: 260px; 
             flex-shrink: 0;
           }
           .nav-btn {
-            width: 42px; height: 42px; border-radius: 50%; background: white; border: 1px solid #e5e7eb;
+            width: 38px; height: 38px; border-radius: 50%; background: white; border: 1px solid #e5e7eb;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; display: flex; align-items: center; justify-content: center;
             z-index: 10; transition: all 0.3s ease; color: #374151;
           }
           .nav-btn:hover { background: #149655; color: white; border-color: #149655; transform: scale(1.05); }
           
-          @media (min-width: 1536px) { .publication-card { min-width: calc(16.66% - 1.5rem); } }
-          @media (max-width: 1535px) { .publication-card { min-width: calc(20% - 1.5rem); } }
-          @media (max-width: 1280px) { .publication-card { min-width: calc(25% - 1.5rem); } }
-          @media (max-width: 1024px) { .publication-card { min-width: calc(33.333% - 1.5rem); } }
-          @media (max-width: 768px) { .publication-card { min-width: calc(50% - 1.5rem); } }
+          @media (min-width: 1536px) { .publication-card { min-width: calc(25% - 1.25rem); } }
+          @media (max-width: 1280px) { .publication-card { min-width: calc(33.333% - 1.25rem); } }
+          @media (max-width: 1024px) { .publication-card { min-width: calc(50% - 1.25rem); } }
           @media (max-width: 640px) { 
             .publication-card { min-width: 100%; }
           }
         `}} />
         
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl lg:text-2xl font-black text-dronek-text uppercase tracking-tight">
               {t.blog.recentPosts}
             </h2>
           </div>
           <div className="flex gap-2">
-            <button onClick={handlePrev} className="nav-btn"><ChevronLeft size={18} /></button>
-            <button onClick={handleNext} className="nav-btn"><ChevronRight size={18} /></button>
+            <button onClick={handlePrev} className="nav-btn"><ChevronLeft size={16} /></button>
+            <button onClick={handleNext} className="nav-btn"><ChevronRight size={16} /></button>
           </div>
         </div>
 
@@ -605,55 +603,55 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
               const imageUrl = pub.image || '/images/hero-forest.jpg';
               return (
                 <div key={index} className="publication-card">
-                  {/* Card formatted in Facebook Post style compact (matching Project Card size) */}
+                  {/* Card Facebook Post Style compacte réduite sans aucun trait noir */}
                   <div 
-                    className="group rounded-3xl overflow-hidden bg-white shadow-[0_14px_35px_rgba(0,0,0,0.06)] border border-gray-150/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(0,0,0,0.1)] cursor-pointer flex flex-col h-full"
+                    className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col h-full border-0"
                     onClick={() => handleSelectPost(pub)}
                   >
-                    {/* Header Facebook Post with Navbar Logo */}
-                    <div className="flex items-center gap-3 px-5 pt-4 pb-2">
-                      <div className="h-9 w-9 rounded-full bg-white text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-sm border border-gray-200 p-1">
+                    {/* Header Facebook Post compact */}
+                    <div className="flex items-center gap-2 px-3 pt-3 pb-1">
+                      <div className="h-6 w-6 rounded-full bg-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-none border-0 p-0.5">
                         <img src="/Typographie/logoV.png" alt="DRONEK" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.src = '/logo.svg'; }} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="font-extrabold text-gray-900 text-sm tracking-tight block leading-none">DRONEK</span>
-                        <p className="text-[11px] font-medium text-gray-500 mt-0.5">
+                        <span className="font-extrabold text-gray-900 text-xs tracking-tight block leading-none">DRONEK</span>
+                        <p className="text-[10px] font-medium text-gray-400 mt-0.5">
                           {lang === 'fr' ? `Publié ${formatTimeAgo(pub.createdAt, lang)}` : `Published ${formatTimeAgo(pub.createdAt, lang)}`}
                         </p>
                       </div>
                     </div>
 
-                    {/* Post Title in Green (No Description) */}
-                    <div className="px-5 py-2">
-                      <h3 className="text-base font-extrabold text-[#149655] leading-snug line-clamp-2">
+                    {/* Titre en vert uniquement (sans description) */}
+                    <div className="px-3 py-1">
+                      <h3 className="text-xs font-bold text-[#149655] leading-tight line-clamp-1">
                         {pub.title}
                       </h3>
                     </div>
 
-                    {/* Main Image */}
+                    {/* Image réduite */}
                     {imageUrl && (
-                      <div className="px-5 py-1">
-                        <div className="rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 h-[180px] sm:h-[200px] relative">
+                      <div className="px-3 py-0.5">
+                        <div className="rounded-xl overflow-hidden bg-gray-50 h-[100px] sm:h-[110px] relative border-0">
                           <img 
                             src={imageUrl} 
                             alt={pub.title}
-                            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                             onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
                           />
                         </div>
                       </div>
                     )}
 
-                    {/* Date de réalisation du projet juste en bas de l'image */}
-                    <div className="px-5 pt-2 pb-1">
-                      <p className="text-[11px] font-semibold text-gray-500 italic">
+                    {/* Date sous l'image */}
+                    <div className="px-3 pt-1 pb-0.5">
+                      <p className="text-[10px] font-semibold text-gray-400 italic">
                         {lang === 'fr' ? 'Réalisé le ' : 'Date: '}
                         {(() => {
                           const d = pub.customDate || pub.createdAt;
                           try {
                             return new Date(d).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
                               day: 'numeric',
-                              month: 'long',
+                              month: 'short',
                               year: 'numeric'
                             });
                           } catch (e) {
@@ -663,10 +661,10 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                       </p>
                     </div>
 
-                    {/* Footer Action */}
-                    <div className="px-5 py-3 mt-auto border-t border-gray-100 flex items-center justify-end bg-gray-50/50">
+                    {/* Footer bouton compact */}
+                    <div className="px-3 py-2 mt-auto flex items-center justify-end bg-gray-50/30 border-0">
                       <Button
-                        className="rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-5 py-2 h-auto text-xs font-bold shadow-none transition-all duration-300"
+                        className="rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-3 py-1 h-7 text-[10px] font-bold shadow-none transition-all duration-300"
                       >
                         {t.blog.readMore}
                       </Button>
