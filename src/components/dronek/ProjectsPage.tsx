@@ -83,6 +83,9 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
             title: p.titre || '',
             summary: p.resume || p.contenu || '',
             detail: p.contenu || p.resume || '',
+            detailTitle: p.detail_title || p.detailTitle || '',
+            detailShortDesc: p.detail_short_desc || p.detailShortDesc || '',
+            detailLongDesc: p.detail_long_desc || p.detailLongDesc || '',
             image: p.image_url || '/images/dronek_image3.png',
             categoryLabel: p.categorie || 'FORESTERIE',
             location: p.localisation || 'Côte d\'Ivoire',
@@ -115,6 +118,9 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               title: n.titre || '',
               summary: n.resume || n.contenu || '',
               detail: n.contenu || n.resume || '',
+              detailTitle: '',
+              detailShortDesc: '',
+              detailLongDesc: n.contenu || '',
               image: imageUrl || '/images/hero-forest.jpg',
               categoryLabel: 'ARCHIVE ACTUALITÉ',
               location: "Côte d'Ivoire",
@@ -185,7 +191,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
   };
 
   // ============================================
-  // PROJECT DETAIL VIEW (Exact same full page format as Actualités)
+  // PROJECT DETAIL VIEW (Tous les éléments administrateur après la grande image)
   // ============================================
   if (selectedProject) {
     let galleryImages: string[] = [];
@@ -252,7 +258,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </motion.p>
         </div>
 
-        {/* Main Image */}
+        {/* Main Big Image */}
         {selectedProject.image && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -271,23 +277,38 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </motion.div>
         )}
 
-        {/* Project Content & Details */}
+        {/* Project Content & Details (Tous les éléments administrateur s'affichent APRÈS la grande image comme description) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.35 }}
           className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 space-y-8"
         >
+          {/* Titre secondaire si saisi par l'admin */}
+          {(selectedProject as any).detailTitle && (
+            <h2 className="text-xl sm:text-2xl font-bold text-[#149655] tracking-tight">
+              {(selectedProject as any).detailTitle}
+            </h2>
+          )}
+
+          {/* Description courte / sous-titre si saisi */}
+          {(selectedProject as any).detailShortDesc && (
+            <p className="text-base sm:text-lg text-gray-800 font-semibold leading-relaxed italic">
+              {(selectedProject as any).detailShortDesc}
+            </p>
+          )}
+
+          {/* Contenu principal / Description détaillée */}
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-700 leading-[1.9] text-[15px] sm:text-base whitespace-pre-line text-justify">
-              {(selectedProject as any).detail || selectedProject.summary}
+              {(selectedProject as any).detailLongDesc || (selectedProject as any).detail || selectedProject.summary}
             </p>
           </div>
 
-          {/* Objectives */}
+          {/* Objectifs saisis par l'admin */}
           {(selectedProject as any).objectives && (selectedProject as any).objectives.length > 0 && (
-            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-              <h3 className="text-base font-bold text-[#149655] tracking-wide mb-4 uppercase">
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+              <h3 className="text-base font-bold text-[#149655] tracking-wide uppercase">
                 {t.projects.objectivesLabel}
               </h3>
               <ul className="space-y-3">
@@ -301,10 +322,10 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
             </div>
           )}
 
-          {/* Impacts */}
+          {/* Impacts / Résultats saisis par l'admin */}
           {(selectedProject as any).impacts && (selectedProject as any).impacts.length > 0 && (
-            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-              <h3 className="text-base font-bold text-[#149655] tracking-wide mb-4 uppercase">
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+              <h3 className="text-base font-bold text-[#149655] tracking-wide uppercase">
                 {t.projects.impactsLabel}
               </h3>
               <ul className="space-y-3">
@@ -497,19 +518,19 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
       {/* Projects Grid Section */}
       <section id="projects-grid-start" className="py-16 bg-[#fcfcfb]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <div className="flex flex-col items-center text-center gap-6 mb-12">
             <div>
               <span className="text-xs font-semibold text-dronek-green uppercase tracking-widest block mb-2">{t.projects.tagline}</span>
               <h2 className="text-2xl sm:text-3xl font-bold text-dronek-text uppercase">{t.projects.sectionTitle}</h2>
             </div>
 
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap gap-2">
+            {/* Category Filter Pills Centered */}
+            <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3">
               {['Tous', 'Foresterie', 'Agriculture', 'Drone et Cartographie', 'Agroforesterie'].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => { setSelectedCategory(cat); setCurrentPage(1); }}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${selectedCategory === cat ? 'bg-dronek-green text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                  className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${selectedCategory === cat ? 'bg-dronek-green text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
                 >
                   {cat}
                 </button>
@@ -592,7 +613,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               <button
                 onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="w-12 h-12 flex items-center justify-center border border-gray-100 bg-white shadow-sm transition-all hover:border-dronek-green disabled:opacity-30 disabled:hover:border-gray-100"
+                className="w-12 h-12 flex items-center justify-center border border-gray-100 bg-[#ffffff] shadow-sm transition-all hover:border-dronek-green disabled:opacity-30 disabled:hover:border-gray-100"
               >
                 <ChevronRight className="w-5 h-5 text-dronek-dark" />
               </button>
