@@ -86,7 +86,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
     const postTime = postDate.getTime();
     const diff = Math.floor((currentTime - postTime) / 1000);
 
-    if (diff < 10) return currentLang === 'fr' ? "À l'instant" : "Just now";
+    if (diff < 10) return currentLang === 'fr' ? "à l'instant" : "just now";
     if (diff < 60) return `${diff}s`;
     
     const mins = Math.floor(diff / 60);
@@ -246,6 +246,21 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         day: 'numeric', 
         month: 'long', 
         year: 'numeric' 
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  // Format short date for badges/cards
+  const formatShortDate = (dateStr?: string | null) => {
+    if (!dateStr) return lang === 'fr' ? 'Actualité' : 'News';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
       });
     } catch (e) {
       return dateStr;
@@ -532,7 +547,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         </div>
       </AnimatedSection>
 
-      {/* 🎠 PUBLICATIONS CAROUSEL (Articles récents au format Post Facebook) */}
+      {/* 🎠 PUBLICATIONS CAROUSEL (Articles récents au format Post Facebook compact) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10 overflow-hidden relative">
         <style dangerouslySetInnerHTML={{ __html: `
           .carousel-container { 
@@ -548,7 +563,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           }
           .publication-card {
             min-width: calc(16.66% - 1.5rem);
-            height: 480px; 
+            height: 440px; 
             flex-shrink: 0;
           }
           .nav-btn {
@@ -590,41 +605,35 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
               const imageUrl = pub.image || '/images/hero-forest.jpg';
               return (
                 <div key={index} className="publication-card">
-                  {/* Card formatted in Facebook Post style for Carousel */}
+                  {/* Card formatted in Facebook Post style compact (matching Project Card size) */}
                   <div 
                     className="group rounded-3xl overflow-hidden bg-white shadow-[0_14px_35px_rgba(0,0,0,0.06)] border border-gray-150/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(0,0,0,0.1)] cursor-pointer flex flex-col h-full"
                     onClick={() => handleSelectPost(pub)}
                   >
-                    {/* Header Facebook Post */}
-                    <div className="flex items-center gap-3 px-5 pt-5 pb-3">
-                      <div className="w-10 h-10 rounded-full bg-dronek-green text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-sm border border-dronek-green/20">
-                        <img src="/logo.svg" alt="DRONEK" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    {/* Header Facebook Post with Navbar Logo */}
+                    <div className="flex items-center gap-3 px-5 pt-4 pb-2">
+                      <div className="h-9 w-9 rounded-full bg-white text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-sm border border-gray-200 p-1">
+                        <img src="/Typographie/logoV.png" alt="DRONEK" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.src = '/logo.svg'; }} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-extrabold text-gray-900 text-sm tracking-tight">DRONEK</span>
-                          <span className="text-xs font-medium text-gray-400">• {formatTimeAgo(pub.createdAt, lang)}</span>
-                        </div>
-                        <p className="text-[10px] font-semibold text-dronek-green uppercase tracking-wider">
-                          {lang === 'fr' ? 'Actualité officielle' : 'Official News'}
+                        <span className="font-extrabold text-gray-900 text-sm tracking-tight block leading-none">DRONEK</span>
+                        <p className="text-[11px] font-medium text-gray-500 mt-0.5">
+                          {lang === 'fr' ? `Publié ${formatTimeAgo(pub.createdAt, lang)}` : `Published ${formatTimeAgo(pub.createdAt, lang)}`}
                         </p>
                       </div>
                     </div>
 
-                    {/* Post Title & Content */}
-                    <div className="px-5 py-2 flex-1">
-                      <h3 className="text-base font-bold text-gray-900 leading-snug mb-2 line-clamp-2">
+                    {/* Post Title in Green (No Description) */}
+                    <div className="px-5 py-2">
+                      <h3 className="text-base font-extrabold text-[#149655] leading-snug line-clamp-2">
                         {pub.title}
                       </h3>
-                      <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
-                        {pub.content}
-                      </p>
                     </div>
 
                     {/* Main Image */}
                     {imageUrl && (
-                      <div className="px-5 py-2">
-                        <div className="rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 aspect-[16/9] relative">
+                      <div className="px-5 py-1">
+                        <div className="rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 h-[180px] sm:h-[200px] relative">
                           <img 
                             src={imageUrl} 
                             alt={pub.title}
@@ -635,11 +644,27 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                       </div>
                     )}
 
+                    {/* Date de réalisation du projet juste en bas de l'image */}
+                    <div className="px-5 pt-2 pb-1">
+                      <p className="text-[11px] font-semibold text-gray-500 italic">
+                        {lang === 'fr' ? 'Réalisé le ' : 'Date: '}
+                        {(() => {
+                          const d = pub.customDate || pub.createdAt;
+                          try {
+                            return new Date(d).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            });
+                          } catch (e) {
+                            return d;
+                          }
+                        })()}
+                      </p>
+                    </div>
+
                     {/* Footer Action */}
-                    <div className="px-5 py-3.5 mt-auto border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-                      <span className="text-xs font-semibold text-gray-500 hover:text-dronek-green transition-colors">
-                        {lang === 'fr' ? 'En savoir plus' : 'Learn more'}
-                      </span>
+                    <div className="px-5 py-3 mt-auto border-t border-gray-100 flex items-center justify-end bg-gray-50/50">
                       <Button
                         className="rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-5 py-2 h-auto text-xs font-bold shadow-none transition-all duration-300"
                       >
@@ -654,7 +679,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         </div>
       </section>
 
-      {/* 📰 CONTENT GRID (Cartes restant au format de la page Projets) */}
+      {/* 📰 CONTENT GRID (Cartes au format de la page Projets avec date de publication sur le badge) */}
       <section id="news-grid-start" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <AnimatePresence mode="wait">
           <motion.div key="news-posts-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
@@ -664,7 +689,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                 whileHover={{ scale: 1.02 }}
                 className="h-full"
               >
-                {/* Format exact des cartes de la page Projets */}
+                {/* Format exact des cartes de la page Projets avec date sur le badge */}
                 <div 
                   className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
                   onClick={() => handleSelectPost(post)}
@@ -678,9 +703,10 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/0 to-transparent" />
                     
+                    {/* Badge remplacé par la date de publication du projet */}
                     <div className="absolute top-4 left-4">
                       <span className="inline-flex items-center rounded-full border border-dronek-green/20 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-dronek-green shadow-sm backdrop-blur-sm">
-                        {lang === 'fr' ? 'Actualités' : 'News'}
+                        {formatShortDate(post.customDate || post.createdAt)}
                       </span>
                     </div>
                   </div>
