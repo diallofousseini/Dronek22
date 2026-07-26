@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from './LanguageProvider';
-import { X, ChevronLeft, ChevronRight, Share2, Link as LinkIcon, ArrowLeft } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import type { PageView } from './Navbar';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -39,12 +39,12 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   const { lang, t } = useLanguage();
 
   const fallbackPosts: NewsPost[] = [
-    { id: '1', title: lang === 'fr' ? 'CAMPAGNE DE REBOISEMENT' : 'REFORESTATION CAMPAIGN', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2026&auto=format&fit=crop', category: 'Actualité' },
-    { id: '2', title: lang === 'fr' ? 'SÉMINAIRE ÉCOLOGIQUE' : 'ECOLOGICAL SEMINAR', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop', category: lang === 'fr' ? 'Actualité' : 'News' },
-    { id: '3', title: 'DRONEK INNOVATION', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=2070&auto=format&fit=crop', category: 'Technologie' },
-    { id: '4', title: 'PROTECTION FORÊTS', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2071&auto=format&fit=crop', category: 'Environnement' },
-    { id: '5', title: 'CARTOGRAPHIE TAI', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1579389083395-4507e9f4c171?q=80&w=2070&auto=format&fit=crop', category: 'Actualité' },
-    { id: '6', title: 'MISSION RÉUSSIE', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop', category: 'Actualité' }
+    { id: '1', title: lang === 'fr' ? 'CAMPAGNE DE REBOISEMENT' : 'REFORESTATION CAMPAIGN', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2026&auto=format&fit=crop', category: 'Actualités' },
+    { id: '2', title: lang === 'fr' ? 'SÉMINAIRE ÉCOLOGIQUE' : 'ECOLOGICAL SEMINAR', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop', category: 'Actualités' },
+    { id: '3', title: 'DRONEK INNOVATION', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=2070&auto=format&fit=crop', category: 'Actualités' },
+    { id: '4', title: 'PROTECTION FORÊTS', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2071&auto=format&fit=crop', category: 'Actualités' },
+    { id: '5', title: 'CARTOGRAPHIE TAI', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1579389083395-4507e9f4c171?q=80&w=2070&auto=format&fit=crop', category: 'Actualités' },
+    { id: '6', title: 'MISSION RÉUSSIE', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop', category: 'Actualités' }
   ];
 
   const [posts, setPosts] = useState<NewsPost[]>(fallbackPosts);
@@ -183,7 +183,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             gallery: n.gallery || null,
             customDate: n.date_publication || null,
             createdAt: n.date_publication || new Date().toISOString(),
-            category: n.categorie || 'Actualités'
+            category: 'Actualités'
           };
         });
 
@@ -380,7 +380,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           </div>
         </motion.div>
 
-        {/* Horizontal 3-Image Carousel replacing bottom Back Button */}
+        {/* Horizontal 3-Image Carousel replacing bottom Back Button (Without 'Photos de l'article' title) */}
         {allFooterImages.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -388,10 +388,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             transition={{ duration: 0.5, delay: 0.45 }}
             className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-12"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                {lang === 'fr' ? 'Photos de l\'article' : 'Article Photos'}
-              </h3>
+            <div className="flex items-center justify-end mb-4">
               {/* Navigation buttons to cycle through photos */}
               <div className="flex items-center gap-2">
                 <button
@@ -498,7 +495,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   }
 
   // ============================================
-  // NEWS LIST VIEW (Cards matching ProjectsPage format)
+  // NEWS LIST VIEW (Cards formatted in Facebook Post Style)
   // ============================================
   return (
     <div className="bg-white min-h-screen pb-20 font-sans">
@@ -551,7 +548,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           }
           .publication-card {
             min-width: calc(16.66% - 1.5rem);
-            height: 440px; 
+            height: 480px; 
             flex-shrink: 0;
           }
           .nav-btn {
@@ -593,34 +590,58 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
               const imageUrl = pub.image || '/images/hero-forest.jpg';
               return (
                 <div key={index} className="publication-card">
-                  {/* Card formatted exactly like ProjectsPage cards */}
+                  {/* Card formatted in Facebook Post style */}
                   <div 
-                    className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
+                    className="group rounded-3xl overflow-hidden bg-white shadow-[0_14px_35px_rgba(0,0,0,0.06)] border border-gray-150/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(0,0,0,0.1)] cursor-pointer flex flex-col h-full"
                     onClick={() => handleSelectPost(pub)}
                   >
-                    <div className="relative h-[250px] sm:h-[280px] overflow-hidden">
-                      <img 
-                        src={imageUrl} 
-                        alt={pub.title} 
-                        className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105" 
-                        onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }} 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/0 to-transparent" />
-                      
-                      <div className="absolute top-4 left-4">
-                        <span className="inline-flex items-center rounded-full border border-dronek-green/20 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-dronek-green shadow-sm backdrop-blur-sm">
-                          {pub.category || (lang === 'fr' ? 'Actualités' : 'News')}
-                        </span>
+                    {/* Header Facebook Post */}
+                    <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+                      <div className="w-10 h-10 rounded-full bg-dronek-green text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-sm border border-dronek-green/20">
+                        <img src="/logo.svg" alt="DRONEK" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-extrabold text-gray-900 text-sm tracking-tight">DRONEK</span>
+                          <span className="text-xs font-medium text-gray-400">• {formatTimeAgo(pub.createdAt, lang)}</span>
+                        </div>
+                        <p className="text-[10px] font-semibold text-dronek-green uppercase tracking-wider">
+                          {lang === 'fr' ? 'Actualité officielle' : 'Official News'}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="p-6 lg:p-7 flex flex-col items-center text-center flex-1">
-                      <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-tight tracking-tight mb-5 line-clamp-2">
-                        {pub.title.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    {/* Post Title & Content */}
+                    <div className="px-5 py-2 flex-1">
+                      <h3 className="text-base font-bold text-gray-900 leading-snug mb-2 line-clamp-2">
+                        {pub.title}
                       </h3>
-                      
+                      <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
+                        {pub.content}
+                      </p>
+                    </div>
+
+                    {/* Main Image */}
+                    {imageUrl && (
+                      <div className="px-5 py-2">
+                        <div className="rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 aspect-[16/9] relative">
+                          <img 
+                            src={imageUrl} 
+                            alt={pub.title}
+                            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+                            onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Footer Action */}
+                    <div className="px-5 py-3.5 mt-auto border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                      <span className="text-xs font-semibold text-gray-500 hover:text-dronek-green transition-colors">
+                        {lang === 'fr' ? 'En savoir plus' : 'Learn more'}
+                      </span>
                       <Button
-                        className="mt-auto w-fit rounded-full bg-dronek-green hover:bg-green-700 text-white px-6 py-2 h-auto text-sm font-semibold"
+                        className="rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-5 py-2 h-auto text-xs font-bold shadow-none transition-all duration-300"
                       >
                         {t.blog.readMore}
                       </Button>
@@ -633,7 +654,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         </div>
       </section>
 
-      {/* 📰 CONTENT GRID (Cards formatted matching ProjectsPage) */}
+      {/* 📰 CONTENT GRID (Cards formatted in Facebook Post Style) */}
       <section id="news-grid-start" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <AnimatePresence mode="wait">
           <motion.div key="news-posts-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
@@ -643,34 +664,58 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                 whileHover={{ scale: 1.02 }}
                 className="h-full"
               >
-                {/* Card format identical to ProjectsPage */}
+                {/* Facebook Post Style Card */}
                 <div 
-                  className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
+                  className="group rounded-3xl overflow-hidden bg-white shadow-[0_14px_35px_rgba(0,0,0,0.06)] border border-gray-150/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(0,0,0,0.1)] cursor-pointer flex flex-col h-full"
                   onClick={() => handleSelectPost(post)}
                 >
-                  <div className="relative h-[250px] sm:h-[280px] overflow-hidden">
-                    <img 
-                      src={post.image || '/images/hero-forest.jpg'} 
-                      alt={post.title}
-                      className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
-                      onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-black/0 to-transparent" />
-                    
-                    <div className="absolute top-4 left-4">
-                      <span className="inline-flex items-center rounded-full border border-dronek-green/20 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-dronek-green shadow-sm backdrop-blur-sm">
-                        {post.category || (lang === 'fr' ? 'Actualités' : 'News')}
-                      </span>
+                  {/* Header Facebook Post */}
+                  <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+                    <div className="w-10 h-10 rounded-full bg-dronek-green text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-sm border border-dronek-green/20">
+                      <img src="/logo.svg" alt="DRONEK" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-extrabold text-gray-900 text-sm tracking-tight">DRONEK</span>
+                        <span className="text-xs font-medium text-gray-400">• {formatTimeAgo(post.createdAt, lang)}</span>
+                      </div>
+                      <p className="text-[10px] font-semibold text-dronek-green uppercase tracking-wider">
+                        {lang === 'fr' ? 'Actualité officielle' : 'Official News'}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="p-6 lg:p-7 flex flex-col items-center text-center flex-1">
-                    <h3 className="text-base lg:text-lg font-bold text-[#149655] leading-tight tracking-tight mb-5 line-clamp-3">
-                      {post.title.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  {/* Post Title & Content */}
+                  <div className="px-5 py-2 flex-1">
+                    <h3 className="text-base font-bold text-gray-900 leading-snug mb-2 line-clamp-2">
+                      {post.title}
                     </h3>
-                    
+                    <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+                      {post.content}
+                    </p>
+                  </div>
+
+                  {/* Main Image */}
+                  {post.image && (
+                    <div className="px-5 py-2">
+                      <div className="rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 aspect-[16/9] relative">
+                        <img 
+                          src={post.image} 
+                          alt={post.title}
+                          className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+                          onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer Action */}
+                  <div className="px-5 py-3.5 mt-auto border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <span className="text-xs font-semibold text-gray-500 hover:text-dronek-green transition-colors">
+                      {lang === 'fr' ? 'En savoir plus' : 'Learn more'}
+                    </span>
                     <Button
-                      className="mt-auto w-fit rounded-full bg-dronek-green hover:bg-green-700 text-white px-6 py-2 h-auto text-sm font-semibold"
+                      className="rounded-full bg-dronek-green hover:bg-dronek-dark text-white px-5 py-2 h-auto text-xs font-bold shadow-none transition-all duration-300"
                     >
                       {t.blog.readMore}
                     </Button>
