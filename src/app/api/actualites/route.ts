@@ -10,6 +10,8 @@ export async function GET() {
       title: true,
       content: true,
       image: true,
+      gallery: true,
+      customDate: true,
       createdAt: true,
     },
   });
@@ -23,6 +25,8 @@ export async function POST(request: NextRequest) {
     const title = String(body?.title || '').trim();
     const content = String(body?.content || '').trim();
     const image = String(body?.image || '').trim() || null;
+    const gallery = body?.gallery ? String(body.gallery).trim() : null;
+    const customDate = body?.customDate ? String(body.customDate).trim() : null;
 
     if (!content) {
       return NextResponse.json({ success: false, message: 'Le texte est requis.' }, { status: 400 });
@@ -33,6 +37,8 @@ export async function POST(request: NextRequest) {
         title: title || content.slice(0, 60),
         content,
         image,
+        gallery,
+        customDate,
         published: true,
         authorId: 'admin',
       },
@@ -41,12 +47,15 @@ export async function POST(request: NextRequest) {
         title: true,
         content: true,
         image: true,
+        gallery: true,
+        customDate: true,
         createdAt: true,
       },
     });
 
     return NextResponse.json({ success: true, post }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('Error creating post:', error);
     return NextResponse.json({ success: false, message: 'Erreur serveur.' }, { status: 500 });
   }
 }

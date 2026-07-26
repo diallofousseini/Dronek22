@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useLanguage } from './LanguageProvider';
-import { ArrowRight, X, ChevronLeft, ChevronRight, Phone, Share2, Link as LinkIcon } from 'lucide-react';
+import { ArrowRight, X, ChevronLeft, ChevronRight, Phone, Share2, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 import type { PageView } from './Navbar';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -16,6 +16,8 @@ type NewsPost = {
   title: string;
   content: string;
   image?: string | null;
+  gallery?: string | null;
+  customDate?: string | null;
   createdAt: string;
   category?: string;
 };
@@ -50,6 +52,11 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   const [selectedPost, setSelectedPost] = useState<NewsPost | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  
+  // Lightbox state for gallery images
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   
   const isWithin6Months = (dateStr: string) => {
     const postDate = new Date(dateStr);
@@ -145,11 +152,11 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
     }
   };
 
-
-
   useEffect(() => {
     const fetchNews = async () => {
       setLoading(true);
+
+      // Fetch from Supabase
       const { data, error } = await supabase
         .from('actualites')
         .select('*')
@@ -157,6 +164,8 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         .order('date_publication', { ascending: false })
         .limit(20);
       
+      let allPosts: NewsPost[] = [];
+
       if (data) {
         let newsItems = data.map(n => {
           let imageUrl = n.image_url || null;
@@ -168,16 +177,42 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             title: n.titre || '',
             content: n.contenu || n.resume || '',
             image: imageUrl,
+            gallery: n.gallery || null,
+            customDate: n.date_publication || null,
             createdAt: n.date_publication || new Date().toISOString(),
             category: n.categorie || 'Actualité'
           };
         });
 
         newsItems = newsItems.filter((post: any) => isWithin6Months(post.createdAt));
+        allPosts = [...newsItems];
+      }
 
-        if (newsItems.length > 0) {
-          setPosts(newsItems);
+      // Also fetch from local Prisma API
+      try {
+        const response = await fetch('/api/actualites', { cache: 'no-store' });
+        const apiData = await response.json();
+        if (Array.isArray(apiData?.posts)) {
+          const localPosts: NewsPost[] = apiData.posts.map((p: any) => ({
+            id: p.id,
+            title: p.title || '',
+            content: p.content || '',
+            image: p.image || null,
+            gallery: p.gallery || null,
+            customDate: p.customDate || null,
+            createdAt: p.createdAt || new Date().toISOString(),
+            category: 'Actualité'
+          }));
+          allPosts = [...allPosts, ...localPosts];
         }
+      } catch (e) {
+        // Silently ignore local API errors
+      }
+
+      if (allPosts.length > 0) {
+        // Sort by date descending
+        allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setPosts(allPosts);
       }
       setLoading(false);
     };
@@ -198,7 +233,240 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
     }
   };
 
+  // Format date for detail page
+  const formatDetailDate = (post: NewsPost) => {
+    const dateStr = post.customDate || post.createdAt;
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
 
+  // Parse gallery images
+  const getGalleryImages = (post: NewsPost): string[] => {
+    if (!post.gallery) return [];
+    try {
+      const parsed = JSON.parse(post.gallery);
+      if (Array.isArray(parsed)) return parsed.filter((s: any) => typeof s === 'string' && s.length > 0);
+    } catch (e) {
+      // ignore
+    }
+    return [];
+  };
+
+  // Open lightbox
+  const openLightbox = (images: string[], index: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  // Handle selecting a post and scrolling to top
+  const handleSelectPost = (post: NewsPost) => {
+    setSelectedPost(post);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle going back to list
+  const handleBackToList = () => {
+    setSelectedPost(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ============================================
+  // ARTICLE DETAIL VIEW (Full Page)
+  // ============================================
+  if (selectedPost) {
+    const galleryImages = getGalleryImages(selectedPost);
+
+    return (
+      <div className="bg-white min-h-screen pb-20 font-sans">
+        {/* Back Button Header */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32">
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={handleBackToList}
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-dronek-green transition-colors mb-8 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-semibold text-sm uppercase tracking-widest">
+              {lang === 'fr' ? 'Retour aux actualités' : 'Back to news'}
+            </span>
+          </motion.button>
+
+          {/* Article Title */}
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#111] leading-tight uppercase tracking-tight mb-4"
+          >
+            {selectedPost.title}
+          </motion.h1>
+
+          {/* Article Date */}
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="text-sm text-dronek-green font-semibold italic mb-8"
+          >
+            {formatDetailDate(selectedPost)}
+          </motion.p>
+        </div>
+
+        {/* Main Image */}
+        {selectedPost.image && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-10"
+          >
+            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg bg-gray-50">
+              <img 
+                src={selectedPost.image} 
+                alt={selectedPost.title} 
+                className="w-full max-h-[550px] object-cover"
+                onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {/* Article Content */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12"
+        >
+          <div className="prose prose-lg max-w-none">
+            <p className="text-gray-700 leading-[1.9] text-[15px] sm:text-base whitespace-pre-line text-justify">
+              {selectedPost.content}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Gallery Section */}
+        {galleryImages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16"
+          >
+            <div className={`grid gap-4 ${
+              galleryImages.length === 1 ? 'grid-cols-1' :
+              galleryImages.length === 2 ? 'grid-cols-2' :
+              'grid-cols-2 sm:grid-cols-3'
+            }`}>
+              {galleryImages.map((imgUrl, idx) => (
+                <motion.div 
+                  key={idx} 
+                  whileHover={{ scale: 1.03 }}
+                  className="aspect-[4/3] rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer bg-gray-50 group"
+                  onClick={() => openLightbox(galleryImages, idx)}
+                >
+                  <img 
+                    src={imgUrl} 
+                    alt={`${selectedPost.title} - Photo ${idx + 1}`} 
+                    className="w-full h-full object-cover group-hover:brightness-90 transition-all duration-300" 
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Bottom back button */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Button 
+            onClick={handleBackToList}
+            className="w-full sm:w-auto rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-5 px-10 h-auto shadow-lg shadow-dronek-green/20 uppercase tracking-widest text-xs"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {lang === 'fr' ? 'Retour aux actualités' : 'Back to news'}
+          </Button>
+        </div>
+
+        {/* Lightbox */}
+        <AnimatePresence>
+          {lightboxOpen && lightboxImages.length > 0 && (
+            <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                onClick={() => setLightboxOpen(false)} 
+                className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+              />
+              
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                exit={{ opacity: 0, scale: 0.9 }} 
+                className="relative max-w-5xl w-full max-h-[85vh]"
+              >
+                <button 
+                  onClick={() => setLightboxOpen(false)} 
+                  className="absolute -top-12 right-0 z-50 bg-white/20 backdrop-blur-md rounded-full p-2 hover:bg-white/40 transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+
+                <img 
+                  src={lightboxImages[lightboxIndex]} 
+                  alt={`Photo ${lightboxIndex + 1}`} 
+                  className="w-full max-h-[85vh] object-contain rounded-xl" 
+                />
+
+                {lightboxImages.length > 1 && (
+                  <>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev) => (prev === 0 ? lightboxImages.length - 1 : prev - 1)); }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/40 transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev) => (prev === lightboxImages.length - 1 ? 0 : prev + 1)); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/40 transition-colors"
+                    >
+                      <ChevronRight className="w-6 h-6 text-white" />
+                    </button>
+
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {lightboxImages.map((_, idx) => (
+                        <button 
+                          key={idx} 
+                          onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
+                          className={`w-2.5 h-2.5 rounded-full transition-all ${idx === lightboxIndex ? 'bg-white scale-125' : 'bg-white/40'}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // ============================================
+  // NEWS LIST VIEW
+  // ============================================
   return (
     <div className="bg-white min-h-screen pb-20 font-sans">
       {/* 🚀 BANNER HERO */}
@@ -279,78 +547,68 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             .publication-card { min-width: 100%; }
           }
         `}} />
-
-        <div className="flex flex-col items-center mb-2">
-          <h2 className="text-xl sm:text-2xl font-black text-dronek-dark uppercase tracking-widest">
-            {lang === 'fr' ? 'DERNIERS POSTS' : 'LATEST POSTS'}
-          </h2>
-        </div>        <div className="flex justify-center items-center gap-4 mb-4">
-          <motion.button onClick={handlePrev} className="nav-btn"><ChevronLeft size={24} /></motion.button>
-          <motion.button onClick={handleNext} className="nav-btn"><ChevronRight size={24} /></motion.button>
+        
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl lg:text-2xl font-black text-dronek-text uppercase tracking-tight">
+              {t.blog.recentPosts}
+            </h2>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handlePrev} className="nav-btn"><ChevronLeft size={18} /></button>
+            <button onClick={handleNext} className="nav-btn"><ChevronRight size={18} /></button>
+          </div>
         </div>
- 
-        <div className="carousel-container" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+
+        <div 
+          className="carousel-container"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <div className="carousel-track" style={{ transform: `translateX(-${currentIndex * (100 / (carouselPosts.length < visibleCount ? carouselPosts.length : visibleCount))}%)` }}>
             {carouselPosts.map((pub, index) => {
-              const timeAgoText = formatTimeAgo(pub.createdAt, lang);
-
+              const imageUrl = pub.image || '/images/hero-forest.jpg';
               return (
-                <div key={index} className="publication-card" onClick={() => setSelectedPost(pub)}>
-                  {/* Card Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center p-1.5 shadow-sm">
-                        <Image src="/images/dronek-nav-icon.png" alt="Logo" width={32} height={32} className="object-contain" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-sm text-gray-900 leading-tight">DRONEK</span>
-                        <span className="text-[11px] text-gray-500 font-medium">{timeAgoText}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div key={index} className="publication-card" onClick={() => handleSelectPost(pub)}>
+                  <div className="relative flex-1 w-full rounded-xl overflow-hidden bg-gray-100 group">
+                    <img src={imageUrl} alt={pub.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-                  <div className="flex-1">
-                    <h3 className="text-[13px] font-bold text-[#149655] leading-tight mb-2 line-clamp-2">
-                      {pub.title.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                    </h3>
-                  </div>
-
-                  {/* Compact Image Container */}
-                  <div className="relative h-[240px] w-full rounded-xl overflow-hidden mt-auto bg-gray-100 shadow-sm group">
-                    <img 
-                      src={pub.image || '/images/hero-forest.jpg'} 
-                      alt={pub.title} 
-                      className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110" 
-                      onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }} 
-                    />
-                    
-                    {/* Hover Overlay with Buttons */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 z-20">
-                       <motion.button 
-                          whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (navigator.share) {
-                              navigator.share({ title: pub.title, url: window.location.href });
-                            } else {
-                              alert("Partage non supporté sur ce navigateur");
-                            }
-                          }}
-                          className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-xl transition-all duration-300"
-                          title="Partager"
-                       >
-                          <Share2 size={20} />
-                       </motion.button>
-                       <motion.button 
-                          whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
-                          whileTap={{ scale: 0.9 }}
-                          className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-xl transition-all duration-300"
-                          title={t.blog.readMore}
-                       >
-                          <LinkIcon size={20} />
-                       </motion.button>
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <span className="text-white/70 text-[10px] font-bold uppercase tracking-[0.15em]">
+                        {formatTimeAgo(pub.createdAt, lang)}
+                      </span>
+                      <h3 className="text-white text-[13px] font-extrabold leading-snug mt-1 line-clamp-3">
+                        {pub.title.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                      </h3>
                     </div>
+
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <motion.button 
+                        whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (navigator.share) {
+                            navigator.share({ title: pub.title, url: window.location.href });
+                          } else {
+                            alert("Partage non supporté sur ce navigateur");
+                          }
+                        }}
+                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-xl transition-all duration-300"
+                        title="Partager"
+                     >
+                        <Share2 size={20} />
+                     </motion.button>
+                     <motion.button 
+                        whileHover={{ scale: 1.1, backgroundColor: '#149655', color: '#fff' }}
+                        whileTap={{ scale: 0.9 }}
+                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-xl transition-all duration-300"
+                        title={t.blog.readMore}
+                     >
+                        <LinkIcon size={20} />
+                     </motion.button>
+                  </div>
 
 
                   </div>
@@ -374,7 +632,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
                 >
                   <div 
                     className="group h-full rounded-2xl overflow-hidden bg-[#f7f7f5] shadow-[0_14px_35px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
-                    onClick={() => setSelectedPost(post)}
+                    onClick={() => handleSelectPost(post)}
                   >
                     <div className="relative h-[300px] sm:h-[340px] overflow-hidden bg-gray-100">
                       <img 
@@ -412,80 +670,6 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           </AnimatePresence>
 
       </section>
-
-      {/* 🚀 MODAL POPUP */}
-      <AnimatePresence>
-        {selectedPost && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              onClick={() => setSelectedPost(null)} 
-              className="absolute inset-0 bg-black/60 backdrop-blur-md" 
-            />
-            
-            {/* Popup Container */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30, scale: 0.95 }} 
-              animate={{ opacity: 1, y: 0, scale: 1 }} 
-              exit={{ opacity: 0, y: 30, scale: 0.95 }} 
-              className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
-            >
-              {/* Close Button Mobile */}
-              <button 
-                onClick={() => setSelectedPost(null)} 
-                className="absolute top-4 right-4 z-50 md:hidden bg-white/80 backdrop-blur-md rounded-full p-2 shadow-lg"
-              >
-                <X className="w-6 h-6 text-dronek-text" />
-              </button>
-
-              {/* Image / Gallery Side */}
-              <div className="md:w-1/2 relative h-64 md:h-auto bg-gray-100 overflow-hidden">
-                <img 
-                  src={selectedPost.image || '/images/hero-forest.jpg'} 
-                  alt={selectedPost.title} 
-                  className="object-cover w-full h-full" 
-                  onError={(e) => { e.currentTarget.src = '/images/hero-forest.jpg'; }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </div>
-
-              {/* Content Side */}
-              <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold text-dronek-green uppercase tracking-[0.2em]">{new Date(selectedPost.createdAt).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                  <button onClick={() => setSelectedPost(null)} className="hidden md:block hover:scale-110 transition-transform">
-                    <X className="w-6 h-6 text-gray-300 hover:text-dronek-text" />
-                  </button>
-                </div>
-                
-                <h2 className="text-2xl md:text-3xl font-bold text-[#149655] mb-4 leading-tight">
-                  {selectedPost.title.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                </h2>
-
-                <div className="space-y-6">
-                  {/* Detailed Description */}
-                  <p className="text-gray-600 leading-relaxed text-sm md:text-base whitespace-pre-line">
-                    {selectedPost.content}
-                  </p>
-
-                </div>
-
-                {/* Final Action */}
-                <div className="mt-10">
-                  <Button 
-                    onClick={() => setSelectedPost(null)}
-                    className="w-full rounded-xl bg-dronek-green hover:bg-dronek-dark text-white font-bold py-6 h-auto shadow-lg shadow-dronek-green/20 uppercase tracking-widest text-xs"
-                  >
-                    {lang === 'fr' ? 'Fermer' : 'Close'}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* 🔢 PAGINATION */}
       {!loading && totalPages > 1 && (

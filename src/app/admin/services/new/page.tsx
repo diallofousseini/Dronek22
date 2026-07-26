@@ -470,7 +470,8 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
     isFeatured: false, isMainService: false, pdfUrl: '',
     detailTitle: '', detailShortDesc: '', detailLongDesc: '',
     serviceType: 'forestry', buttonText: 'En savoir plus',
-    lat: '', lng: ''
+    lat: '', lng: '',
+    galleryImages: []
   });
   const [saving, setSaving] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -604,7 +605,17 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
               year: year,
               objectives: objectives,
               impacts: impacts,
-              gallery: gallery
+              gallery: gallery,
+              // actualite gallery images
+              galleryImages: (() => {
+                if (item.gallery) {
+                  try {
+                    const parsed = JSON.parse(item.gallery);
+                    if (Array.isArray(parsed)) return parsed;
+                  } catch (e) {}
+                }
+                return [];
+              })()
             });
 
             if (type === 'service') {
@@ -774,6 +785,7 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           resume: data.description, 
           contenu: data.content,
           image_url: data.image,
+          gallery: data.galleryImages && data.galleryImages.length > 0 ? JSON.stringify(data.galleryImages) : null,
           statut: data.status || 'publie',
           date_publication: data.date || new Date().toISOString()
         };
@@ -1088,29 +1100,57 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
               )}
 
              {type === 'actualite' && (
-               <motion.div 
-                 initial={{ opacity: 0, y: 20 }}
-                 whileInView={{ opacity: 1, y: 0 }}
-                 viewport={{ once: true }}
-                 className="space-y-12"
-               >
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                   {/* Left Column: Info */}
-                   <div className="space-y-8">
-                     <VerticalField labelSize="13px" label={lang === 'fr' ? "Titre de l'actualité" : "News Title"} value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder={lang === 'fr' ? "Titre principal..." : "Main title..."} />
-                     <VerticalField labelSize="13px" label={lang === 'fr' ? "Contenu / Description" : "Content / Description"} type="textarea" value={data.content || data.description} onChange={(v: string) => setData({ ...data, content: v, description: v })} placeholder={lang === 'fr' ? "Détails de l'actualité..." : "News details..."} />
-                   </div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="space-y-12"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    {/* Left Column: Info */}
+                    <div className="space-y-8">
+                      <VerticalField labelSize="13px" label={lang === 'fr' ? "Titre de l'actualité" : "News Title"} value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder={lang === 'fr' ? "Titre principal..." : "Main title..."} />
+                      <VerticalField labelSize="13px" label={lang === 'fr' ? "Contenu / Description" : "Content / Description"} type="textarea" value={data.content || data.description} onChange={(v: string) => setData({ ...data, content: v, description: v })} placeholder={lang === 'fr' ? "Détails de l'actualité..." : "News details..."} />
+                    </div>
 
-                   {/* Right Column: Image */}
-                   <div className="flex flex-col items-center justify-center space-y-6">
-                     <label className="text-[14px] font-black text-[#111] uppercase tracking-[0.2em] block text-center">{lang === 'fr' ? "Image de l'article" : "Article Image"}</label>
-                     <div className="w-full max-w-sm">
-                       <SimpleUpload value={data.image} onChange={(v) => setData({ ...data, image: v })} path={`uploads/${type}`} />
-                     </div>
-                   </div>
-                 </div>
-               </motion.div>
-             )}
+                    {/* Right Column: Image principale */}
+                    <div className="flex flex-col items-center justify-center space-y-6">
+                      <label className="text-[14px] font-black text-[#111] uppercase tracking-[0.2em] block text-center">{lang === 'fr' ? "Image principale (Image 1)" : "Main Image (Image 1)"}</label>
+                      <div className="w-full max-w-sm">
+                        <SimpleUpload value={data.image} onChange={(v) => setData({ ...data, image: v })} path={`uploads/${type}`} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gallery Section */}
+                  <div className="space-y-6 pt-4">
+                    <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+                      <h3 className="text-[14px] font-black text-[#111] uppercase tracking-[0.2em]">
+                        {lang === 'fr' ? "Galerie d'images supplémentaires" : 'Additional Image Gallery'}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {Array(6).fill(0).map((_, i) => (
+                        <div key={i} className="space-y-3 bg-gray-50 p-4 rounded-[1.5rem] border border-gray-100 shadow-sm">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block text-center">
+                            {lang === 'fr' ? `Photo galerie ${i + 1}` : `Gallery Photo ${i + 1}`}
+                          </label>
+                          <SimpleUpload 
+                            value={data.galleryImages?.[i] || ''} 
+                            onChange={(url) => {
+                              const newGallery = [...(data.galleryImages || Array(6).fill(''))];
+                              while (newGallery.length <= i) newGallery.push('');
+                              newGallery[i] = url;
+                              setData({ ...data, galleryImages: newGallery });
+                            }} 
+                            path={`uploads/${type}/gallery`} 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
              {type === 'membre' && (
                <div className="space-y-6">
                  <HorizontalField label={lang === 'fr' ? "Poste / Responsabilité" : "Position / Responsibility"} value={data.role} onChange={(v: string) => setData({ ...data, role: v })} placeholder={lang === 'fr' ? "ex: Responsable Agricole" : "e.g. Agricultural Manager"} />

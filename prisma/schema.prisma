@@ -22,12 +22,14 @@ model User {
 }
 
 model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  image     String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  title      String
+  content    String?
+  image      String?
+  gallery    String?  // JSON string array of base64 images
+  customDate String?  // custom date string
+  published  Boolean  @default(false)
+  authorId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
