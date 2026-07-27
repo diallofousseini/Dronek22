@@ -562,8 +562,9 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
             transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .publication-card {
-            min-width: calc(25% - 1.25rem);
-            height: 260px; 
+            min-width: calc(20% - 1rem);
+            max-width: 230px;
+            height: 250px; 
             flex-shrink: 0;
           }
           .nav-btn {
@@ -573,11 +574,11 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           }
           .nav-btn:hover { background: #149655; color: white; border-color: #149655; transform: scale(1.05); }
           
-          @media (min-width: 1536px) { .publication-card { min-width: calc(25% - 1.25rem); } }
-          @media (max-width: 1280px) { .publication-card { min-width: calc(33.333% - 1.25rem); } }
-          @media (max-width: 1024px) { .publication-card { min-width: calc(50% - 1.25rem); } }
+          @media (min-width: 1536px) { .publication-card { min-width: calc(20% - 1rem); max-width: 230px; } }
+          @media (max-width: 1280px) { .publication-card { min-width: calc(25% - 1rem); max-width: 230px; } }
+          @media (max-width: 1024px) { .publication-card { min-width: calc(33.333% - 1rem); max-width: 230px; } }
           @media (max-width: 640px) { 
-            .publication-card { min-width: 100%; }
+            .publication-card { min-width: calc(85% - 1rem); max-width: 260px; }
           }
         `}} />
         

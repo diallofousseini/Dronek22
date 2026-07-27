@@ -712,7 +712,7 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
         hasRequiredFields = !!(data.title && data.description);
       }
     } else if (type === 'projet') {
-      hasRequiredFields = !!(data.title && data.description && data.image && data.location && data.year);
+      hasRequiredFields = true; // Tous les champs sont optionnels pour la sauvegarde
     } else if (type === 'actualite') {
       hasRequiredFields = !!(data.title && data.description && data.image);
     } else if (type === 'mediatheque') {
@@ -1019,13 +1019,22 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
                   transition={{ duration: 0.9, ease: "easeOut" }}
                   className="space-y-8"
                 >
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Secteur" : "Sector"} value={data.category} onChange={(v: string) => setData({ ...data, category: v })} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Localisation" : "Location"} value={data.location} onChange={(v: string) => setData({ ...data, location: v })} placeholder={lang === 'fr' ? "ex: Parc National de Taï" : "e.g. Tai National Park"} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Année" : "Year"} value={data.year} onChange={(v: string) => setData({ ...data, year: v })} placeholder={lang === 'fr' ? "ex: 2023" : "e.g. 2023"} />
+                  <HorizontalField 
+                    labelSize="16px" 
+                    label={lang === 'fr' ? "Secteur" : "Sector"} 
+                    type="select"
+                    value={data.category || 'Foresterie'} 
+                    onChange={(v: string) => setData({ ...data, category: v })} 
+                    options={[
+                      { value: "Foresterie", label: "Foresterie" },
+                      { value: "Agriculture", label: "Agriculture" },
+                      { value: "Drone et technologie", label: "Drone et technologie" }
+                    ]}
+                  />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Localisation" : "Location"} value={data.location || ''} onChange={(v: string) => setData({ ...data, location: v })} placeholder={lang === 'fr' ? "ex: Parc National de Taï" : "e.g. Tai National Park"} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Année" : "Year"} value={data.year || ''} onChange={(v: string) => setData({ ...data, year: v })} placeholder={lang === 'fr' ? "ex: 2023" : "e.g. 2023"} />
                   <HorizontalField labelSize="16px" label={lang === 'fr' ? "Objectifs" : "Objectives"} type="textarea" value={Array.isArray(data.objectives) ? data.objectives.join('\n') : data.objectives || ''} onChange={(v: string) => setData({ ...data, objectives: v.split('\n').filter(Boolean) })} placeholder={lang === 'fr' ? "Lister les objectifs (un par ligne)..." : "List objectives (one per line)..."} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Résultats & Impacts" : "Results & Impacts"} type="textarea" value={Array.isArray(data.impacts) ? data.impacts.join('\n') : data.impacts || ''} onChange={(v: string) => setData({ ...data, impacts: v.split('\n').filter(Boolean) })} placeholder={lang === 'fr' ? "Lister les résultats (un par ligne)..." : "List results (one per line)..."} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Description courte" : "Short description"} type="textarea" value={data.descriptionShort || ''} onChange={(v: string) => setData({ ...data, descriptionShort: v })} placeholder={lang === 'fr' ? "Résumé court du projet (utilisé pour les cartes)..." : "Short summary of the project (used for cards)..."} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Description complète" : "Full description"} type="textarea" value={data.description} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Description générale du projet..." : "General description of the project..."} />
+                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Description" : "Description"} type="textarea" value={data.description || ''} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Description générale du projet..." : "General description of the project..."} />
                 </motion.div>
               )}
 

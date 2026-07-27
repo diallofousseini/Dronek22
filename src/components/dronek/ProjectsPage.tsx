@@ -258,47 +258,21 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </motion.p>
         </div>
 
-        {/* Main Big Image */}
-        {selectedProject.image && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-10"
-          >
-            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg bg-gray-50">
-              <img 
-                src={selectedProject.image} 
-                alt={selectedProject.title} 
-                className="w-full max-h-[550px] object-cover"
-                onError={(e) => { e.currentTarget.src = '/images/dronek_image3.png'; }}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* Project Content & Details (Tous les éléments administrateur s'affichent APRÈS la grande image comme description) */}
+        {/* Project Content & Details (Affichés JUSTE AU-DESSUS de l'image 1 comme celui des actualités) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
-          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 space-y-8"
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 space-y-6"
         >
-          {/* Titre secondaire si saisi par l'admin */}
+          {/* Titre secondaire si présent */}
           {(selectedProject as any).detailTitle && (
             <h2 className="text-xl sm:text-2xl font-bold text-[#149655] tracking-tight">
               {(selectedProject as any).detailTitle}
             </h2>
           )}
 
-          {/* Description courte / sous-titre si saisi */}
-          {(selectedProject as any).detailShortDesc && (
-            <p className="text-base sm:text-lg text-gray-800 font-semibold leading-relaxed italic">
-              {(selectedProject as any).detailShortDesc}
-            </p>
-          )}
-
-          {/* Contenu principal / Description détaillée */}
+          {/* Contenu principal / Description générale */}
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-700 leading-[1.9] text-[15px] sm:text-base whitespace-pre-line text-justify">
               {(selectedProject as any).detailLongDesc || (selectedProject as any).detail || selectedProject.summary}
@@ -321,24 +295,26 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               </ul>
             </div>
           )}
-
-          {/* Impacts / Résultats saisis par l'admin */}
-          {(selectedProject as any).impacts && (selectedProject as any).impacts.length > 0 && (
-            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
-              <h3 className="text-base font-bold text-[#149655] tracking-wide uppercase">
-                {t.projects.impactsLabel}
-              </h3>
-              <ul className="space-y-3">
-                {(selectedProject as any).impacts.map((impact: string, i: number) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
-                    <div className="w-2 h-2 rounded-full bg-dronek-green mt-2 shrink-0" />
-                    <span>{impact}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </motion.div>
+
+        {/* Main Big Image 1 (Placée juste après la description) */}
+        {selectedProject.image && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12"
+          >
+            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg bg-gray-50">
+              <img 
+                src={selectedProject.image} 
+                alt={selectedProject.title} 
+                className="w-full max-h-[550px] object-cover"
+                onError={(e) => { e.currentTarget.src = '/images/dronek_image3.png'; }}
+              />
+            </div>
+          </motion.div>
+        )}
 
         {/* Horizontal 3-Image Carousel at Bottom with controls */}
         {allFooterImages.length > 0 && (
