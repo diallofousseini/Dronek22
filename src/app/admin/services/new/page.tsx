@@ -1017,24 +1017,66 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 0.9, ease: "easeOut" }}
-                  className="space-y-8"
+                  className="space-y-12"
                 >
-                  <HorizontalField 
-                    labelSize="16px" 
-                    label={lang === 'fr' ? "Secteur" : "Sector"} 
-                    type="select"
-                    value={data.category || 'Foresterie'} 
-                    onChange={(v: string) => setData({ ...data, category: v })} 
-                    options={[
-                      { value: "Foresterie", label: "Foresterie" },
-                      { value: "Agriculture", label: "Agriculture" },
-                      { value: "Drone et technologie", label: "Drone et technologie" }
-                    ]}
-                  />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Localisation" : "Location"} value={data.location || ''} onChange={(v: string) => setData({ ...data, location: v })} placeholder={lang === 'fr' ? "ex: Parc National de Taï" : "e.g. Tai National Park"} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Année" : "Year"} value={data.year || ''} onChange={(v: string) => setData({ ...data, year: v })} placeholder={lang === 'fr' ? "ex: 2023" : "e.g. 2023"} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Objectifs" : "Objectives"} type="textarea" value={Array.isArray(data.objectives) ? data.objectives.join('\n') : data.objectives || ''} onChange={(v: string) => setData({ ...data, objectives: v.split('\n').filter(Boolean) })} placeholder={lang === 'fr' ? "Lister les objectifs (un par ligne)..." : "List objectives (one per line)..."} />
-                  <HorizontalField labelSize="16px" label={lang === 'fr' ? "Description" : "Description"} type="textarea" value={data.description || ''} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Description générale du projet..." : "General description of the project..."} />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="space-y-8">
+                      <HorizontalField 
+                        labelSize="16px" 
+                        label={lang === 'fr' ? "Secteur" : "Sector"} 
+                        type="select"
+                        value={data.category || 'Foresterie'} 
+                        onChange={(v: string) => setData({ ...data, category: v })} 
+                        options={[
+                          { value: "Foresterie", label: "Foresterie" },
+                          { value: "Agriculture", label: "Agriculture" },
+                          { value: "Drone et technologie", label: "Drone et technologie" }
+                        ]}
+                      />
+                      <HorizontalField labelSize="16px" label={lang === 'fr' ? "Localisation" : "Location"} value={data.location || ''} onChange={(v: string) => setData({ ...data, location: v })} placeholder={lang === 'fr' ? "ex: Parc National de Taï" : "e.g. Tai National Park"} />
+                      <HorizontalField labelSize="16px" label={lang === 'fr' ? "Année" : "Year"} value={data.year || ''} onChange={(v: string) => setData({ ...data, year: v })} placeholder={lang === 'fr' ? "ex: 2023" : "e.g. 2023"} />
+                      <HorizontalField labelSize="16px" label={lang === 'fr' ? "Objectifs" : "Objectives"} type="textarea" value={Array.isArray(data.objectives) ? data.objectives.join('\n') : data.objectives || ''} onChange={(v: string) => setData({ ...data, objectives: v.split('\n').filter(Boolean) })} placeholder={lang === 'fr' ? "Lister les objectifs (un par ligne)..." : "List objectives (one per line)..."} />
+                      <HorizontalField labelSize="16px" label={lang === 'fr' ? "Description" : "Description"} type="textarea" value={data.description || ''} onChange={(v: string) => setData({ ...data, description: v })} placeholder={lang === 'fr' ? "Description générale du projet..." : "General description of the project..."} />
+                    </div>
+
+                    {/* Image Principale (Image 1) */}
+                    <div className="flex flex-col items-center justify-center space-y-6">
+                      <label className="text-[14px] font-black text-[#111] uppercase tracking-[0.2em] block text-center">
+                        {lang === 'fr' ? "Image principale (Image 1)" : "Main Image (Image 1)"}
+                      </label>
+                      <div className="w-full max-w-sm">
+                        <SimpleUpload value={data.image} onChange={(v) => setData({ ...data, image: v })} path={`uploads/${type}`} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Galerie d'images supplémentaires */}
+                  <div className="space-y-6 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-4 pb-4">
+                      <h3 className="text-[14px] font-black text-[#111] uppercase tracking-[0.2em]">
+                        {lang === 'fr' ? "Galerie d'images supplémentaires" : 'Additional Image Gallery'}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {Array(6).fill(0).map((_, i) => (
+                        <div key={i} className="space-y-3 bg-gray-50 p-4 rounded-[1.5rem] border border-gray-100 shadow-sm">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block text-center">
+                            {lang === 'fr' ? `Photo galerie ${i + 1}` : `Gallery Photo ${i + 1}`}
+                          </label>
+                          <SimpleUpload 
+                            value={data.galleryImages?.[i] || ''} 
+                            onChange={(url) => {
+                              const newGallery = [...(data.galleryImages || Array(6).fill(''))];
+                              while (newGallery.length <= i) newGallery.push('');
+                              newGallery[i] = url;
+                              setData({ ...data, galleryImages: newGallery });
+                            }} 
+                            path={`uploads/${type}/gallery`} 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -1165,158 +1207,184 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
                  <HorizontalField label={lang === 'fr' ? "Poste / Responsabilité" : "Position / Responsibility"} value={data.role} onChange={(v: string) => setData({ ...data, role: v })} placeholder={lang === 'fr' ? "ex: Responsable Agricole" : "e.g. Agricultural Manager"} />
                  <HorizontalField label={lang === 'fr' ? "Lien Facebook" : "Facebook Link"} value={data.facebook} onChange={(v: string) => setData({ ...data, facebook: v })} placeholder="https://facebook.com/..." />
                  <HorizontalField label={lang === 'fr' ? "Lien LinkedIn" : "LinkedIn Link"} value={data.linkedin} onChange={(v: string) => setData({ ...data, linkedin: v })} placeholder="https://linkedin.com/in/..." />
-                  <HorizontalField label={lang === 'fr' ? "Lien Email" : "Email Link"} value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="exemple@dronek.net" />
-                </div>
-             )}
-
-              {type === 'mediatheque' && (
-                <div className="space-y-16">
-                  {/* Images Section */}
-                  <div className="space-y-8">
-                    <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                      <ImageIcon className="w-6 h-6 text-[#149655]" />
-                      <h3 className="text-xl font-bold uppercase tracking-widest text-gray-800">
-                        {lang === 'fr' ? 'Images du Média (1 à 2)' : 'Gallery Images (1 to 8)'}
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      {Array(8).fill(0).map((_, i) => (
-                        <div key={i} className="space-y-3 bg-gray-50 p-4 rounded-[2rem] border border-gray-100 shadow-sm">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block text-center">Position {i + 1}</label>
-                          <SimpleUpload 
-                            value={data.mediatheque?.images?.[i] || ''} 
-                            onChange={(url) => {
-                              const newImages = [...(data.mediatheque?.images || Array(8).fill(''))];
-                              newImages[i] = url;
-                              setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), images: newImages } });
-                            }} 
-                            path="mediatheque" 
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Videos Section */}
-                  <div className="space-y-8">
-                    <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                      <FileText className="w-6 h-6 text-[#149655]" />
-                      <h3 className="text-xl font-bold uppercase tracking-widest text-gray-800">
-                        {lang === 'fr' ? 'Vidéos YouTube (2 maximum)' : 'YouTube Videos (2 maximum)'}
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      {/* Vidéo 1 */}
-                      <div className="space-y-3 bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Vidéo 1 (YouTube, FB, Vimeo, Local)</label>
-                          <VideoUpload 
-                            value={data.mediatheque?.videos?.[0] || ''} 
-                            onChange={(v) => {
-                              const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
-                              newVideos[0] = v;
-                              setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
-                            }}
-                            path={`mediatheque/${id || 'new'}`}
-                          />
-                        </div>
-                        <input 
-                          type="text" 
-                          value={data.mediatheque?.videos?.[0] || ''} 
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
-                            newVideos[0] = val;
-                            setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
-                          }} 
-                          placeholder="Lien YouTube, Facebook, Vimeo..."
-                          className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl focus:border-[#149655] outline-none text-sm font-bold placeholder:font-normal placeholder:text-gray-300"
-                        />
-                        {data.mediatheque?.videos?.[0] ? (
-                           <div className="relative aspect-video rounded-xl overflow-hidden mt-3 shadow-md border border-white bg-black">
-                             {(() => {
-                               const v = data.mediatheque.videos[0];
-                               const ytMatch = v.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-                               const ytId = (ytMatch && ytMatch[2].length === 11) ? ytMatch[2] : (v.length === 11 ? v : '');
-                               
-                               if (ytId) {
-                                 return <img src={`https://img.youtube.com/vi/${ytId}/default.jpg`} className="w-full h-full object-cover" />;
-                               } else if (v.includes('facebook.com') || v.includes('fb.watch')) {
-                                 return <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white font-bold text-xs">Facebook Video</div>;
-                               } else if (v.includes('vimeo.com')) {
-                                 return <div className="w-full h-full flex items-center justify-center bg-blue-400 text-white font-bold text-xs">Vimeo Video</div>;
-                               } else {
-                                 return <video src={v} className="w-full h-full object-cover" />;
-                               }
-                             })()}
-                             <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                               <Play className="w-6 h-6 text-white opacity-80" />
-                             </div>
-                           </div>
-                        ) : (
-                          <div className="aspect-video bg-white/50 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200 mt-3">
-                            <LayoutGrid className="w-5 h-5 text-gray-200" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Vidéo 2 */}
-                      <div className="space-y-3 bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Vidéo 2 (YouTube, FB, Vimeo, Local)</label>
-                          <VideoUpload 
-                            value={data.mediatheque?.videos?.[1] || ''} 
-                            onChange={(v) => {
-                              const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
-                              newVideos[1] = v;
-                              setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
-                            }}
-                            path={`mediatheque/${id || 'new'}`}
-                          />
-                        </div>
-                        <input 
-                          type="text" 
-                          value={data.mediatheque?.videos?.[1] || ''} 
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const newVideos = [...(data.mediatheque?.videos || Array(2).fill(''))];
-                            newVideos[1] = val;
-                            setData({ ...data, mediatheque: { ...(data.mediatheque || { images: Array(8).fill(''), videos: Array(2).fill('') }), videos: newVideos } });
-                          }} 
-                          placeholder="Lien YouTube, Facebook, Vimeo..."
-                          className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl focus:border-[#149655] outline-none text-sm font-bold placeholder:font-normal placeholder:text-gray-300"
-                        />
-                        {data.mediatheque?.videos?.[1] ? (
-                           <div className="relative aspect-video rounded-xl overflow-hidden mt-3 shadow-md border border-white bg-black">
-                             {(() => {
-                               const v = data.mediatheque.videos[1];
-                               const ytMatch = v.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-                               const ytId = (ytMatch && ytMatch[2].length === 11) ? ytMatch[2] : (v.length === 11 ? v : '');
-                               
-                               if (ytId) {
-                                 return <img src={`https://img.youtube.com/vi/${ytId}/default.jpg`} className="w-full h-full object-cover" />;
-                               } else if (v.includes('facebook.com') || v.includes('fb.watch')) {
-                                 return <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white font-bold text-xs">Facebook Video</div>;
-                               } else if (v.includes('vimeo.com')) {
-                                 return <div className="w-full h-full flex items-center justify-center bg-blue-400 text-white font-bold text-xs">Vimeo Video</div>;
-                               } else {
-                                 return <video src={v} className="w-full h-full object-cover" />;
-                               }
-                             })()}
-                             <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                               <Play className="w-6 h-6 text-white opacity-80" />
-                             </div>
-                           </div>
-                        ) : (
-                          <div className="aspect-video bg-white/50 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200 mt-3">
-                            <LayoutGrid className="w-5 h-5 text-gray-200" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                 <HorizontalField label={lang === 'fr' ? "Lien Email" : "Email Link"} value={data.email} onChange={(v: string) => setData({ ...data, email: v })} placeholder="exemple@dronek.net" />
+               </div>
               )}
+
+             {type === 'mediatheque' && (
+                 <div className="space-y-16">
+                   {/* Images Section avec ajout dynamique */}
+                   <div className="space-y-8">
+                     <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                       <div className="flex items-center gap-3">
+                         <ImageIcon className="w-6 h-6 text-[#149655]" />
+                         <h3 className="text-xl font-bold uppercase tracking-widest text-gray-800">
+                           {lang === 'fr' ? 'Photos de la Médiathèque' : 'Gallery Photos'}
+                         </h3>
+                       </div>
+                       <button
+                         type="button"
+                         onClick={() => {
+                           const currentImgs = data.mediatheque?.images || [];
+                           setData({
+                             ...data,
+                             mediatheque: {
+                               ...(data.mediatheque || { images: [], videos: [] }),
+                               images: [...currentImgs, '']
+                             }
+                           });
+                         }}
+                         className="px-4 py-2 bg-[#149655] hover:bg-[#0f7a44] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                       >
+                         <Plus className="w-4 h-4" />
+                         {lang === 'fr' ? 'Ajouter une photo' : 'Add a photo'}
+                       </button>
+                     </div>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                       {(data.mediatheque?.images && data.mediatheque.images.length > 0 
+                         ? data.mediatheque.images 
+                         : ['', '']
+                       ).map((imgUrl: string, i: number) => (
+                         <div key={i} className="relative space-y-3 bg-gray-50 p-4 rounded-[2rem] border border-gray-100 shadow-sm">
+                           <div className="flex items-center justify-between px-1">
+                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Photo {i + 1}</label>
+                             <button
+                               type="button"
+                               onClick={() => {
+                                 const newImgs = [...(data.mediatheque?.images || [])];
+                                 newImgs.splice(i, 1);
+                                 setData({
+                                   ...data,
+                                   mediatheque: {
+                                     ...(data.mediatheque || { images: [], videos: [] }),
+                                     images: newImgs
+                                   }
+                                 });
+                               }}
+                               className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                             >
+                               <Trash2 className="w-3.5 h-3.5" />
+                             </button>
+                           </div>
+                           <SimpleUpload 
+                             value={imgUrl} 
+                             onChange={(url) => {
+                               const newImages = [...(data.mediatheque?.images || ['', ''])];
+                               while (newImages.length <= i) newImages.push('');
+                               newImages[i] = url;
+                               setData({ ...data, mediatheque: { ...(data.mediatheque || { images: [], videos: [] }), images: newImages } });
+                             }} 
+                             path="mediatheque" 
+                           />
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+
+                   {/* Videos Section avec ajout dynamique */}
+                   <div className="space-y-8 pt-6 border-t border-gray-100">
+                     <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                       <div className="flex items-center gap-3">
+                         <FileText className="w-6 h-6 text-[#149655]" />
+                         <h3 className="text-xl font-bold uppercase tracking-widest text-gray-800">
+                           {lang === 'fr' ? 'Vidéos de la Médiathèque' : 'Gallery Videos'}
+                         </h3>
+                       </div>
+                       <button
+                         type="button"
+                         onClick={() => {
+                           const currentVids = data.mediatheque?.videos || [];
+                           setData({
+                             ...data,
+                             mediatheque: {
+                               ...(data.mediatheque || { images: [], videos: [] }),
+                               videos: [...currentVids, '']
+                             }
+                           });
+                         }}
+                         className="px-4 py-2 bg-[#149655] hover:bg-[#0f7a44] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                       >
+                         <Plus className="w-4 h-4" />
+                         {lang === 'fr' ? 'Ajouter une vidéo' : 'Add a video'}
+                       </button>
+                     </div>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                       {(data.mediatheque?.videos && data.mediatheque.videos.length > 0 
+                         ? data.mediatheque.videos 
+                         : ['', '']
+                       ).map((vidUrl: string, idx: number) => (
+                         <div key={idx} className="space-y-3 bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm relative">
+                           <div className="flex justify-between items-center">
+                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Vidéo {idx + 1}</label>
+                             <div className="flex items-center gap-2">
+                               <VideoUpload 
+                                 value={vidUrl} 
+                                 onChange={(v) => {
+                                   const newVideos = [...(data.mediatheque?.videos || [])];
+                                   while (newVideos.length <= idx) newVideos.push('');
+                                   newVideos[idx] = v;
+                                   setData({ ...data, mediatheque: { ...(data.mediatheque || { images: [], videos: [] }), videos: newVideos } });
+                                 }}
+                                 path={`mediatheque/${id || 'new'}`}
+                               />
+                               <button
+                                 type="button"
+                                 onClick={() => {
+                                   const newVids = [...(data.mediatheque?.videos || [])];
+                                   newVids.splice(idx, 1);
+                                   setData({
+                                     ...data,
+                                     mediatheque: {
+                                       ...(data.mediatheque || { images: [], videos: [] }),
+                                       videos: newVids
+                                     }
+                                   });
+                                 }}
+                                 className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                               >
+                                 <Trash2 className="w-4 h-4" />
+                               </button>
+                             </div>
+                           </div>
+                           <input 
+                             type="text" 
+                             value={vidUrl} 
+                             onChange={(e) => {
+                               const val = e.target.value;
+                               const newVideos = [...(data.mediatheque?.videos || [])];
+                               while (newVideos.length <= idx) newVideos.push('');
+                               newVideos[idx] = val;
+                               setData({ ...data, mediatheque: { ...(data.mediatheque || { images: [], videos: [] }), videos: newVideos } });
+                             }} 
+                             placeholder="Lien YouTube, Facebook, Vimeo ou Fichier Vidéo..."
+                             className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl focus:border-[#149655] outline-none text-sm font-bold placeholder:font-normal placeholder:text-gray-300"
+                           />
+                           {vidUrl ? (
+                              <div className="relative aspect-video rounded-xl overflow-hidden mt-3 shadow-md border border-white bg-black">
+                                {(() => {
+                                  const ytMatch = vidUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                                  const ytId = (ytMatch && ytMatch[2].length === 11) ? ytMatch[2] : (vidUrl.length === 11 ? vidUrl : '');
+                                  
+                                  if (ytId) {
+                                    return <img src={`https://img.youtube.com/vi/${ytId}/default.jpg`} className="w-full h-full object-cover" />;
+                                  } else if (vidUrl.includes('facebook.com') || vidUrl.includes('fb.watch')) {
+                                    return <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white font-bold text-xs">Facebook Video</div>;
+                                  } else if (vidUrl.includes('vimeo.com')) {
+                                    return <div className="w-full h-full flex items-center justify-center bg-blue-400 text-white font-bold text-xs">Vimeo Video</div>;
+                                  } else {
+                                    return <video src={vidUrl} className="w-full h-full object-cover" />;
+                                  }
+                                })()}
+                              </div>
+                           ) : null}
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+               )}
 
               {type !== 'contact' && type !== 'production_site' && type !== 'actualite' && type !== 'mediatheque' && type !== 'service' && (
                <div className="pt-4 space-y-8 flex flex-col items-center">

@@ -564,7 +564,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           .publication-card {
             min-width: calc(20% - 1rem);
             max-width: 230px;
-            height: 250px; 
+            height: 310px; 
             flex-shrink: 0;
           }
           .nav-btn {
@@ -604,7 +604,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
               const imageUrl = pub.image || '/images/hero-forest.jpg';
               return (
                 <div key={index} className="publication-card">
-                  {/* Card Facebook Post Style compacte réduite sans aucun trait noir */}
+                  {/* Card Facebook Post Style compacte avec hauteur rallongée de 1.5 cm */}
                   <div 
                     className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col h-full border-0"
                     onClick={() => handleSelectPost(pub)}
@@ -624,15 +624,15 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
 
                     {/* Titre en vert uniquement (sans description) */}
                     <div className="px-3 py-1">
-                      <h3 className="text-xs font-bold text-[#149655] leading-tight line-clamp-1">
+                      <h3 className="text-xs font-bold text-[#149655] leading-tight line-clamp-2">
                         {pub.title}
                       </h3>
                     </div>
 
-                    {/* Image réduite */}
+                    {/* Image rallongée en hauteur */}
                     {imageUrl && (
-                      <div className="px-3 py-0.5">
-                        <div className="rounded-xl overflow-hidden bg-gray-50 h-[100px] sm:h-[110px] relative border-0">
+                      <div className="px-3 py-1">
+                        <div className="rounded-xl overflow-hidden bg-gray-50 h-[145px] sm:h-[155px] relative border-0">
                           <img 
                             src={imageUrl} 
                             alt={pub.title}
