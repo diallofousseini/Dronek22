@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 
 import { useLanguage } from '@/components/dronek/LanguageProvider';
+import { projects as hardcodedProjects } from '@/lib/projects';
 
 interface DashboardItem {
   id: string;
@@ -220,6 +221,29 @@ export default function AdminDashboard() {
                 rawDate: new Date(item.created_at)
               };
             })];
+          }
+        }
+
+        if (activeTab === 'all' || activeTab === 'projets') {
+          for (const hp of hardcodedProjects) {
+            const exists = combined.some(item => item.table === 'projets' && (item.id === hp.slug || item.titre === hp.title || item.title === hp.title));
+            if (!exists) {
+              combined.push({
+                id: hp.slug,
+                title: hp.title,
+                titre: hp.title,
+                category: hp.categoryLabel || 'Foresterie',
+                status: lang === 'fr' ? 'Publié' : 'Published',
+                date: hp.year,
+                table: 'projets',
+                url: hp.image,
+                rawDate: new Date(`${hp.year}-01-01`),
+                description_courte: hp.summary,
+                description_complete: hp.detail,
+                localisation: hp.location,
+                annee: hp.year
+              } as any);
+            }
           }
         }
 

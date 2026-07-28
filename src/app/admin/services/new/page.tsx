@@ -213,6 +213,13 @@ function VerticalField({ label, value, onChange, placeholder, type = 'text', lab
           placeholder={placeholder}
           className="w-full px-6 py-5 bg-white border border-[#e5e7eb] rounded-2xl focus:border-[#149655] focus:ring-8 focus:ring-[#149655]/5 outline-none transition-all duration-300 text-[15px] font-semibold text-[#111] leading-relaxed placeholder:text-[#9ca3af] shadow-sm"
         />
+      ) : type === 'date' ? (
+        <input 
+          type="date" 
+          value={value ? value.substring(0, 10) : ""} 
+          onChange={(e) => onChange(e.target.value)} 
+          className="w-full h-[60px] px-6 bg-white border border-[#e5e7eb] rounded-2xl focus:border-[#149655] focus:ring-8 focus:ring-[#149655]/5 outline-none transition-all duration-300 text-[15px] font-semibold text-[#111] shadow-sm cursor-pointer"
+        />
       ) : (
         <input 
           type="text" 
@@ -711,12 +718,8 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
       } else {
         hasRequiredFields = !!(data.title && data.description);
       }
-    } else if (type === 'projet') {
+    } else if (type === 'projet' || type === 'actualite' || type === 'mediatheque') {
       hasRequiredFields = true; // Tous les champs sont optionnels pour la sauvegarde
-    } else if (type === 'actualite') {
-      hasRequiredFields = !!(data.title && data.description && data.image);
-    } else if (type === 'mediatheque') {
-      hasRequiredFields = true;
     } else {
       hasRequiredFields = !!(data.title && (data.category || data.content || data.description) && data.image);
     }
@@ -742,12 +745,12 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
 
         payload = { 
           ...payload, 
-          titre: data.title, 
-          categorie: data.category, 
+          titre: data.title || (lang === 'fr' ? 'Projet sans titre' : 'Untitled project'), 
+          categorie: data.category || 'Foresterie', 
           description_courte: data.descriptionShort || data.description || '', 
           description_complete: serializedDescription,
-          image_url: data.image, 
-          localisation: data.location, 
+          image_url: data.image || '', 
+          localisation: data.location || '', 
           is_featured: !!data.isFeatured,
           statut: data.status || 'publie'
         };
@@ -781,13 +784,13 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
       } else if (type === 'actualite') {
         payload = { 
           ...payload, 
-          titre: data.title, 
-          resume: data.description, 
-          contenu: data.content,
-          image_url: data.image,
-          gallery: data.galleryImages && data.galleryImages.length > 0 ? JSON.stringify(data.galleryImages) : null,
+          titre: data.title || (lang === 'fr' ? 'Actualité sans titre' : 'Untitled news'), 
+          resume: data.content || data.description || '', 
+          contenu: data.content || data.description || '',
+          image_url: data.image || '',
+          gallery: data.galleryImages && data.galleryImages.length > 0 ? JSON.stringify(data.galleryImages.filter(Boolean)) : null,
           statut: data.status || 'publie',
-          date_publication: data.date || new Date().toISOString()
+          date_publication: data.customDate || data.date || new Date().toISOString()
         };
       } else if (type === 'contact') {
         table = 'contacts';
@@ -1161,6 +1164,13 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
                     {/* Left Column: Info */}
                     <div className="space-y-8">
                       <VerticalField labelSize="13px" label={lang === 'fr' ? "Titre de l'actualité" : "News Title"} value={data.title} onChange={(v: string) => setData({ ...data, title: v })} placeholder={lang === 'fr' ? "Titre principal..." : "Main title..."} />
+                      <VerticalField 
+                        labelSize="13px" 
+                        label={lang === 'fr' ? "Date de réalisation" : "Date of completion"} 
+                        type="date"
+                        value={data.customDate || data.date || ''} 
+                        onChange={(v: string) => setData({ ...data, customDate: v, date: v })} 
+                      />
                       <VerticalField labelSize="13px" label={lang === 'fr' ? "Contenu / Description" : "Content / Description"} type="textarea" value={data.content || data.description} onChange={(v: string) => setData({ ...data, content: v, description: v })} placeholder={lang === 'fr' ? "Détails de l'actualité..." : "News details..."} />
                     </div>
 
