@@ -558,26 +558,44 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
       
       const populateForm = (item: any) => {
         if (!item) return;
-        let year = '';
+
+        let year = item.annee || item.year || '';
         let objectives: string[] = [];
         let impacts: string[] = [];
         let gallery: string[] = [];
-        let description = item.description_courte || item.description || item.contenu || item.content || item.resume || '';
-        let descriptionShort = item.description_courte || '';
+        let category = item.categorie || item.category || item.categoryLabel || 'Foresterie';
 
-        if (type === 'projet' && item.description_complete && typeof item.description_complete === 'string' && item.description_complete.startsWith('{') && item.description_complete.endsWith('}')) {
+        let description = item.description || item.description_complete || item.description_courte || item.contenu || item.content || item.resume || item.detail || item.detailLongDesc || '';
+
+        if (type === 'projet' && item.description_complete && typeof item.description_complete === 'string' && item.description_complete.startsWith('{')) {
           try {
             const parsed = JSON.parse(item.description_complete);
-            description = parsed.detail || description;
-            year = parsed.year || '';
-            objectives = parsed.objectives || [];
-            impacts = parsed.impacts || [];
-            gallery = parsed.gallery || [];
+            description = parsed.detail || parsed.description || description;
+            year = parsed.year || year;
+            if (Array.isArray(parsed.objectives)) objectives = parsed.objectives;
+            if (Array.isArray(parsed.impacts)) impacts = parsed.impacts;
+            if (Array.isArray(parsed.gallery)) gallery = parsed.gallery;
           } catch (e) {
             description = item.description_complete;
           }
-        } else if (type === 'projet') {
-          description = item.description_complete || item.description_courte || item.summary || item.detail || '';
+        }
+
+        if (objectives.length === 0) {
+          const rawObj = item.objectifs || item.objectives;
+          if (Array.isArray(rawObj)) {
+            objectives = rawObj.filter((o: any) => typeof o === 'string' && o.trim().length > 0);
+          } else if (typeof rawObj === 'string' && rawObj.trim().length > 0) {
+            objectives = rawObj.split('\n').map((s: string) => s.trim()).filter(Boolean);
+          }
+        }
+
+        if (gallery.length === 0) {
+          const rawGal = item.gallery || item.galleryImages;
+          if (Array.isArray(rawGal)) {
+            gallery = rawGal;
+          } else if (typeof rawGal === 'string' && rawGal.trim().length > 0) {
+            try { gallery = JSON.parse(rawGal); } catch (e) {}
+          }
         }
 
         const pubDateRaw = item.date_publication || item.createdAt || item.customDate || item.created_at || item.date || '';
@@ -587,58 +605,33 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           ...item,
           id: item.id || id,
           title: item.titre || item.title || '',
+          category: category,
           content: item.contenu || item.content || item.resume || description || '',
-          description: description || item.contenu || item.resume || '',
-          descriptionShort: descriptionShort,
+          description: description,
+          descriptionShort: item.description_courte || '',
           customDate: customDateVal,
           image: item.image_url || item.image || '',
           status: item.statut || item.status || 'publie',
           phone: item.telephone || item.phone || '',
-          location: item.message || item.location || item.localisation || '',
+          location: item.localisation || item.location || item.message || '',
           name: item.nom ? `${item.prenom || ''} ${item.nom}` : item.name || '',
           role: item.poste || item.role || '',
           bio: item.biographie || item.bio || '',
           detailTitle: item.detail_title || item.detailTitle || '',
           detailShortDesc: item.detail_short_desc || item.detailShortDesc || '',
-          detailLongDesc: item.detail_long_desc || item.detailLongDesc || '',
+          detailLongDesc: item.detail_long_desc || item.detailLongDesc || description || '',
           serviceType: item.service_type || item.serviceType || 'forestry',
           isMainService: false,
           pdfUrl: item.button_text || item.pdf_url || item.pdfUrl || '',
           desc: item.description || item.desc || '',
           lat: item.latitude?.toString() || item.lat || '',
           lng: item.longitude?.toString() || item.lng || '',
-          year: year || item.annee || item.year || '',
-          objectives: objectives.length > 0 ? objectives : (item.objectives || []),
-          impacts: impacts.length > 0 ? impacts : (item.impacts || []),
-          gallery: gallery.length > 0 ? gallery : (typeof item.gallery === 'string' ? (() => { try { return JSON.parse(item.gallery); } catch(e) { return []; } })() : (item.gallery || [])),
-          galleryImages: (() => {
-            if (item.gallery) {
-              try {
-                const parsed = typeof item.gallery === 'string' ? JSON.parse(item.gallery) : item.gallery;
-                if (Array.isArray(parsed)) return parsed;
-              } catch (e) {}
-            }
-            return [];
-          })()
+          year: year,
+          objectives: objectives,
+          impacts: impacts,
+          gallery: gallery,
+          galleryImages: gallery,
         });
-
-        if (type === 'service') {
-          const isDomain = item.service_type === 'domain';
-          if (isDomain) {
-            setFormMode('featured');
-          }
-          supabase.from('contacts').select('*').eq('sujet', 'MainServices').single().then(({ data: config }) => {
-            if (config && config.message) {
-              try {
-                const mainIds = JSON.parse(config.message);
-                if (Array.isArray(mainIds) && mainIds.includes(item.id)) {
-                  setData(prev => ({ ...prev, isMainService: true }));
-                  setFormMode('featured');
-                }
-              } catch (e) {}
-            }
-          });
-        }
       };
 
       // Query Supabase first
@@ -651,15 +644,21 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           if (item) {
             populateForm(item);
           } else {
+            // Try secondary lookup by title/slug in Supabase
+            const titleField = type === 'actualite' || type === 'projet' ? 'titre' : 'nom';
+            const { data: altItem } = await supabase.from(table).select('*').ilike(titleField, `%${id}%`).limit(1).maybeSingle();
+            if (altItem) {
+              populateForm(altItem);
+              return;
+            }
+
             // Fallback for Actualites if not in Supabase yet
             if (type === 'actualite') {
-              // Check defaultNewsPosts
               const foundDefault = defaultNewsPosts.find(dn => dn.id === id || dn.title === id);
               if (foundDefault) {
                 populateForm(foundDefault);
                 return;
               }
-              // Check local Prisma API
               try {
                 const res = await fetch('/api/actualites', { cache: 'no-store' });
                 const apiRes = await res.json();
@@ -671,7 +670,18 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
                   }
                 }
               } catch (e) {}
+              try {
+                const localStored = JSON.parse(localStorage.getItem('dronek_local_actualites') || '[]');
+                if (Array.isArray(localStored)) {
+                  const foundLs = localStored.find((ls: any) => String(ls.id) === String(id) || ls.title === id);
+                  if (foundLs) {
+                    populateForm(foundLs);
+                    return;
+                  }
+                }
+              } catch (e) {}
             }
+
             // Fallback for Projets if not in Supabase yet
             if (type === 'projet') {
               const foundProj = hardcodedProjects.find(hp => hp.slug === id || hp.title === id);

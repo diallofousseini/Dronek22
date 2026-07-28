@@ -78,23 +78,51 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
 
         let standardProjects: any[] = [];
         if (supaProjects && supaProjects.length > 0) {
-          standardProjects = supaProjects.map((p: any) => ({
-            slug: p.id,
-            title: p.titre || '',
-            summary: p.resume || p.contenu || '',
-            detail: p.contenu || p.resume || '',
-            detailTitle: p.detail_title || p.detailTitle || '',
-            detailShortDesc: p.detail_short_desc || p.detailShortDesc || '',
-            detailLongDesc: p.detail_long_desc || p.detailLongDesc || '',
-            image: p.image_url || '/images/dronek_image3.png',
-            categoryLabel: p.categorie || 'FORESTERIE',
-            location: p.localisation || 'Côte d\'Ivoire',
-            year: p.annee || '2024',
-            objectives: p.objectifs ? (Array.isArray(p.objectifs) ? p.objectifs : [p.objectifs]) : [],
-            impacts: p.impacts ? (Array.isArray(p.impacts) ? p.impacts : [p.impacts]) : [],
-            gallery: p.gallery || null,
-            isFeatured: p.is_featured || false
-          }));
+          standardProjects = supaProjects.map((p: any) => {
+            let parsedDescComp: any = null;
+            if (p.description_complete && typeof p.description_complete === 'string' && p.description_complete.startsWith('{')) {
+              try { parsedDescComp = JSON.parse(p.description_complete); } catch(e) {}
+            }
+
+            const descText = p.description || p.description_complete || p.description_courte || p.contenu || p.resume || (parsedDescComp?.detail) || (parsedDescComp?.description) || '';
+
+            let objectivesList: string[] = [];
+            if (Array.isArray(p.objectifs)) objectivesList = p.objectifs;
+            else if (Array.isArray(p.objectives)) objectivesList = p.objectives;
+            else if (parsedDescComp?.objectives && Array.isArray(parsedDescComp.objectives)) objectivesList = parsedDescComp.objectives;
+            else if (typeof p.objectifs === 'string' && p.objectifs.trim().length > 0) objectivesList = p.objectifs.split('\n').map((s: string) => s.trim()).filter(Boolean);
+            else if (typeof p.objectives === 'string' && p.objectives.trim().length > 0) objectivesList = p.objectives.split('\n').map((s: string) => s.trim()).filter(Boolean);
+
+            let galleryList: string[] = [];
+            if (Array.isArray(p.gallery)) galleryList = p.gallery;
+            else if (typeof p.gallery === 'string' && p.gallery.trim().length > 0) {
+              try { galleryList = JSON.parse(p.gallery); } catch(e) {}
+            }
+            if (parsedDescComp?.gallery && Array.isArray(parsedDescComp.gallery) && galleryList.length === 0) {
+              galleryList = parsedDescComp.gallery;
+            }
+
+            return {
+              slug: String(p.id),
+              title: p.titre || p.title || '',
+              summary: descText.slice(0, 180),
+              detail: descText,
+              description: descText,
+              detailTitle: p.detail_title || p.detailTitle || '',
+              detailShortDesc: p.detail_short_desc || p.detailShortDesc || '',
+              detailLongDesc: descText,
+              image: p.image_url || p.image || '/images/dronek_image3.png',
+              categoryLabel: p.categorie || p.category || 'FORESTERIE',
+              category: p.categorie || p.category || 'FORESTERIE',
+              location: p.localisation || p.location || 'Côte d\'Ivoire',
+              year: p.annee || p.year || '2024',
+              objectives: objectivesList,
+              objectifs: objectivesList,
+              impacts: p.impacts ? (Array.isArray(p.impacts) ? p.impacts : [p.impacts]) : [],
+              gallery: galleryList,
+              isFeatured: p.is_featured || false
+            };
+          });
         }
 
         const { data: newsData } = await supabase
@@ -147,7 +175,11 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
     loadData();
   }, [lang]);
 
-  const allProjectsRaw = (dynamicProjects.length > 0 ? dynamicProjects : hardcodedProjects).map((p: any) => translateProject(p, lang));
+  const mergedProjectsMap = new Map<string, any>();
+  hardcodedProjects.forEach((hp: any) => mergedProjectsMap.set(String(hp.slug || hp.id), hp));
+  dynamicProjects.forEach((dp: any) => mergedProjectsMap.set(String(dp.slug || dp.id), dp));
+
+  const allProjectsRaw = Array.from(mergedProjectsMap.values()).map((p: any) => translateProject(p, lang));
   const allProjects = selectedCategory === 'Tous' 
     ? allProjectsRaw 
     : allProjectsRaw.filter((p: any) => p.categoryLabel === selectedCategory || p.category === selectedCategory);
