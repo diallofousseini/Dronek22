@@ -34,11 +34,19 @@ export async function POST(request: NextRequest) {
     }
 
     let post;
-    if (id) {
-      const existing = await db.post.findUnique({ where: { id } }).catch(() => null);
+    if (id || title) {
+      const existing = await db.post.findFirst({
+        where: {
+          OR: [
+            ...(id ? [{ id }] : []),
+            ...(title ? [{ title: { equals: title } }] : [])
+          ]
+        }
+      }).catch(() => null);
+
       if (existing) {
         post = await db.post.update({
-          where: { id },
+          where: { id: existing.id },
           data: {
             title: title || content.slice(0, 60),
             content: content || title,

@@ -71,7 +71,8 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   };
 
   const translatedPosts = posts.map(p => translateNews(p, lang));
-  const carouselPosts = translatedPosts.slice(0, 12);
+  // Les 6 premiers posts restent au format post facebook en carrousel
+  const carouselPosts = translatedPosts.slice(0, 6);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
@@ -275,10 +276,12 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
     fetchNews();
   }, []);
 
-  const totalPages = Math.ceil(translatedPosts.length / itemsPerPage);
+  // Le reste des posts (à partir du 7ème) apparaît en bas dans la grille
+  const remainingPosts = translatedPosts.slice(6);
+  const totalPages = Math.ceil(remainingPosts.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPosts = translatedPosts.slice(indexOfFirstItem, indexOfLastItem);
+  const currentPosts = remainingPosts.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -730,11 +733,12 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         </div>
       </section>
 
-      {/* 📰 CONTENT GRID (Cartes au format de la page Projets avec date de publication sur le badge) */}
-      <section id="news-grid-start" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <AnimatePresence mode="wait">
-          <motion.div key="news-posts-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-            {currentPosts.map((post, index) => (
+      {/* 📰 CONTENT GRID (Cartes au format de la page Projets à partir du 7ème post) */}
+      {remainingPosts.length > 0 && (
+        <section id="news-grid-start" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <AnimatePresence mode="wait">
+            <motion.div key="news-posts-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+              {currentPosts.map((post, index) => (
               <motion.div
                 key={post.id}
                 whileHover={{ scale: 1.02 }}
@@ -779,6 +783,7 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
           </motion.div>
         </AnimatePresence>
       </section>
+      )}
 
       {/* 🔢 PAGINATION */}
       {!loading && totalPages > 1 && (
