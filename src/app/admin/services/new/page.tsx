@@ -556,93 +556,129 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
                     type === 'production_site' ? 'production_sites' : 
                     type === 'service' ? 'services' : 'contacts';
       
+      const populateForm = (item: any) => {
+        if (!item) return;
+        let year = '';
+        let objectives: string[] = [];
+        let impacts: string[] = [];
+        let gallery: string[] = [];
+        let description = item.description_courte || item.description || item.contenu || item.content || item.resume || '';
+        let descriptionShort = item.description_courte || '';
+
+        if (type === 'projet' && item.description_complete && typeof item.description_complete === 'string' && item.description_complete.startsWith('{') && item.description_complete.endsWith('}')) {
+          try {
+            const parsed = JSON.parse(item.description_complete);
+            description = parsed.detail || description;
+            year = parsed.year || '';
+            objectives = parsed.objectives || [];
+            impacts = parsed.impacts || [];
+            gallery = parsed.gallery || [];
+          } catch (e) {
+            description = item.description_complete;
+          }
+        } else if (type === 'projet') {
+          description = item.description_complete || item.description_courte || item.summary || item.detail || '';
+        }
+
+        const pubDateRaw = item.date_publication || item.createdAt || item.customDate || item.created_at || item.date || '';
+        const customDateVal = pubDateRaw ? pubDateRaw.substring(0, 10) : '';
+
+        setData({
+          ...item,
+          id: item.id || id,
+          title: item.titre || item.title || '',
+          content: item.contenu || item.content || item.resume || description || '',
+          description: description || item.contenu || item.resume || '',
+          descriptionShort: descriptionShort,
+          customDate: customDateVal,
+          image: item.image_url || item.image || '',
+          status: item.statut || item.status || 'publie',
+          phone: item.telephone || item.phone || '',
+          location: item.message || item.location || item.localisation || '',
+          name: item.nom ? `${item.prenom || ''} ${item.nom}` : item.name || '',
+          role: item.poste || item.role || '',
+          bio: item.biographie || item.bio || '',
+          detailTitle: item.detail_title || item.detailTitle || '',
+          detailShortDesc: item.detail_short_desc || item.detailShortDesc || '',
+          detailLongDesc: item.detail_long_desc || item.detailLongDesc || '',
+          serviceType: item.service_type || item.serviceType || 'forestry',
+          isMainService: false,
+          pdfUrl: item.button_text || item.pdf_url || item.pdfUrl || '',
+          desc: item.description || item.desc || '',
+          lat: item.latitude?.toString() || item.lat || '',
+          lng: item.longitude?.toString() || item.lng || '',
+          year: year || item.annee || item.year || '',
+          objectives: objectives.length > 0 ? objectives : (item.objectives || []),
+          impacts: impacts.length > 0 ? impacts : (item.impacts || []),
+          gallery: gallery.length > 0 ? gallery : (typeof item.gallery === 'string' ? (() => { try { return JSON.parse(item.gallery); } catch(e) { return []; } })() : (item.gallery || [])),
+          galleryImages: (() => {
+            if (item.gallery) {
+              try {
+                const parsed = typeof item.gallery === 'string' ? JSON.parse(item.gallery) : item.gallery;
+                if (Array.isArray(parsed)) return parsed;
+              } catch (e) {}
+            }
+            return [];
+          })()
+        });
+
+        if (type === 'service') {
+          const isDomain = item.service_type === 'domain';
+          if (isDomain) {
+            setFormMode('featured');
+          }
+          supabase.from('contacts').select('*').eq('sujet', 'MainServices').single().then(({ data: config }) => {
+            if (config && config.message) {
+              try {
+                const mainIds = JSON.parse(config.message);
+                if (Array.isArray(mainIds) && mainIds.includes(item.id)) {
+                  setData(prev => ({ ...prev, isMainService: true }));
+                  setFormMode('featured');
+                }
+              } catch (e) {}
+            }
+          });
+        }
+      };
+
+      // Query Supabase first
       supabase
         .from(table)
         .select('*')
         .eq('id', id)
-        .single()
-        .then(({ data: item }) => {
+        .maybeSingle()
+        .then(async ({ data: item, error }) => {
           if (item) {
-            let year = '';
-            let objectives: string[] = [];
-            let impacts: string[] = [];
-            let gallery: string[] = [];
-            let description = item.description_courte || item.description || '';
-            let descriptionShort = item.description_courte || '';
-
-            if (type === 'projet' && item.description_complete && item.description_complete.startsWith('{') && item.description_complete.endsWith('}')) {
+            populateForm(item);
+          } else {
+            // Fallback for Actualites if not in Supabase yet
+            if (type === 'actualite') {
+              // Check defaultNewsPosts
+              const foundDefault = defaultNewsPosts.find(dn => dn.id === id || dn.title === id);
+              if (foundDefault) {
+                populateForm(foundDefault);
+                return;
+              }
+              // Check local Prisma API
               try {
-                const parsed = JSON.parse(item.description_complete);
-                description = parsed.detail || '';
-                year = parsed.year || '';
-                objectives = parsed.objectives || [];
-                impacts = parsed.impacts || [];
-                gallery = parsed.gallery || [];
-              } catch (e) {
-                console.error("Error parsing description_complete:", e);
-                description = item.description_complete;
-              }
-            } else if (type === 'projet') {
-              description = item.description_complete || item.description_courte || '';
+                const res = await fetch('/api/actualites', { cache: 'no-store' });
+                const apiRes = await res.json();
+                if (Array.isArray(apiRes?.posts)) {
+                  const foundApi = apiRes.posts.find((p: any) => p.id === id || p.title === id);
+                  if (foundApi) {
+                    populateForm(foundApi);
+                    return;
+                  }
+                }
+              } catch (e) {}
             }
-
-            setData({
-              ...item,
-              title: item.titre || item.title || '',
-              content: item.contenu || item.content || item.resume || description || '',
-              description: description || item.contenu || item.resume || '',
-              descriptionShort: descriptionShort,
-              customDate: item.date_publication ? item.date_publication.substring(0, 10) : item.customDate || item.date || '',
-              image: item.image_url || item.image || '',
-              status: item.statut || item.status || 'publie',
-              phone: item.telephone || item.phone,
-              location: item.message || item.location,
-              name: item.nom ? `${item.prenom || ''} ${item.nom}` : item.name,
-              role: item.poste || item.role,
-              bio: item.biographie || item.bio,
-              detailTitle: item.detail_title || item.detailTitle || '',
-              detailShortDesc: item.detail_short_desc || item.detailShortDesc || '',
-              detailLongDesc: item.detail_long_desc || item.detailLongDesc || '',
-              serviceType: item.service_type || item.serviceType || 'forestry',
-              isMainService: false,
-              pdfUrl: item.button_text || item.pdf_url || item.pdfUrl || '',
-              // production_site specific field mapping
-              desc: item.description || item.desc || '',
-              lat: item.latitude?.toString() || item.lat || '',
-              lng: item.longitude?.toString() || item.lng || '',
-              // project specific fields
-              year: year,
-              objectives: objectives,
-              impacts: impacts,
-              gallery: gallery,
-              // actualite gallery images
-              galleryImages: (() => {
-                if (item.gallery) {
-                  try {
-                    const parsed = JSON.parse(item.gallery);
-                    if (Array.isArray(parsed)) return parsed;
-                  } catch (e) {}
-                }
-                return [];
-              })()
-            });
-
-            if (type === 'service') {
-              const isDomain = item.service_type === 'domain';
-              if (isDomain) {
-                setFormMode('featured');
+            // Fallback for Projets if not in Supabase yet
+            if (type === 'projet') {
+              const foundProj = hardcodedProjects.find(hp => hp.slug === id || hp.title === id);
+              if (foundProj) {
+                populateForm(foundProj);
+                return;
               }
-              supabase.from('contacts').select('*').eq('sujet', 'MainServices').single().then(({ data: config }) => {
-                if (config && config.message) {
-                  try {
-                    const mainIds = JSON.parse(config.message);
-                    if (Array.isArray(mainIds) && mainIds.includes(item.id)) {
-                      setData(prev => ({ ...prev, isMainService: true }));
-                      setFormMode('featured');
-                    }
-                  } catch (e) {}
-                }
-              });
             }
           }
         });
@@ -838,8 +874,13 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
 
       if (targetId) {
         const { data: resData, error: resErr } = await supabase.from(table).update(payload).eq('id', targetId).select();
-        if (resErr) saveError = resErr;
-        else savedData = resData?.[0];
+        if (resErr || !resData || resData.length === 0) {
+          // If update failed or row didn't exist in Supabase yet, fallback to insert
+          const { data: resData2 } = await supabase.from(table).insert([payload]).select();
+          savedData = resData2?.[0];
+        } else {
+          savedData = resData?.[0];
+        }
       } else {
         const { data: resData, error: resErr } = await supabase.from(table).insert([payload]).select();
         if (resErr) {
