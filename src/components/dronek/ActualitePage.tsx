@@ -10,7 +10,7 @@ import Image from 'next/image';
 import AnimatedSection from './AnimatedSection';
 import { supabase } from '@/lib/supabase';
 import { translateNews } from '@/lib/i18n';
-import { defaultNewsPosts } from '@/lib/news';
+import { defaultNewsPosts, mergeNewsPosts } from '@/lib/news';
 
 type NewsPost = {
   id: string;
@@ -160,115 +160,32 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
 
   useEffect(() => {
     const fetchNews = async () => {
-      setLoading(true);
+      let supaData: any[] = [];
+      let apiDataPosts: any[] = [];
+      let localDataPosts: any[] = [];
 
-      // Fetch from Supabase
-      const { data, error } = await supabase
-        .from('actualites')
-        .select('*');
-      
-      let allPosts: NewsPost[] = [];
-
-      if (data && data.length > 0) {
-        const newsItems = data.map(n => {
-          let imageUrl = n.image_url || null;
-          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
-            imageUrl = null;
-          }
-          const itemDate = n.date_publication || n.created_at || new Date().toISOString();
-          return {
-            id: n.id,
-            title: n.titre || '',
-            content: n.contenu || n.resume || '',
-            image: imageUrl,
-            gallery: n.gallery || null,
-            customDate: itemDate,
-            createdAt: itemDate,
-            category: 'Actualités'
-          };
-        });
-
-        allPosts = [...newsItems];
-      }
-
-      // Also fetch from local Prisma API
+      // 1. Fetch from Supabase
       try {
-        const response = await fetch('/api/actualites', { cache: 'no-store' });
-        const apiData = await response.json();
-        if (Array.isArray(apiData?.posts)) {
-          for (const p of apiData.posts) {
-            const pIdStr = String(p.id);
-            const existingIndex = allPosts.findIndex(ap => String(ap.id) === pIdStr);
-            const pDate = p.customDate || p.createdAt || new Date().toISOString();
-            const pObj: NewsPost = {
-              id: String(p.id),
-              title: p.title || '',
-              content: p.content || '',
-              image: p.image || null,
-              gallery: p.gallery || null,
-              customDate: pDate,
-              createdAt: pDate,
-              category: 'Actualités'
-            };
-            if (existingIndex >= 0) {
-              allPosts[existingIndex] = { ...allPosts[existingIndex], ...pObj };
-            } else {
-              allPosts.push(pObj);
-            }
-          }
-        }
-      } catch (e) {
-        // Silently ignore local API errors
-      }
-
-      // Also merge from localStorage fail-safe
-      try {
-        const localStored = JSON.parse(localStorage.getItem('dronek_local_actualites') || '[]');
-        if (Array.isArray(localStored)) {
-          for (const lsItem of localStored) {
-            const lsIdStr = String(lsItem.id);
-            const existingIndex = allPosts.findIndex(ap => String(ap.id) === lsIdStr || ap.title.toLowerCase().trim() === (lsItem.title || '').toLowerCase().trim());
-            const lsDate = lsItem.customDate || lsItem.createdAt || new Date().toISOString();
-            const lsObj: NewsPost = {
-              id: lsIdStr,
-              title: lsItem.title || '',
-              content: lsItem.content || '',
-              image: lsItem.image || null,
-              gallery: lsItem.gallery || null,
-              customDate: lsDate,
-              createdAt: lsDate,
-              category: 'Actualités'
-            };
-            if (existingIndex >= 0) {
-              allPosts[existingIndex] = { ...allPosts[existingIndex], ...lsObj };
-            } else {
-              allPosts.push(lsObj);
-            }
-          }
-        }
+        const { data } = await supabase.from('actualites').select('*');
+        if (data && data.length > 0) supaData = data;
       } catch (e) {}
 
-      // Fill in default news posts only if they don't clash with existing DB posts
-      for (const dn of defaultNewsPosts) {
-        const dnIdStr = String(dn.id);
-        const exists = allPosts.some(ap => String(ap.id) === dnIdStr || ap.title.toLowerCase().trim() === dn.title.toLowerCase().trim());
-        if (!exists) {
-          allPosts.push({
-            id: dn.id,
-            title: lang === 'en' && dn.titleEn ? dn.titleEn : dn.title,
-            content: dn.content,
-            image: dn.image,
-            createdAt: dn.createdAt,
-            customDate: dn.createdAt,
-            category: dn.category
-          });
-        }
-      }
+      // 2. Fetch from local Prisma API
+      try {
+        const response = await fetch('/api/actualites', { cache: 'no-store' });
+        const apiRes = await response.json();
+        if (Array.isArray(apiRes?.posts)) apiDataPosts = apiRes.posts;
+      } catch (e) {}
 
-      if (allPosts.length > 0) {
-        // Sort by date descending
-        allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setPosts(allPosts);
+      // 3. Fetch from localStorage fail-safe
+      try {
+        const localStored = JSON.parse(localStorage.getItem('dronek_local_actualites') || '[]');
+        if (Array.isArray(localStored)) localDataPosts = localStored;
+      } catch (e) {}
+
+      const merged = mergeNewsPosts(supaData, apiDataPosts, localDataPosts, lang);
+      if (merged.length > 0) {
+        setPosts(merged);
       }
       setLoading(false);
     };

@@ -277,7 +277,7 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </motion.div>
         )}
 
-        {/* Project Content & Details (Affichés ENTRE l'image principale et les images supplémentaires) */}
+        {/* Project Content & Details (Affichés au-dessous de l'image principale comme celui des actualités) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -291,29 +291,51 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
             </h2>
           )}
 
-          {/* Contenu principal / Description générale */}
-          <div className="prose prose-lg max-w-none">
-            <p className="text-gray-700 leading-[1.9] text-[15px] sm:text-base whitespace-pre-line text-justify">
-              {(selectedProject as any).detailLongDesc || (selectedProject as any).detail || selectedProject.summary}
-            </p>
-          </div>
+          {/* Description complète / Contenu principal */}
+          {(() => {
+            const mainDesc = (selectedProject as any).detailLongDesc || 
+                             (selectedProject as any).detail || 
+                             (selectedProject as any).description || 
+                             (selectedProject as any).description_complete || 
+                             (selectedProject as any).description_courte || 
+                             selectedProject.summary || '';
+            if (!mainDesc) return null;
+            return (
+              <div className="prose prose-lg max-w-none">
+                <p className="text-gray-700 leading-[1.9] text-[15px] sm:text-base whitespace-pre-line text-justify">
+                  {mainDesc}
+                </p>
+              </div>
+            );
+          })()}
 
-          {/* Objectifs saisis par l'admin */}
-          {(selectedProject as any).objectives && (selectedProject as any).objectives.length > 0 && (
-            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
-              <h3 className="text-base font-bold text-[#149655] tracking-wide uppercase">
-                {t.projects.objectivesLabel}
-              </h3>
-              <ul className="space-y-3">
-                {(selectedProject as any).objectives.map((obj: string, i: number) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
-                    <div className="w-2 h-2 rounded-full bg-dronek-green mt-2 shrink-0" />
-                    <span>{obj}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Objectifs du projet */}
+          {(() => {
+            const rawObjs = (selectedProject as any).objectives || (selectedProject as any).objectifs;
+            let objList: string[] = [];
+            if (Array.isArray(rawObjs)) {
+              objList = rawObjs.filter((o: any) => typeof o === 'string' && o.trim().length > 0);
+            } else if (typeof rawObjs === 'string' && rawObjs.trim().length > 0) {
+              objList = rawObjs.split('\n').map(s => s.trim()).filter(Boolean);
+            }
+            if (objList.length === 0) return null;
+
+            return (
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+                <h3 className="text-base font-bold text-[#149655] tracking-wide uppercase">
+                  {t.projects.objectivesLabel}
+                </h3>
+                <ul className="space-y-3">
+                  {objList.map((obj: string, i: number) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                      <div className="w-2 h-2 rounded-full bg-dronek-green mt-2 shrink-0" />
+                      <span>{obj}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
         </motion.div>
 
         {/* Horizontal 3-Image Carousel at Bottom with controls */}
