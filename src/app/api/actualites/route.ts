@@ -22,20 +22,41 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const id = body?.id ? String(body.id).trim() : null;
     const title = String(body?.title || '').trim();
     const content = String(body?.content || '').trim();
     const image = String(body?.image || '').trim() || null;
     const gallery = body?.gallery ? String(body.gallery).trim() : null;
     const customDate = body?.customDate ? String(body.customDate).trim() : null;
 
-    if (!content) {
+    if (!content && !title) {
       return NextResponse.json({ success: false, message: 'Le texte est requis.' }, { status: 400 });
     }
 
-    const post = await db.post.create({
+    let post;
+    if (id) {
+      const existing = await db.post.findUnique({ where: { id } }).catch(() => null);
+      if (existing) {
+        post = await db.post.update({
+          where: { id },
+          data: {
+            title: title || content.slice(0, 60),
+            content: content || title,
+            image,
+            gallery,
+            customDate,
+            published: true,
+          },
+        });
+        return NextResponse.json({ success: true, post }, { status: 200 });
+      }
+    }
+
+    post = await db.post.create({
       data: {
+        ...(id ? { id } : {}),
         title: title || content.slice(0, 60),
-        content,
+        content: content || title,
         image,
         gallery,
         customDate,
@@ -55,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, post }, { status: 201 });
   } catch (error) {
-    console.error('Error creating post:', error);
+    console.error('Error creating/updating post:', error);
     return NextResponse.json({ success: false, message: 'Erreur serveur.' }, { status: 500 });
   }
 }

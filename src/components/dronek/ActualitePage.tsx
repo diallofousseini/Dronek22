@@ -196,24 +196,44 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         const apiData = await response.json();
         if (Array.isArray(apiData?.posts)) {
           for (const p of apiData.posts) {
-            const exists = allPosts.some(ap => ap.id === p.id || ap.title === p.title);
-            if (!exists) {
-              const pDate = p.customDate || p.createdAt || new Date().toISOString();
-              allPosts.push({
-                id: p.id,
-                title: p.title || '',
-                content: p.content || '',
-                image: p.image || null,
-                gallery: p.gallery || null,
-                customDate: pDate,
-                createdAt: pDate,
-                category: 'Actualités'
-              });
+            const existingIndex = allPosts.findIndex(ap => ap.id === p.id);
+            const pDate = p.customDate || p.createdAt || new Date().toISOString();
+            const pObj: NewsPost = {
+              id: p.id,
+              title: p.title || '',
+              content: p.content || '',
+              image: p.image || null,
+              gallery: p.gallery || null,
+              customDate: pDate,
+              createdAt: pDate,
+              category: 'Actualités'
+            };
+            if (existingIndex >= 0) {
+              // Update with local Prisma data if title or content was updated
+              allPosts[existingIndex] = { ...allPosts[existingIndex], ...pObj };
+            } else {
+              allPosts.push(pObj);
             }
           }
         }
       } catch (e) {
         // Silently ignore local API errors
+      }
+
+      // Fill in default news posts only if they don't clash with existing DB posts
+      for (const dn of defaultNewsPosts) {
+        const exists = allPosts.some(ap => ap.id === dn.id || ap.title.toLowerCase().trim() === dn.title.toLowerCase().trim());
+        if (!exists) {
+          allPosts.push({
+            id: dn.id,
+            title: lang === 'en' && dn.titleEn ? dn.titleEn : dn.title,
+            content: dn.content,
+            image: dn.image,
+            createdAt: dn.createdAt,
+            customDate: dn.createdAt,
+            category: dn.category
+          });
+        }
       }
 
       if (allPosts.length > 0) {

@@ -861,6 +861,7 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              id: targetId || payload.id,
               title: payload.titre,
               content: payload.contenu,
               image: payload.image_url,

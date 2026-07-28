@@ -258,12 +258,31 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </motion.p>
         </div>
 
-        {/* Project Content & Details (Affichés JUSTE AU-DESSUS de l'image 1 comme celui des actualités) */}
+        {/* Main Big Image 1 */}
+        {selectedProject.image && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-8"
+          >
+            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg bg-gray-50">
+              <img 
+                src={selectedProject.image} 
+                alt={selectedProject.title} 
+                className="w-full max-h-[550px] object-cover"
+                onError={(e) => { e.currentTarget.src = '/images/dronek_image3.png'; }}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {/* Project Content & Details (Affichés ENTRE l'image principale et les images supplémentaires) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 space-y-6"
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 space-y-6"
         >
           {/* Titre secondaire si présent */}
           {(selectedProject as any).detailTitle && (
@@ -296,25 +315,6 @@ export default function ProjectsPage({ onNavigate }: ProjectsPageProps) {
             </div>
           )}
         </motion.div>
-
-        {/* Main Big Image 1 (Placée juste après la description) */}
-        {selectedProject.image && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35 }}
-            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12"
-          >
-            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg bg-gray-50">
-              <img 
-                src={selectedProject.image} 
-                alt={selectedProject.title} 
-                className="w-full max-h-[550px] object-cover"
-                onError={(e) => { e.currentTarget.src = '/images/dronek_image3.png'; }}
-              />
-            </div>
-          </motion.div>
-        )}
 
         {/* Horizontal 3-Image Carousel at Bottom with controls */}
         {allFooterImages.length > 0 && (
