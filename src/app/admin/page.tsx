@@ -11,6 +11,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 
 import { useLanguage } from '@/components/dronek/LanguageProvider';
 import { projects as hardcodedProjects } from '@/lib/projects';
+import { defaultNewsPosts } from '@/lib/news';
 
 interface DashboardItem {
   id: string;
@@ -219,7 +220,7 @@ export default function AdminDashboard() {
           }
         }
 
-        // Merge local Prisma actualites if activeTab is 'all' or 'actualites'
+        // Merge local Prisma actualites & default public news if activeTab is 'all' or 'actualites'
         if (activeTab === 'all' || activeTab === 'actualites') {
           try {
             const res = await fetch('/api/actualites', { cache: 'no-store' });
@@ -246,6 +247,25 @@ export default function AdminDashboard() {
               }
             }
           } catch (e) {}
+
+          for (const dn of defaultNewsPosts) {
+            const exists = combined.some(item => item.table === 'actualites' && (item.id === dn.id || item.titre === dn.title || item.title === dn.title));
+            if (!exists) {
+              combined.push({
+                id: dn.id,
+                title: dn.title,
+                titre: dn.title,
+                category: 'actualites',
+                status: lang === 'fr' ? 'Publié' : 'Published',
+                date: formatDate(dn.createdAt),
+                table: 'actualites',
+                url: dn.image,
+                rawDate: new Date(dn.createdAt),
+                contenu: dn.content,
+                resume: dn.content
+              } as any);
+            }
+          }
         }
 
         if (activeTab === 'all' || activeTab === 'projets') {

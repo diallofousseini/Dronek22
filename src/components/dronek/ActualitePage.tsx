@@ -10,6 +10,7 @@ import Image from 'next/image';
 import AnimatedSection from './AnimatedSection';
 import { supabase } from '@/lib/supabase';
 import { translateNews } from '@/lib/i18n';
+import { defaultNewsPosts } from '@/lib/news';
 
 type NewsPost = {
   id: string;
@@ -38,14 +39,15 @@ const stagger = {
 export default function ActualitePage({ onNavigate }: ActualitePageProps) {
   const { lang, t } = useLanguage();
 
-  const fallbackPosts: NewsPost[] = [
-    { id: '1', title: lang === 'fr' ? 'CAMPAGNE DE REBOISEMENT' : 'REFORESTATION CAMPAIGN', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2026&auto=format&fit=crop', category: 'Actualités' },
-    { id: '2', title: lang === 'fr' ? 'SÉMINAIRE ÉCOLOGIQUE' : 'ECOLOGICAL SEMINAR', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop', category: 'Actualités' },
-    { id: '3', title: 'DRONEK INNOVATION', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=2070&auto=format&fit=crop', category: 'Actualités' },
-    { id: '4', title: 'PROTECTION FORÊTS', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2071&auto=format&fit=crop', category: 'Actualités' },
-    { id: '5', title: 'CARTOGRAPHIE TAI', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1579389083395-4507e9f4c171?q=80&w=2070&auto=format&fit=crop', category: 'Actualités' },
-    { id: '6', title: 'MISSION RÉUSSIE', content: '...', createdAt: new Date().toISOString(), image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop', category: 'Actualités' }
-  ];
+  const fallbackPosts: NewsPost[] = defaultNewsPosts.map(n => ({
+    id: n.id,
+    title: lang === 'en' && n.titleEn ? n.titleEn : n.title,
+    content: n.content,
+    createdAt: n.createdAt,
+    customDate: n.createdAt,
+    image: n.image,
+    category: n.category
+  }));
 
   const [posts, setPosts] = useState<NewsPost[]>(fallbackPosts);
   const [loading, setLoading] = useState(false);
