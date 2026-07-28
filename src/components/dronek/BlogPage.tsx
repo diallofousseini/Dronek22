@@ -25,9 +25,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
       setLoading(true);
       const { data, error } = await supabase
         .from('actualites')
-        .select('*')
-        .in('statut', ['publie', 'Publié', 'Published'])
-        .order('date_publication', { ascending: false });
+        .select('*');
       
       if (data) {
         setDynamicNews(data.map(n => {

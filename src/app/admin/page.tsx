@@ -179,10 +179,7 @@ export default function AdminDashboard() {
         }
 
         for (const table of tablesToFetch) {
-          let query = supabase
-            .from(table)
-            .select('*')
-            .order('created_at', { ascending: false });
+          let query = supabase.from(table).select('*');
           
           if (table === 'contacts' && activeTab === 'mediatheque') {
             query = query.eq('sujet', 'Mediatheque');
@@ -195,12 +192,9 @@ export default function AdminDashboard() {
           
           if (error) {
             console.error(`[Admin Fetch] Error on table "${table}":`, error);
-            fetchFailed = true;
-            lastErrorMessage = error.message;
-            continue;
           }
 
-          if (data) {
+          if (data && data.length > 0) {
             combined = [...combined, ...data.map(item => {
               let categoryVal = item.sujet === 'Mediatheque' ? 'Média' : (item.categorie || item.category || table);
               if (table === 'services') {
@@ -209,19 +203,49 @@ export default function AdminDashboard() {
                   ? (lang === 'fr' ? "Domaine d'expertise" : "Domain of expertise")
                   : (lang === 'fr' ? "Service" : "Service");
               }
+              const itemDate = item.created_at || item.date_publication || item.createdAt || item.date || new Date().toISOString();
               return {
                 ...item,
                 id: item.id,
                 title: item.prenom || item.nom ? `${item.prenom || ''} ${item.nom || ''}`.trim() : (item.sujet || item.titre || item.name || item.title || (lang === 'fr' ? 'Sans titre' : 'Untitled')),
                 category: categoryVal,
                 status: item.statut || item.status || (lang === 'fr' ? 'Publié' : 'Published'),
-                date: formatDate(item.created_at),
+                date: formatDate(itemDate),
                 table: table,
                 url: item.url || item.image_url || item.photo_url || item.image || item.photo,
-                rawDate: new Date(item.created_at)
+                rawDate: new Date(itemDate)
               };
             })];
           }
+        }
+
+        // Merge local Prisma actualites if activeTab is 'all' or 'actualites'
+        if (activeTab === 'all' || activeTab === 'actualites') {
+          try {
+            const res = await fetch('/api/actualites', { cache: 'no-store' });
+            const apiRes = await res.json();
+            if (Array.isArray(apiRes?.posts)) {
+              for (const p of apiRes.posts) {
+                const exists = combined.some(item => item.table === 'actualites' && (item.id === p.id || item.titre === p.title || item.title === p.title));
+                if (!exists) {
+                  const pDate = p.customDate || p.createdAt || new Date().toISOString();
+                  combined.push({
+                    id: p.id,
+                    title: p.title || 'Actualité',
+                    titre: p.title || 'Actualité',
+                    category: 'actualites',
+                    status: lang === 'fr' ? 'Publié' : 'Published',
+                    date: formatDate(pDate),
+                    table: 'actualites',
+                    url: p.image || null,
+                    rawDate: new Date(pDate),
+                    contenu: p.content,
+                    resume: p.content
+                  } as any);
+                }
+              }
+            }
+          } catch (e) {}
         }
 
         if (activeTab === 'all' || activeTab === 'projets') {

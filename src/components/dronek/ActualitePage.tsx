@@ -162,32 +162,29 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
       // Fetch from Supabase
       const { data, error } = await supabase
         .from('actualites')
-        .select('*')
-        .in('statut', ['publie', 'Publié', 'Published'])
-        .order('date_publication', { ascending: false })
-        .limit(20);
+        .select('*');
       
       let allPosts: NewsPost[] = [];
 
-      if (data) {
-        let newsItems = data.map(n => {
+      if (data && data.length > 0) {
+        const newsItems = data.map(n => {
           let imageUrl = n.image_url || null;
           if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
             imageUrl = null;
           }
+          const itemDate = n.date_publication || n.created_at || new Date().toISOString();
           return {
             id: n.id,
             title: n.titre || '',
             content: n.contenu || n.resume || '',
             image: imageUrl,
             gallery: n.gallery || null,
-            customDate: n.date_publication || null,
-            createdAt: n.date_publication || new Date().toISOString(),
+            customDate: itemDate,
+            createdAt: itemDate,
             category: 'Actualités'
           };
         });
 
-        newsItems = newsItems.filter((post: any) => isWithin6Months(post.createdAt));
         allPosts = [...newsItems];
       }
 
@@ -196,17 +193,22 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         const response = await fetch('/api/actualites', { cache: 'no-store' });
         const apiData = await response.json();
         if (Array.isArray(apiData?.posts)) {
-          const localPosts: NewsPost[] = apiData.posts.map((p: any) => ({
-            id: p.id,
-            title: p.title || '',
-            content: p.content || '',
-            image: p.image || null,
-            gallery: p.gallery || null,
-            customDate: p.customDate || null,
-            createdAt: p.createdAt || new Date().toISOString(),
-            category: 'Actualités'
-          }));
-          allPosts = [...allPosts, ...localPosts];
+          for (const p of apiData.posts) {
+            const exists = allPosts.some(ap => ap.id === p.id || ap.title === p.title);
+            if (!exists) {
+              const pDate = p.customDate || p.createdAt || new Date().toISOString();
+              allPosts.push({
+                id: p.id,
+                title: p.title || '',
+                content: p.content || '',
+                image: p.image || null,
+                gallery: p.gallery || null,
+                customDate: pDate,
+                createdAt: pDate,
+                category: 'Actualités'
+              });
+            }
+          }
         }
       } catch (e) {
         // Silently ignore local API errors

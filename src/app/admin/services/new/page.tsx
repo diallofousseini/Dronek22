@@ -784,6 +784,7 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           statut: data.status || 'publie'
         };
       } else if (type === 'actualite') {
+        const pubDate = data.customDate || data.date || new Date().toISOString();
         payload = { 
           ...payload, 
           titre: data.title || (lang === 'fr' ? 'Actualité sans titre' : 'Untitled news'), 
@@ -792,7 +793,8 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           image_url: data.image || '',
           gallery: data.galleryImages && data.galleryImages.length > 0 ? JSON.stringify(data.galleryImages.filter(Boolean)) : null,
           statut: data.status || 'publie',
-          date_publication: data.customDate || data.date || new Date().toISOString()
+          date_publication: pubDate,
+          created_at: pubDate
         };
       } else if (type === 'contact') {
         table = 'contacts';
