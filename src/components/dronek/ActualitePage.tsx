@@ -196,10 +196,11 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         const apiData = await response.json();
         if (Array.isArray(apiData?.posts)) {
           for (const p of apiData.posts) {
-            const existingIndex = allPosts.findIndex(ap => ap.id === p.id);
+            const pIdStr = String(p.id);
+            const existingIndex = allPosts.findIndex(ap => String(ap.id) === pIdStr);
             const pDate = p.customDate || p.createdAt || new Date().toISOString();
             const pObj: NewsPost = {
-              id: p.id,
+              id: String(p.id),
               title: p.title || '',
               content: p.content || '',
               image: p.image || null,
@@ -209,7 +210,6 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
               category: 'Actualités'
             };
             if (existingIndex >= 0) {
-              // Update with local Prisma data if title or content was updated
               allPosts[existingIndex] = { ...allPosts[existingIndex], ...pObj };
             } else {
               allPosts.push(pObj);
@@ -220,9 +220,37 @@ export default function ActualitePage({ onNavigate }: ActualitePageProps) {
         // Silently ignore local API errors
       }
 
+      // Also merge from localStorage fail-safe
+      try {
+        const localStored = JSON.parse(localStorage.getItem('dronek_local_actualites') || '[]');
+        if (Array.isArray(localStored)) {
+          for (const lsItem of localStored) {
+            const lsIdStr = String(lsItem.id);
+            const existingIndex = allPosts.findIndex(ap => String(ap.id) === lsIdStr || ap.title.toLowerCase().trim() === (lsItem.title || '').toLowerCase().trim());
+            const lsDate = lsItem.customDate || lsItem.createdAt || new Date().toISOString();
+            const lsObj: NewsPost = {
+              id: lsIdStr,
+              title: lsItem.title || '',
+              content: lsItem.content || '',
+              image: lsItem.image || null,
+              gallery: lsItem.gallery || null,
+              customDate: lsDate,
+              createdAt: lsDate,
+              category: 'Actualités'
+            };
+            if (existingIndex >= 0) {
+              allPosts[existingIndex] = { ...allPosts[existingIndex], ...lsObj };
+            } else {
+              allPosts.push(lsObj);
+            }
+          }
+        }
+      } catch (e) {}
+
       // Fill in default news posts only if they don't clash with existing DB posts
       for (const dn of defaultNewsPosts) {
-        const exists = allPosts.some(ap => ap.id === dn.id || ap.title.toLowerCase().trim() === dn.title.toLowerCase().trim());
+        const dnIdStr = String(dn.id);
+        const exists = allPosts.some(ap => String(ap.id) === dnIdStr || ap.title.toLowerCase().trim() === dn.title.toLowerCase().trim());
         if (!exists) {
           allPosts.push({
             id: dn.id,

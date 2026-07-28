@@ -876,33 +876,55 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
         const { data: resData, error: resErr } = await supabase.from(table).update(payload).eq('id', targetId).select();
         if (resErr || !resData || resData.length === 0) {
           // If update failed or row didn't exist in Supabase yet, fallback to insert
-          const { data: resData2 } = await supabase.from(table).insert([payload]).select();
-          savedData = resData2?.[0];
+          const { data: resData2, error: resErr2 } = await supabase.from(table).insert([payload]).select();
+          if (resErr2) {
+            const payloadNoId = { ...payload };
+            delete payloadNoId.id;
+            const { data: resData3, error: resErr3 } = await supabase.from(table).insert([payloadNoId]).select();
+            if (resErr3) saveError = resErr3;
+            else savedData = resData3?.[0];
+          } else {
+            savedData = resData2?.[0];
+          }
         } else {
           savedData = resData?.[0];
         }
       } else {
         const { data: resData, error: resErr } = await supabase.from(table).insert([payload]).select();
         if (resErr) {
-          // Retry without payload.id if Supabase table auto-generates ID
+          // Retry without payload.id if Supabase table auto-generates integer/UUID ID
           const payloadNoId = { ...payload };
           delete payloadNoId.id;
           const { data: resData2, error: resErr2 } = await supabase.from(table).insert([payloadNoId]).select();
-          if (resErr2) saveError = resErr;
+          if (resErr2) saveError = resErr2;
           else savedData = resData2?.[0];
         } else {
           savedData = resData?.[0];
         }
       }
 
-      // Dual write to local Prisma API for actualites to guarantee zero data loss
+      // Dual write to local Prisma API and localStorage for actualites to guarantee 100% display
       if (type === 'actualite') {
+        const finalId = String(savedData?.id || targetId || payload.id || `act_${Date.now()}`);
+        const actRecord = {
+          id: finalId,
+          title: payload.titre,
+          content: payload.contenu,
+          image: payload.image_url,
+          gallery: payload.gallery,
+          customDate: payload.date_publication,
+          createdAt: payload.date_publication || new Date().toISOString(),
+          category: 'Actualités',
+          statut: payload.statut || 'publie'
+        };
+
+        // 1. Prisma API dual-write
         try {
           await fetch('/api/actualites', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              id: targetId || payload.id,
+              id: finalId,
               title: payload.titre,
               content: payload.contenu,
               image: payload.image_url,
@@ -912,6 +934,22 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           });
         } catch (apiErr) {
           console.error("Local actualites API sync error:", apiErr);
+        }
+
+        // 2. localStorage fail-safe dual-write
+        try {
+          const existingLocal = JSON.parse(localStorage.getItem('dronek_local_actualites') || '[]');
+          if (Array.isArray(existingLocal)) {
+            const idx = existingLocal.findIndex((item: any) => String(item.id) === finalId || item.title === payload.titre);
+            if (idx >= 0) {
+              existingLocal[idx] = { ...existingLocal[idx], ...actRecord };
+            } else {
+              existingLocal.unshift(actRecord);
+            }
+            localStorage.setItem('dronek_local_actualites', JSON.stringify(existingLocal));
+          }
+        } catch (lsErr) {
+          console.error("localStorage actualites sync error:", lsErr);
         }
       }
 

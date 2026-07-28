@@ -220,14 +220,16 @@ export default function AdminDashboard() {
           }
         }
 
-        // Merge local Prisma actualites & default public news if activeTab is 'all' or 'actualites'
+        // Merge local Prisma actualites, localStorage actualites & default public news if activeTab is 'all' or 'actualites'
         if (activeTab === 'all' || activeTab === 'actualites') {
+          // 1. Prisma local API
           try {
             const res = await fetch('/api/actualites', { cache: 'no-store' });
             const apiRes = await res.json();
             if (Array.isArray(apiRes?.posts)) {
               for (const p of apiRes.posts) {
-                const exists = combined.some(item => item.table === 'actualites' && (item.id === p.id || item.titre === p.title || item.title === p.title));
+                const pIdStr = String(p.id);
+                const exists = combined.some(item => item.table === 'actualites' && (String(item.id) === pIdStr || item.titre === p.title || item.title === p.title));
                 if (!exists) {
                   const pDate = p.customDate || p.createdAt || new Date().toISOString();
                   combined.push({
@@ -248,8 +250,37 @@ export default function AdminDashboard() {
             }
           } catch (e) {}
 
+          // 2. localStorage fail-safe
+          try {
+            const localStored = JSON.parse(localStorage.getItem('dronek_local_actualites') || '[]');
+            if (Array.isArray(localStored)) {
+              for (const lsItem of localStored) {
+                const lsIdStr = String(lsItem.id);
+                const exists = combined.some(item => item.table === 'actualites' && (String(item.id) === lsIdStr || item.titre === lsItem.title || item.title === lsItem.title));
+                if (!exists) {
+                  const lsDate = lsItem.customDate || lsItem.createdAt || new Date().toISOString();
+                  combined.push({
+                    id: lsItem.id,
+                    title: lsItem.title || 'Actualité',
+                    titre: lsItem.title || 'Actualité',
+                    category: 'actualites',
+                    status: lang === 'fr' ? 'Publié' : 'Published',
+                    date: formatDate(lsDate),
+                    table: 'actualites',
+                    url: lsItem.image || null,
+                    rawDate: new Date(lsDate),
+                    contenu: lsItem.content,
+                    resume: lsItem.content
+                  } as any);
+                }
+              }
+            }
+          } catch (e) {}
+
+          // 3. Default news catalog
           for (const dn of defaultNewsPosts) {
-            const exists = combined.some(item => item.table === 'actualites' && (item.id === dn.id || item.titre === dn.title || item.title === dn.title));
+            const dnIdStr = String(dn.id);
+            const exists = combined.some(item => item.table === 'actualites' && (String(item.id) === dnIdStr || item.titre === dn.title || item.title === dn.title));
             if (!exists) {
               combined.push({
                 id: dn.id,
