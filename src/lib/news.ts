@@ -8,17 +8,7 @@ export interface DefaultNewsItem {
   createdAt: string;
 }
 
-export const defaultNewsPosts: DefaultNewsItem[] = [
-  {
-    id: 'news-reboisement-2024',
-    title: 'CAMPAGNE DE REBOISEMENT ET RESTAURATION FORESTIÈRE',
-    titleEn: 'REFORESTATION AND FOREST RESTORATION CAMPAIGN',
-    content: 'Sensibilisation des communautés locales et plantation de milliers d\'arbres d\'essences locales pour restaurer le couvert forestier en Côte d\'Ivoire.',
-    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2026&auto=format&fit=crop',
-    category: 'Actualités',
-    createdAt: '2024-05-15T10:00:00.000Z'
-  }
-];
+export const defaultNewsPosts: DefaultNewsItem[] = [];
 
 export function mergeNewsPosts(supaPosts: any[] = [], apiPosts: any[] = [], localStoredPosts: any[] = [], lang: string = 'fr') {
   const mergedMap = new Map<string, any>();
