@@ -408,29 +408,53 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const defaultHeroServices = React.useMemo(() => [
     {
       id: 'serre',
-      title: lang === 'fr' ? 'Construction de serre moderne' : 'Modern Greenhouse Construction',
-      image: '/IMAGE SITE WEB/Services agriculture 2.JPG',
+      title: lang === 'fr' ? 'Construction de serres agricoles' : 'Agricultural Greenhouse Construction',
+      image: '/IMAGE SITE WEB/Services serre.jpg',
       service_type: 'agriculture'
     },
     {
-      id: 'drone',
-      title: t.services?.drone?.name || (lang === 'fr' ? 'Drone et Cartographie' : 'Drone and Mapping'),
-      image: '/images/hero-drone.jpg',
+      id: 'pepiniere',
+      title: lang === 'fr' ? 'Production de plants en pépinière' : 'Nursery Plant Production',
+      image: '/IMAGE SITE WEB/Services Production de plants.JPG',
+      service_type: 'forestry'
+    },
+    {
+      id: 'sig',
+      title: lang === 'fr' ? 'SIG, Drone & Cartographie aérienne' : 'GIS, Drone & Aerial Mapping',
+      image: '/IMAGE SITE WEB/Services SIG.jpg',
       service_type: 'drone'
     },
     {
-      id: 'surveillance',
-      title: t.services?.surveillance?.name || (lang === 'fr' ? 'Agroforesterie' : 'Agroforestry'),
-      image: '/images/hero-agroforestry.jpg',
+      id: 'agroforesterie',
+      title: lang === 'fr' ? 'Agroforesterie & Cacao durable' : 'Agroforestry & Sustainable Cocoa',
+      image: '/IMAGE SITE WEB/Services agriculture.JPG',
       service_type: 'surveillance'
     },
     {
-      id: 'agriculture',
-      title: t.services?.agriculture?.name || (lang === 'fr' ? 'Agriculture' : 'Agriculture'),
-      image: '/images/hero-agriculture.jpg',
-      service_type: 'agriculture'
+      id: 'reboisement',
+      title: lang === 'fr' ? 'Reboisement & Restauration des sols' : 'Reforestation & Soil Restoration',
+      image: '/IMAGE SITE WEB/Services reboisement 2.jpg',
+      service_type: 'forestry'
+    },
+    {
+      id: 'amenagement',
+      title: lang === 'fr' ? 'Aménagement & Inventaire forestier' : 'Forest Management & Inventory',
+      image: '/IMAGE SITE WEB/Services Aménagement forestier.png',
+      service_type: 'forestry'
+    },
+    {
+      id: 'audits',
+      title: lang === 'fr' ? 'Audit des travaux forestiers' : 'Forestry Audit Services',
+      image: '/IMAGE SITE WEB/Services audits des travaux forestiers.jpg',
+      service_type: 'forestry'
+    },
+    {
+      id: 'formation',
+      title: lang === 'fr' ? 'Formations aux métiers forestiers' : 'Forestry Vocational Training',
+      image: '/IMAGE SITE WEB/Services formation.jpg',
+      service_type: 'forestry'
     }
-  ], [lang, t]);
+  ], [lang]);
 
   const slides = heroServices.length > 0 ? heroServices : defaultHeroServices;
 

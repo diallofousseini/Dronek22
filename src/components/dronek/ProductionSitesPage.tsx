@@ -31,27 +31,100 @@ export default function ProductionSitesPage({ onNavigate }: ProductionSitesPageP
   React.useEffect(() => {
     const fetchSites = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('production_sites')
-        .select('*')
-        .in('statut', ['publie', 'Publié', 'Published'])
-        .order('created_at', { ascending: false });
-      
-      if (data && data.length > 0) {
-        const dynamicSites = data.map(site => {
-          let imageUrl = site.image_url || site.image || '';
-          return {
-            ...site,
-            name: site.nom || site.name || 'Site de production',
-            location: site.localisation || site.location || '',
-            image: imageUrl,
-            desc: site.description || site.desc || site.description_courte || site.content || ''
-          };
-        });
-        
-        setSites(dynamicSites);
-      } else {
-        setSites([]);
+      const defaultSites = [
+        {
+          id: 'site-tiassale',
+          name: "Site de Tiassalé",
+          location: "Tiassalé, Côte d'Ivoire",
+          desc: "Site stratégique de production de plants avec serres modernes destinées à produire 2 400 000 plants de cacaoyers pour la régénération du verger ivoirien.",
+          image: "/IMAGE SITE WEB/Site de Tiassalé.jpg",
+          lat: 5.8983,
+          lng: -4.8239
+        },
+        {
+          id: 'site-lakota',
+          name: "Site de Lakota",
+          location: "Lakota, Côte d'Ivoire",
+          desc: "Centre d'excellence pour la production de plants forestiers et agroforestiers de qualité supérieure.",
+          image: "/IMAGE SITE WEB/Site de Lakota.jpg",
+          lat: 5.8475,
+          lng: -5.6820
+        },
+        {
+          id: 'site-sanpedro',
+          name: "Site de San Pédro",
+          location: "San Pédro, Côte d'Ivoire",
+          desc: "Centre d'excellence littoral spécialisé dans la surveillance, la cartographie des zones humides et la gestion des plantations de cacao.",
+          image: "/IMAGE SITE WEB/Site de San pedro.jpg",
+          lat: 4.7500,
+          lng: -6.6400
+        },
+        {
+          id: 'site-soubre',
+          name: "Site de Soubré",
+          location: "Soubré, Côte d'Ivoire",
+          desc: "Pépinière agroforestière majeure assurant la fourniture et le suivi de plants certifiés dans la région de la Nawa.",
+          image: "/IMAGE SITE WEB/Site de Soubré.jpg",
+          lat: 5.7875,
+          lng: -6.5878
+        },
+        {
+          id: 'site-agboville',
+          name: "Site d'Agboville",
+          location: "Agboville, Côte d'Ivoire",
+          desc: "Installation géospatiale et pépinière pour le suivi de reboisement et d'aménagement forestier.",
+          image: "/IMAGE SITE WEB/Site de d'Agboville.JPG",
+          lat: 5.9271,
+          lng: -4.2188
+        },
+        {
+          id: 'site-yamoussoukro',
+          name: "Site de Yamoussoukro",
+          location: "Yamoussoukro, Côte d'Ivoire",
+          desc: "Hub technologique spécialisé en cartographie par drone, génération d'orthomosaïques et analyses NDVI.",
+          image: "/IMAGE SITE WEB/Site de yakro.jpg",
+          lat: 6.8216,
+          lng: -5.2764
+        },
+        {
+          id: 'site-abengourou',
+          name: "Site d'Abengourou",
+          location: "Abengourou, Côte d'Ivoire",
+          desc: "Centre d'appui aux coopératives et pépinière agroforestière pour l'Est ivoirien.",
+          image: "/IMAGE SITE WEB/Site d'abengourou.jpg",
+          lat: 6.7290,
+          lng: -3.4960
+        }
+      ];
+
+      try {
+        const { data, error } = await supabase
+          .from('production_sites')
+          .select('*')
+          .in('statut', ['publie', 'Publié', 'Published'])
+          .order('created_at', { ascending: false });
+
+        if (data && data.length > 0) {
+          const dynamicSites = data.map(site => {
+            let imageUrl = site.image_url || site.image || '';
+            return {
+              ...site,
+              name: site.nom || site.name || 'Site de production',
+              location: site.localisation || site.location || '',
+              image: imageUrl || "/IMAGE SITE WEB/Bannière site de production.jpg",
+              desc: site.description || site.desc || site.description_courte || site.content || ''
+            };
+          });
+
+          // Merge dynamic with defaults avoiding duplicates
+          const dynamicNames = new Set(dynamicSites.map(s => s.name.toLowerCase().trim()));
+          const filteredDefaults = defaultSites.filter(ds => !dynamicNames.has(ds.name.toLowerCase().trim()));
+          setSites([...dynamicSites, ...filteredDefaults]);
+        } else {
+          setSites(defaultSites);
+        }
+      } catch (e) {
+        setSites(defaultSites);
       }
       setLoading(false);
     };
