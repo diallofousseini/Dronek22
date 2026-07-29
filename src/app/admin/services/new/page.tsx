@@ -837,7 +837,6 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           resume: data.content || data.description || '', 
           contenu: data.content || data.description || '',
           image_url: data.image || '',
-          gallery: data.galleryImages && data.galleryImages.length > 0 ? JSON.stringify(data.galleryImages.filter(Boolean)) : null,
           statut: data.status || 'publie',
           date_publication: pubDate,
           created_at: pubDate
@@ -852,7 +851,7 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           nom: data.name, 
           localisation: data.location, 
           image_url: data.image,
-          description: data.desc || data.description,
+          capacite: data.desc || data.description || null,
           ...(data.lat && { lat: parseFloat(data.lat) || data.lat }),
           ...(data.lng && { lng: parseFloat(data.lng) || data.lng }),
           statut: 'publie'
@@ -882,15 +881,45 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
       let savedData: any = null;
       let saveError: any = null;
 
+      // Helper for auto-sanitizing unknown columns to prevent PGRST204 errors
+      const executeSupabaseSave = async (op: 'update' | 'insert', p: any, filterId?: string) => {
+        let currentPayload = { ...p };
+        let result: any = null;
+        let err: any = null;
+
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (op === 'update' && filterId) {
+            const res = await supabase.from(table).update(currentPayload).eq('id', filterId).select();
+            result = res.data;
+            err = res.error;
+          } else {
+            const res = await supabase.from(table).insert([currentPayload]).select();
+            result = res.data;
+            err = res.error;
+          }
+
+          if (err && err.code === 'PGRST204') {
+            const match = err.message.match(/Could not find the '([^']+)' column/);
+            if (match && match[1]) {
+              const badCol = match[1];
+              delete currentPayload[badCol];
+              continue;
+            }
+          }
+          break;
+        }
+
+        return { data: result, error: err, payloadUsed: currentPayload };
+      };
+
       if (targetId) {
-        const { data: resData, error: resErr } = await supabase.from(table).update(payload).eq('id', targetId).select();
+        let { data: resData, error: resErr } = await executeSupabaseSave('update', payload, targetId);
         if (resErr || !resData || resData.length === 0) {
-          // If update failed or row didn't exist in Supabase yet, fallback to insert
-          const { data: resData2, error: resErr2 } = await supabase.from(table).insert([payload]).select();
+          let { data: resData2, error: resErr2 } = await executeSupabaseSave('insert', payload);
           if (resErr2) {
             const payloadNoId = { ...payload };
             delete payloadNoId.id;
-            const { data: resData3, error: resErr3 } = await supabase.from(table).insert([payloadNoId]).select();
+            let { data: resData3, error: resErr3 } = await executeSupabaseSave('insert', payloadNoId);
             if (resErr3) saveError = resErr3;
             else savedData = resData3?.[0];
           } else {
@@ -900,12 +929,11 @@ function GenericItemEditor({ type, id, mode }: { type: string, id?: string | nul
           savedData = resData?.[0];
         }
       } else {
-        const { data: resData, error: resErr } = await supabase.from(table).insert([payload]).select();
+        let { data: resData, error: resErr } = await executeSupabaseSave('insert', payload);
         if (resErr) {
-          // Retry without payload.id if Supabase table auto-generates integer/UUID ID
           const payloadNoId = { ...payload };
           delete payloadNoId.id;
-          const { data: resData2, error: resErr2 } = await supabase.from(table).insert([payloadNoId]).select();
+          let { data: resData2, error: resErr2 } = await executeSupabaseSave('insert', payloadNoId);
           if (resErr2) saveError = resErr2;
           else savedData = resData2?.[0];
         } else {
