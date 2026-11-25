@@ -142,7 +142,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
         .in('statut', ['publie', 'Publié', 'Published'])
         .order('created_at', { ascending: false });
       
-      if (data) {
+      if (data && data.length > 0) {
         const mapped = data.map(s => {
           let imageUrl = s.image_url || s.image || '/images/hero-forest.jpg';
           if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
@@ -166,7 +166,7 @@ export default function AllServicesPage({ onNavigate }: AllServicesPageProps) {
         const sorted = mapped.sort((a, b) => getServiceDomainVal(a) - getServiceDomainVal(b));
         setServices(sorted);
       } else {
-        setServices([]);
+        setServices(defaultServices);
       }
       setLoading(false);
     };
