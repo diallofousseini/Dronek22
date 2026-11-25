@@ -5,8 +5,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Custom fetch wrapper with exponential backoff retry logic for Supabase requests
 const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const maxAttempts = 4;
-  const initialDelay = 1000; // 1 second
+  const maxAttempts = 1;
+  const initialDelay = 500;
   let attempt = 0;
 
   while (attempt < maxAttempts) {
